@@ -1,0 +1,22 @@
+#!/bin/bash
+# tmux2png — Screenshot einer tmux Session/Pane als PNG
+# Usage: tmux2png [SESSION_OR_PANE] [OUTPUT.png]
+# Beispiele:
+#   tmux2png                          # aktuelle Session → /tmp/tmux-TIMESTAMP.png
+#   tmux2png lazyvim                  # Session "lazyvim"
+#   tmux2png lazyvim:0.0              # spezifische Pane
+#   tmux2png lazyvim /tmp/out.png     # mit Ausgabepfad
+
+set -euo pipefail
+
+TARGET="${1:-$(tmux display-message -p '#S')}"
+OUTPUT="${2:-/tmp/tmux-$(date +%Y%m%d-%H%M%S).png}"
+HTML="$(mktemp /tmp/tmux2png-XXXXXX.html)"
+
+cleanup() { rm -f "$HTML"; }
+trap cleanup EXIT
+
+tmux2html "$TARGET" -o "$HTML"
+wkhtmltoimage --quiet --width 1400 "$HTML" "$OUTPUT" 2>/dev/null
+
+echo "$OUTPUT"
