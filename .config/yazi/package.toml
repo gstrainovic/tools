@@ -1,0 +1,7 @@
+[[plugin.deps]]
+use = "XYenon/yafg"
+rev = "dd03b13"
+hash = "59a4d7d65f49d4b064d60e65fb1242c6"
+
+[flavor]
+deps = []

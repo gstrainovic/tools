@@ -1,0 +1,91 @@
+# Key mappings
+# https://yazi-rs.github.io/docs/configuration/keymap
+
+# Manager (file list) keymaps
+[mgr]
+prepend_keymap = [
+    # Quick bookmarks with 'g' key
+    { on = ["g", "h"], run = "cd ~", desc = "Go to home" },
+    { on = ["g", "d"], run = "cd ~/Downloads", desc = "Go to Downloads" },
+    { on = ["g", "c"], run = "cd ~/.config", desc = "Go to config" },
+    { on = ["g", "p"], run = "cd ~/Pictures", desc = "Go to Pictures" },
+    { on = ["g", "w"], run = "cd ~/workspace", desc = "Go to workspace" },
+    
+    # Quick toggle hidden files
+    { on = "H", run = "hidden toggle", desc = "Toggle hidden files" },
+    
+    # Quick search with fzf integration
+    { on = "f", run = "search --via=fd", desc = "Search files with fd" },
+    { on = "F", run = "search --via=rg", desc = "Search content with ripgrep" },
+
+    # Fuzzy grep (rg + fzf) — opens result in nvim
+    { on = "<C-f>", run = "plugin yafg", desc = "Fuzzy grep (rg+fzf)" },
+    
+    # Quick flat view
+    { on = ["g", "f"], run = "search_do --via=fd --args='-d 1'", desc = "Flat view (depth 1)" },
+    
+    # Delete with 'D' (capital) for permanent delete
+    { on = "D", run = "remove --permanently --force", desc = "Delete permanently" },
+    
+    # Yank path to clipboard
+    { on = "y", run = "yank", desc = "Yank (copy)" },
+    { on = "Y", run = "copy path", desc = "Copy path to clipboard" },
+    
+    # Open in editor
+    { on = "e", run = "open --interactive", desc = "Open with" },
+    
+    # Suspend
+    { on = "<C-z>", run = "suspend", desc = "Suspend yazi" },
+    
+    # Quit without saving cwd
+    { on = "Q", run = "quit --no-cwd-file", desc = "Quit without output" },
+]
+
+# Tasks (task manager) keymaps
+[tasks]
+prepend_keymap = [
+    { on = "q", run = "close", desc = "Close task manager" },
+]
+
+# Spot (file info) keymaps
+[spot]
+prepend_keymap = [
+    { on = "q", run = "close", desc = "Close spotter" },
+]
+
+# Input (text input) keymaps
+[input]
+prepend_keymap = [
+    # Vim-like navigation in input mode
+    { on = "<C-a>", run = "move 999", desc = "Go to end" },
+    { on = "<C-e>", run = "move -999", desc = "Go to start" },
+    { on = "<C-u>", run = "kill bol", desc = "Kill to beginning" },
+    { on = "<C-k>", run = "kill eol", desc = "Kill to end" },
+    { on = "<C-w>", run = "kill backward", desc = "Kill word backward" },
+]
+
+# Confirm dialog keymaps
+[confirm]
+prepend_keymap = [
+    { on = "y", run = "close --submit", desc = "Confirm (yes)" },
+    { on = "n", run = "close", desc = "Cancel (no)" },
+]
+
+# Completion keymaps
+[cmp]
+prepend_keymap = [
+    { on = "<Tab>", run = "close --submit", desc = "Submit completion" },
+    { on = "<Esc>", run = "close", desc = "Close completion" },
+]
+
+# Help keymaps
+[help]
+prepend_keymap = [
+    { on = "q", run = "close", desc = "Close help" },
+]
+
+# Pick keymaps
+[pick]
+prepend_keymap = [
+    { on = "q", run = "close", desc = "Close picker" },
+]

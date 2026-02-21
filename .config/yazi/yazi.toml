@@ -1,0 +1,70 @@
+# Yazi Configuration
+# https://yazi-rs.github.io/docs/configuration/yazi
+
+[mgr]
+# Layout ratio: [parent, current, preview]
+ratio = [0, 3, 4]
+
+# Sorting
+sort_by = "natural"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+sort_translit = false
+
+# Display options
+show_hidden = true
+show_symlink = true
+linemode = "size"
+scrolloff = 5
+
+[preview]
+wrap = "no"
+tab_size = 4
+max_width = 1200
+max_height = 1200
+cache_dir = ""
+image_delay = 30
+image_filter = "lanczos3"
+image_quality = 90
+
+[opener]
+edit = [
+    { run = "nvim-ide-open %s", block = true, for = "unix" },
+]
+
+play = [
+    { run = "mpv %s", orphan = true, for = "unix" },
+]
+
+open = [
+    { run = "xdg-open %s", desc = "Open" },
+]
+
+[open]
+prepend_rules = [
+    { url = "*.json", use = "edit" },
+    { url = "*.toml", use = "edit" },
+    { url = "*.yaml", use = "edit" },
+    { url = "*.yml", use = "edit" },
+]
+
+[tasks]
+micro_workers = 10
+macro_workers = 25
+bizarre_retry = 5
+suppress_preload = false
+image_alloc = 0
+image_bound = [0, 0]
+
+[input]
+cursor_blink = false
+
+[confirm]
+title = "Warning"
+
+[which]
+sort_by = "none"
+sort_sensitive = false
+sort_reverse = false
+sort_translit = false
