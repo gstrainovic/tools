@@ -1,0 +1,23 @@
+#!/bin/bash
+# nvim-split — Öffnet nvim als rechten Split im aktuellen WezTerm-Tab
+#
+# Usage: nvim-split [file] [--percent N]
+#
+# Öffnet nvim neben dem aktuellen Pane, ohne den User-Flow zu unterbrechen.
+# Der User bleibt in seinem Pane, nvim erscheint als Side-Split.
+#
+# Gibt die Pane-ID zurück (für send-key, screenshot usw.)
+
+FILE="${1:-}"
+PERCENT=40
+if [[ "$*" =~ --percent[[:space:]]+([0-9]+) ]]; then
+  PERCENT="${BASH_REMATCH[1]}"
+fi
+
+if [ -n "$FILE" ]; then
+  PANE_ID=$(wezterm cli split-pane --right --percent "$PERCENT" -- nvim "$FILE" 2>/dev/null)
+else
+  PANE_ID=$(wezterm cli split-pane --right --percent "$PERCENT" -- nvim 2>/dev/null)
+fi
+
+echo "$PANE_ID"

@@ -1,0 +1,71 @@
+#!/bin/bash
+# Send keystrokes to a WezTerm pane (nvim-style notation supported)
+# Usage: send-key.sh PANE_ID KEY [KEY ...]
+# Examples:
+#   send-key.sh 3 "<Space><Space>"
+#   send-key.sh 3 "<Esc>"
+#   send-key.sh 3 ":wq<CR>"
+
+PANE_ID="$1"
+shift
+INPUT="$*"
+
+if [ -z "$PANE_ID" ] || [ -z "$INPUT" ]; then
+  echo "Usage: send-key.sh PANE_ID KEY" >&2
+  exit 1
+fi
+
+# Convert nvim key notation to raw bytes
+convert_keys() {
+  local input="$1"
+  # Use python3 for reliable escape sequence generation
+  python3 -c "
+import sys
+import re
+
+text = sys.argv[1]
+result = bytearray()
+
+# Map nvim-style key names to bytes
+keymap = {
+    '<Space>': b' ',
+    '<CR>':    b'\r',
+    '<Enter>': b'\r',
+    '<Esc>':   b'\x1b',
+    '<Tab>':   b'\t',
+    '<BS>':    b'\x7f',
+    '<C-c>':   b'\x03',
+    '<C-u>':   b'\x15',
+    '<C-d>':   b'\x04',
+    '<C-f>':   b'\x06',
+    '<C-b>':   b'\x02',
+    '<C-l>':   b'\x0c',
+    '<C-w>':   b'\x17',
+    '<C-[>':   b'\x1b',
+    '<Up>':    b'\x1b[A',
+    '<Down>':  b'\x1b[B',
+    '<Right>': b'\x1b[C',
+    '<Left>':  b'\x1b[D',
+}
+
+i = 0
+while i < len(text):
+    # Try to match a key sequence <...>
+    m = re.match(r'<[^>]+>', text[i:])
+    if m:
+        key = m.group(0)
+        if key in keymap:
+            result.extend(keymap[key])
+        else:
+            # Unknown key notation - pass as-is
+            result.extend(key.encode())
+        i += len(key)
+    else:
+        result.extend(text[i].encode('utf-8'))
+        i += 1
+
+sys.stdout.buffer.write(bytes(result))
+" "$input"
+}
+
+convert_keys "$INPUT" | wezterm cli send-text --pane-id "$PANE_ID" --no-paste

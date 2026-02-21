@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""
+XDG Desktop Portal screenshot for GNOME Wayland.
+Captures the full screen automatically (no dialog) and prints the file path.
+Usage: screenshot-linux-wayland.py [output_path]
+"""
+import sys
+import os
+import dbus
+import dbus.mainloop.glib
+from gi.repository import GLib
+
+def take_screenshot(output_hint=None):
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    bus = dbus.SessionBus()
+    loop = GLib.MainLoop()
+    result = {'path': None, 'error': None}
+
+    portal = bus.get_object(
+        'org.freedesktop.portal.Desktop',
+        '/org/freedesktop/portal/desktop'
+    )
+    iface = dbus.Interface(portal, 'org.freedesktop.portal.Screenshot')
+
+    options = dbus.Dictionary(
+        {'handle_token': dbus.String('wezterm_shot'), 'interactive': dbus.Boolean(False)},
+        signature='sv'
+    )
+
+    try:
+        request_path = iface.Screenshot('', options)
+    except dbus.DBusException as e:
+        print(f'ERROR: {e}', file=sys.stderr)
+        sys.exit(1)
+
+    request_obj = bus.get_object('org.freedesktop.portal.Desktop', request_path)
+
+    def on_response(response, results):
+        if response == 0:
+            uri = str(results.get('uri', ''))
+            if uri.startswith('file://'):
+                result['path'] = uri[7:]
+            else:
+                result['path'] = uri
+        else:
+            result['error'] = f'Portal response code: {response}'
+        loop.quit()
+
+    request_obj.connect_to_signal(
+        'Response', on_response,
+        dbus_interface='org.freedesktop.portal.Request'
+    )
+
+    GLib.timeout_add_seconds(15, loop.quit)
+    loop.run()
+
+    if result['path']:
+        # If output_hint given, move/copy to that path
+        if output_hint and output_hint != result['path']:
+            import shutil
+            shutil.move(result['path'], output_hint)
+            print(output_hint)
+        else:
+            print(result['path'])
+    else:
+        error = result['error'] or 'Screenshot timed out or was cancelled'
+        print(f'ERROR: {error}', file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == '__main__':
+    output = sys.argv[1] if len(sys.argv) > 1 else None
+    take_screenshot(output)
