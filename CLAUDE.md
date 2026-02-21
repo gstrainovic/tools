@@ -34,6 +34,10 @@ tmux2png lazyvim /tmp/out.png   # mit Ausgabepfad
 
 **Intern:** `tmux2html TARGET -o HTML` → `wkhtmltoimage --width 1400 HTML PNG`
 
+**⚠️ LIMITATION: Erfasst NUR den Text-Layer (ANSI-Zeichen/Farben).**
+Sixel/Kitty-Pixel-Grafiken werden vom Terminal-Emulator außerhalb des tmux-Buffers gerendert → **NICHT sichtbar in tmux2png!**
+Nützlich für: nvim-UI, Menüs, Picker, Explorer — nicht für Bild-Rendering-Tests.
+
 ## MCPs für Terminal-Automation
 
 ### tmux-mcp (`npx -y tmux-mcp`)
