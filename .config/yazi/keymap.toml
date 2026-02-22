@@ -22,7 +22,7 @@ prepend_keymap = [
     { on = "<C-f>", run = "plugin yafg", desc = "Fuzzy grep (rg+fzf)" },
 
     # Toggle preview fullscreen (using built-in max-preview plugin)
-    { on = "<C-p>", run = "plugin max-preview", desc = "Toggle preview fullscreen" },
+    { on = "<C-p>", run = "plugin toggle-pane --args=max-preview", desc = "Toggle preview fullscreen" },
     
     # Quick flat view
     { on = ["g", "f"], run = "search_do --via=fd --args='-d 1'", desc = "Flat view (depth 1)" },

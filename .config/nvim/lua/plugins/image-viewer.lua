@@ -29,7 +29,7 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     -- If reveal succeeded, trigger fullscreen preview using max-preview plugin
     if reveal_ok then
       vim.defer_fn(function()
-        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "max-preview" })
+        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane", "max-preview" })
         local plugin_ok = vim.v.shell_error == 0
         if not plugin_ok then
           vim.notify("⚠️ max-preview plugin failed", vim.log.levels.WARN)
