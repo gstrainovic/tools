@@ -26,6 +26,13 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     local result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
     local ok = vim.v.shell_error == 0
 
+    -- If reveal succeeded, trigger fullscreen preview in yazi
+    if ok then
+      vim.defer_fn(function()
+        vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "preview-fullscreen" })
+      end, 100)
+    end
+
     vim.schedule(function()
       -- Clean up the buffer — don't open binary in nvim
       if vim.api.nvim_buf_is_valid(buf) then
@@ -33,7 +40,7 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
       end
 
       if ok then
-        vim.notify("Preview: " .. vim.fn.fnamemodify(filepath, ":t"), vim.log.levels.INFO)
+        vim.notify("Preview (fullscreen): " .. vim.fn.fnamemodify(filepath, ":t"), vim.log.levels.INFO)
       else
         vim.notify("yazi nicht erreichbar (ide Layout aktiv?)", vim.log.levels.WARN)
       end
