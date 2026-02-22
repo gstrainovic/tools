@@ -11,5 +11,8 @@ fi
 if nvim --server "$SOCKET" --remote-expr "1" &>/dev/null; then
     nvim --server "$SOCKET" --remote "$@"
 else
+    # Server nicht erreichbar → Fallback mit Warnung
+    echo "⚠️  nvim-Server nicht erreichbar ($SOCKET)" >&2
+    echo "   Öffne lokal statt via RPC..." >&2
     nvim "$@"
 fi
