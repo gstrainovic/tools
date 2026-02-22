@@ -1,6 +1,8 @@
 -- preview-fullscreen.yazi — Auto-fullscreen preview for images/PDFs
 -- When yazi reveals a binary file, preview panel expands to fullscreen
--- Navigate away to restore normal layout, or press 'Esc' to toggle
+-- Navigate away to restore normal layout, or press 'Ctrl+P' to toggle
+
+local M = {}
 
 local NORMAL_RATIO = { 0, 3, 4 }
 local PREVIEW_RATIO = { 0, 0, 1 }
@@ -24,7 +26,7 @@ local function is_preview_file(url)
 end
 
 --- Toggle preview fullscreen
-function M:toggle()
+function M.toggle()
   if is_fullscreen then
     ya.manager_emit("resize", { NORMAL_RATIO[1], NORMAL_RATIO[2], NORMAL_RATIO[3] })
     is_fullscreen = false
@@ -35,7 +37,7 @@ function M:toggle()
 end
 
 --- Check hovered file and auto-fullscreen if preview type
-function M:check_and_fullscreen()
+function M.check_and_fullscreen()
   ya.emit("escape", { visual = true })
 
   local hovered = ya.sync(function()
