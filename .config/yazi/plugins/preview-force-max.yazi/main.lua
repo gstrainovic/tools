@@ -17,6 +17,8 @@ return {
 					})
 					:split(self._area)
 			end
+			st.old = nil
+			st.parent, st.current, st.preview = nil, nil, nil
 			ui.render()
 			return
 		end
