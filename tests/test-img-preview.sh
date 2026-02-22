@@ -6,8 +6,8 @@ PASS=0
 FAIL=0
 SCRIPT="$(cd "$(dirname "$0")/.." && pwd)/img-preview"
 
-fail() { echo "FAIL: $1"; ((FAIL++)); }
-pass() { echo "PASS: $1"; ((PASS++)); }
+fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
+pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 
 # Test 1: Script existiert und ist ausführbar
 if [[ -x "$SCRIPT" ]]; then
