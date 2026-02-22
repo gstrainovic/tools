@@ -26,13 +26,13 @@ Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, img-pr
 | `mcps.json` | MCP-Server-Konfigurationen (aus `~/.claude.json`) |
 | `.config/yazi/` | Yazi-Konfiguration (symlinked nach `~/.config/yazi/`) |
 | `yazi-debug-session` | Yazi mit fester Client-ID 1337 + Debug-Logging starten |
-| `.config/wezterm/wezterm.lua` | WezTerm-Config: Keybindings + Screenshot-Trigger |
+| `.config/wezterm/wezterm.lua` | WezTerm-Config: Keybindings |
 
 ## WezTerm Keybindings
 
 | Shortcut | Aktion |
 |----------|--------|
-| `Ctrl+Shift+S` | Screenshot via XDG Portal (nur Linux) |
+| `Ctrl+Shift+Z` | Pane Zoom (TogglePaneZoomState) |
 
 ## tmux2png
 

@@ -1,3 +1,4 @@
+-- Fuzzy Grep Plugin
 require("yafg"):setup({
   editor = "nvim",
   args = {},
