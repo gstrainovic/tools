@@ -26,13 +26,16 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     local reveal_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
     local reveal_ok = vim.v.shell_error == 0
 
-    -- If reveal succeeded, trigger fullscreen preview using max-preview plugin
+    -- If reveal succeeded, force fullscreen preview (idempotent: reset then set)
     if reveal_ok then
       vim.defer_fn(function()
+        -- Reset to normal layout first (no-args = reset), then set to max-preview
+        -- This ensures idempotent behavior regardless of current toggle state
+        vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane" })
         local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane", "max-preview" })
         local plugin_ok = vim.v.shell_error == 0
         if not plugin_ok then
-          vim.notify("⚠️ max-preview plugin failed", vim.log.levels.WARN)
+          vim.notify("⚠️ toggle-pane plugin failed", vim.log.levels.WARN)
         end
       end, 200)
     end
