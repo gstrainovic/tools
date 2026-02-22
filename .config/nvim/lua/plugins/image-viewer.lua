@@ -23,14 +23,18 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     local buf = ev.buf
 
     -- Tell yazi to reveal/preview this file via DDS
-    local result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
-    local ok = vim.v.shell_error == 0
+    local reveal_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
+    local reveal_ok = vim.v.shell_error == 0
 
     -- If reveal succeeded, trigger fullscreen preview in yazi
-    if ok then
+    if reveal_ok then
       vim.defer_fn(function()
-        vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "preview-fullscreen" })
-      end, 100)
+        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "preview-fullscreen" })
+        local plugin_ok = vim.v.shell_error == 0
+        if not plugin_ok then
+          vim.notify("⚠️ Plugin fullscreen failed: " .. tostring(plugin_result), vim.log.levels.WARN)
+        end
+      end, 200)  -- Increased delay to 200ms
     end
 
     vim.schedule(function()
@@ -39,10 +43,10 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
         vim.api.nvim_buf_delete(buf, { force = true })
       end
 
-      if ok then
-        vim.notify("Preview (fullscreen): " .. vim.fn.fnamemodify(filepath, ":t"), vim.log.levels.INFO)
+      if reveal_ok then
+        vim.notify("🖼️  Preview: " .. vim.fn.fnamemodify(filepath, ":t") .. " (layout toggle in 200ms)", vim.log.levels.INFO)
       else
-        vim.notify("yazi nicht erreichbar (ide Layout aktiv?)", vim.log.levels.WARN)
+        vim.notify("❌ yazi nicht erreichbar (YAZI_IDE_ID=" .. YAZI_IDE_ID .. ")", vim.log.levels.WARN)
       end
     end)
   end,
