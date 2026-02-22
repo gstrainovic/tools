@@ -1,9 +1,63 @@
-# ~/tools — WezTerm Automation Tools
+# ~/tools — WezTerm + Yazi + Nvim Automation
 
-Tools zum automatischen Öffnen von nvim neben dem aktuellen Pane,
-Tastatureingaben senden und Screenshots machen — ohne den User-Flow zu unterbrechen.
+Tools für zwei Workflows:
+1. **IDE-Modus:** yazi + nvim als WezTerm-Split-Layout (Dateimanager + Editor)
+2. **Claude-Modus:** nvim neben Claude öffnen, Tasten senden, Screenshots machen
 
-## Flow: nvim neben Claude öffnen
+## WezTerm Keybindings
+
+| Shortcut | Aktion |
+|----------|--------|
+| `Ctrl+Shift+Z` | Pane Zoom Toggle — maximiert/minimiert den aktiven Pane (z.B. yazi ausblenden, nvim fullscreen) |
+| `Ctrl+Shift+S` | Screenshot via XDG Portal (nur Linux) |
+
+Config: `.config/wezterm/wezterm.lua`
+
+## IDE-Modus: yazi + nvim
+
+```
+┌──────────────┬───────────────────────────┐
+│  yazi (30%)  │      nvim (70%)           │
+│  Datei-      │      --listen             │
+│  Browser     │      /tmp/nvim-ide.sock   │
+└──────────────┴───────────────────────────┘
+```
+
+### `ide` — Layout starten
+
+```bash
+ide                  # aktuelles Verzeichnis
+ide ~/projekte       # bestimmtes Verzeichnis
+```
+
+- Startet nvim als Server (`/tmp/nvim-ide.sock`) im rechten 70%-Split
+- Startet yazi im linken 30%-Pane
+- Funktioniert auch außerhalb von WezTerm (öffnet neues Fenster)
+
+### `nvim-ide-open` — Dateien aus yazi in nvim öffnen
+
+```bash
+nvim-ide-open datei.txt
+```
+
+- Wird von yazi als `edit`-Opener aufgerufen (konfiguriert in `yazi.toml`)
+- Sendet Datei an laufenden nvim via `--server --remote`
+- Fallback: startet normales nvim wenn kein Server läuft
+
+### Yazi-Konfiguration
+
+Die Yazi-Config liegt in `.config/yazi/` und wird via Symlink nach `~/.config/yazi/` verlinkt.
+
+| Datei | Beschreibung |
+|-------|-------------|
+| `yazi.toml` | Hauptconfig: Layout, Opener (`nvim-ide-open`), Preview |
+| `keymap.toml` | Keybindings: Bookmarks, fzf-Search, yafg |
+| `init.lua` | Plugin-Init: yafg mit `editor = "nvim"` |
+| `theme.toml` | Catppuccin/Dracula Theme |
+| `plugins/yafg.yazi/` | Fuzzy-Grep Plugin (rg + fzf) |
+| `flavors/dracula.yazi/` | Dracula Flavor |
+
+## Claude-Modus: nvim neben Claude
 
 ```
 User chattet in Tab 1 (Pane 0)
@@ -20,10 +74,7 @@ User chattet in Tab 1 (Pane 0)
            │
            ▼
   python3 wez-screenshot /tmp/out.png   ← XDG Portal Screenshot
-  (WezTerm ist aktives Fenster → Screenshot enthält echte Pixel inkl. Kitty/Sixel)
 ```
-
-## Scripts
 
 ### `nvim-split` — nvim als Split öffnen
 
@@ -31,44 +82,16 @@ User chattet in Tab 1 (Pane 0)
 nvim-split [file] [--percent N]
 ```
 
-Öffnet nvim als rechten Split (default: 40% Breite) im aktuellen WezTerm-Tab.
-Gibt die Pane-ID zurück, die für `wez-send-key` und `wez-screenshot` gebraucht wird.
+Öffnet nvim als rechten Split (default: 40%) im aktuellen WezTerm-Tab.
+Gibt die Pane-ID zurück.
 
-```bash
-PANE=$(nvim-split /tmp/test.png)       # Öffnet nvim mit test.png
-PANE=$(nvim-split --percent 50)        # 50% Breite
-echo "Pane ID: $PANE"
-```
-
-**Warum Split statt neuer Tab?**
-- User bleibt in seinem Pane → kein Flow-Unterbruch
-- Nvim ist sofort sichtbar, User kann mitverfolgen/eingreifen
-- XDG Portal Screenshot erfasst beide Panes im gleichen Fenster
-
-### `wez-send-key` — Tastendrücke an nvim senden
+### `wez-send-key` — Tastendrücke an Pane senden
 
 ```bash
 wez-send-key PANE_ID "TASTEN"
 ```
 
-Unterstützt nvim-Style Notation:
-
-| Notation | Beschreibung |
-|----------|-------------|
-| `<Space>` | Leertaste |
-| `<CR>` / `<Enter>` | Enter |
-| `<Esc>` | Escape |
-| `<Tab>` | Tab |
-| `<BS>` | Backspace |
-| `<C-c>` | Ctrl+C |
-| `<C-u>` | Ctrl+U |
-| `<Up>` `<Down>` `<Left>` `<Right>` | Pfeiltasten |
-
-```bash
-wez-send-key "$PANE" "<Esc>:w<CR>"           # Speichern
-wez-send-key "$PANE" "<Space><Space>"         # Leader Leader
-wez-send-key "$PANE" ":set number<CR>"        # Zeilennummern
-```
+Unterstützt nvim-Style Notation: `<Space>`, `<CR>`, `<Esc>`, `<Tab>`, `<BS>`, `<C-c>`, `<Up>` etc.
 
 ### `wez-screenshot` — Screenshot mit echten Pixeln
 
@@ -76,58 +99,52 @@ wez-send-key "$PANE" ":set number<CR>"        # Zeilennummern
 python3 ~/tools/wez-screenshot /tmp/out.png
 ```
 
-Verwendet XDG Desktop Portal (`org.freedesktop.portal.Screenshot`) mit `interactive=false`.
-**Wichtig:** Funktioniert nur wenn WezTerm das aktive Fenster ist (kein Fokus-Wechsel nötig
-wenn man bereits in WezTerm ist).
+XDG Desktop Portal Screenshot (`interactive=false`).
+Erfasst echte Pixel inkl. Sixel und Kitty Grafiken.
 
-Erfasst echte Pixel inkl. **Sixel** und **Kitty** Grafiken — im Gegensatz zu
-`tmux2png` (nur Text-Layer) oder `tui_screenshot` (unlesbarer Pixelbrei).
+## Alle Scripts
+
+| Script | Beschreibung |
+|--------|-------------|
+| `ide` | WezTerm-Layout: yazi (30%) + nvim (70%) |
+| `nvim-ide-open` | Datei an laufenden nvim-Server senden (yazi-Opener) |
+| `nvim-split` | Nvim als rechten WezTerm-Split öffnen (Claude-Modus) |
+| `wez-send-key` | Tastendrücke an WezTerm-Pane senden |
+| `wez-screenshot` | XDG Portal Screenshot (GNOME Wayland) |
+| `wez-screenshot-windows.ps1` | Screenshot für Windows |
+| `tmux2png` | tmux-Session → PNG via tmux2html |
+| `setup.sh` | Einrichtungs-Script für neuen PC |
+
+## Plattform-Kompatibilität
+
+| Feature | Linux (Fedora) | Windows (Git Bash) |
+|---------|:-:|:-:|
+| ide (yazi + nvim) | Ja | Ja |
+| nvim-ide-open | Ja | Ja |
+| nvim-split | Ja | Ja |
+| wez-send-key | Ja | Ja |
+| wez-screenshot | Ja (XDG Portal) | PowerShell-Version |
+| tmux2png | Ja | Nein (kein tmux) |
+
+Unter Windows nutzt nvim Named Pipes (`\\.\pipe\nvim-ide`) statt Unix-Sockets.
+
+## Setup
 
 ```bash
-python3 ~/tools/wez-screenshot /tmp/screenshot.png
-# → Speichert Screenshot, gibt Pfad aus
+bash ~/tools/setup.sh
 ```
 
-## Komplettes Beispiel
+Erkennt automatisch Linux vs. Windows und installiert entsprechend.
 
-```bash
-#!/bin/bash
-# Öffne Bild in nvim, mache Screenshot, schließe nvim wieder
-
-FILE="/tmp/mein-bild.png"
-
-# 1. nvim als Split öffnen
-PANE=$(~/tools/nvim-split "$FILE")
-sleep 1   # nvim startet
-
-# 2. Plugin aktivieren (z.B. Sixelview)
-~/tools/wez-send-key "$PANE" "<Space><Space>"
-sleep 0.5
-
-# 3. Screenshot
-python3 ~/tools/wez-screenshot /tmp/result.png
-
-# 4. nvim schließen (optional)
-~/tools/wez-send-key "$PANE" "<Esc>:q!<CR>"
-
-echo "Screenshot: /tmp/result.png"
-```
+**Voraussetzungen:** `cargo`, `go`, WezTerm, yazi, neovim. Zusätzlich Linux: `uv`, tmux.
 
 ## Getestete Ansätze (und warum verworfen)
 
 | Option | Status | Problem |
 |--------|--------|---------|
-| XDG Screenshot Portal | ✅ **Benutzt** | Kein Fokus-Wechsel, echte Pixel |
-| XDG ScreenCast Portal (persist_mode=2) | ❌ | Dialog erscheint immer wieder |
-| Weston headless + GL | ❌ | NVIDIA spiegelt Screenshot horizontal |
-| Weston headless + Pixman | ❌ | WezTerm bekommt kein GPU → Kitty blank |
-| Xvfb | ❌ | X11-Mode, kein Wayland, Sixel fraglich |
-| WezTerm Lua Plugin (user-var-changed) | ❌ | Nicht nötig, zu komplex |
-| tmux2png | ❌ | Nur Text-Layer, keine Pixel/Sixel/Kitty |
-| tui_screenshot | ❌ | Unlesbarer Pixelbrei |
-
-## Voraussetzungen
-
-- WezTerm mit `wezterm cli` in PATH
-- Python 3 mit `dbus-python` und `PyGObject` (für wez-screenshot)
-- XDG Desktop Portal (GNOME Wayland: bereits vorhanden)
+| XDG Screenshot Portal | **Benutzt** | Kein Fokus-Wechsel, echte Pixel |
+| XDG ScreenCast Portal (persist_mode=2) | verworfen | Dialog erscheint immer wieder |
+| Weston headless + GL | verworfen | NVIDIA spiegelt Screenshot horizontal |
+| Weston headless + Pixman | verworfen | WezTerm bekommt kein GPU, Kitty blank |
+| tmux2png | nur Text | Nur Text-Layer, keine Pixel/Sixel/Kitty |
+| tui_screenshot | verworfen | Unlesbarer Pixelbrei |
