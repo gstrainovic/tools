@@ -22,7 +22,7 @@ prepend_keymap = [
     { on = "<C-f>", run = "plugin yafg", desc = "Fuzzy grep (rg+fzf)" },
 
     # Toggle preview fullscreen for images/PDFs
-    { on = "<C-p>", run = "plugin preview-fullscreen --call-method toggle", desc = "Toggle preview fullscreen" },
+    { on = "<C-p>", run = "plugin preview-fullscreen", desc = "Toggle preview fullscreen" },
     
     # Quick flat view
     { on = ["g", "f"], run = "search_do --via=fd --args='-d 1'", desc = "Flat view (depth 1)" },

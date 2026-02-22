@@ -2,7 +2,7 @@
 
 return {
   entry = function(self, job)
-    ya.dbg("preview-fullscreen: entry called")
+    ya.notify({ title = "preview-fullscreen", content = "entry called", timeout = 2, level = "info" })
 
     -- Get current manager state synchronously
     local hovered = ya.sync(function()
@@ -10,18 +10,18 @@ return {
     end)
 
     if not hovered then
-      ya.dbg("preview-fullscreen: no hovered file")
+      ya.notify({ title = "preview-fullscreen", content = "no hovered file", timeout = 2, level = "info" })
       return
     end
 
-    ya.dbg("preview-fullscreen: hovered=" .. tostring(hovered.url))
+    ya.notify({ title = "preview-fullscreen", content = "hovered=" .. tostring(hovered.url), timeout = 2, level = "info" })
 
     -- Check if hovered file is a preview type
     local path = tostring(hovered.url)
     local ext = path:match("%.([^%.]+)$")
     if ext then
       ext = ext:lower()
-      ya.dbg("preview-fullscreen: ext=" .. ext)
+      ya.notify({ title = "preview-fullscreen", content = "ext=" .. ext, timeout = 2, level = "info" })
 
       local is_preview = ext == "png" or ext == "jpg" or ext == "jpeg" or
                          ext == "gif" or ext == "webp" or ext == "bmp" or
@@ -29,14 +29,14 @@ return {
                          ext == "pdf"
 
       if is_preview then
-        ya.dbg("preview-fullscreen: toggling to fullscreen")
+        ya.notify({ title = "preview-fullscreen", content = "toggling to fullscreen", timeout = 2, level = "info" })
         ya.manager_emit("resize", { 0, 0, 1 })
       else
-        ya.dbg("preview-fullscreen: restoring layout")
+        ya.notify({ title = "preview-fullscreen", content = "restoring layout", timeout = 2, level = "info" })
         ya.manager_emit("resize", { 0, 3, 4 })
       end
     else
-      ya.dbg("preview-fullscreen: no extension found")
+      ya.notify({ title = "preview-fullscreen", content = "no extension found", timeout = 2, level = "info" })
     end
   end,
 }
