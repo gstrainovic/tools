@@ -35,11 +35,14 @@ return {
                        ext == "pdf"
 
     if is_preview then
-      ya.notify({ title = "preview-fullscreen", content = "✅ resizing to [0,0,1] fullscreen", timeout = 2, level = "info" })
+      ya.notify({ title = "preview-fullscreen", content = "✅ attempting fullscreen [0,0,1]", timeout = 2, level = "info" })
+      -- Try both methods
       ya.manager_emit("resize", { 0, 0, 1 })
+      ya.emit("resize", { 0, 0, 1 })  -- Alternative method
     else
       ya.notify({ title = "preview-fullscreen", content = "restoring [0,3,4] normal", timeout = 2, level = "info" })
       ya.manager_emit("resize", { 0, 3, 4 })
+      ya.emit("resize", { 0, 3, 4 })  -- Alternative method
     end
   end,
 }
