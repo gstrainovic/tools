@@ -4,5 +4,3 @@ require("yafg"):setup({
   file_arg_format = "+{row} {file}",
 })
 
--- Preview fullscreen plugin — toggle with Ctrl+P
-require("preview-fullscreen")

@@ -1,6 +1,20 @@
 --- @sync entry
 return {
 	entry = function(st, job)
+		local arg = job and job.args and job.args[1]
+
+		-- Reset: restore original layout
+		if arg == "reset" then
+			if st.old then
+				Tab.layout = st.old
+				st.old = nil
+				st.parent, st.current, st.preview = nil, nil, nil
+				ui.render()
+			end
+			return
+		end
+
+		-- Force max preview (idempotent)
 		local R = rt.mgr.ratio
 		st.parent = st.parent or R.parent
 		st.current = st.current or R.current
