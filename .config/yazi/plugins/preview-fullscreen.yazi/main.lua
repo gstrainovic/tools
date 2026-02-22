@@ -39,4 +39,9 @@ return {
       ya.notify({ title = "preview-fullscreen", content = "no extension found", timeout = 2, level = "info" })
     end
   end,
+
+  watcher = function(self)
+    -- This will test if yazi calls watcher hooks on hover changes
+    ya.notify({ title = "preview-fullscreen", content = "watcher tick", timeout = 1, level = "info" })
+  end,
 }
