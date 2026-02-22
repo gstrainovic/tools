@@ -27,6 +27,7 @@ Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, ide, n
 | `tui-screenshot-skill.md` | Claude-Skill-Dokumentation für tui-screenshot |
 | `mcps.json` | MCP-Server-Konfigurationen (aus `~/.claude.json`) |
 | `.config/yazi/` | Yazi-Konfiguration (symlinked nach `~/.config/yazi/`) |
+| `yazi-debug-session` | Yazi mit fester Client-ID 1337 + Debug-Logging starten |
 | `.config/wezterm/wezterm.lua` | WezTerm-Config: Keybindings + Screenshot-Trigger |
 
 ## WezTerm Keybindings
@@ -86,6 +87,22 @@ Sixel/Kitty-Pixel-Grafiken werden vom Terminal-Emulator außerhalb des tmux-Buff
 2. tmux2png SESSION_NAME            # PNG erzeugen
 3. Read-Tool → /tmp/tmux-*.png     # PNG in Claude Code anzeigen
 ```
+
+## Yazi Debugging (Claude-Workflow)
+
+Yazi läuft **NICHT** in headless tmux (Terminal response timeout). User startet yazi im echten Terminal.
+
+```bash
+# User startet (einmalig):
+yazi-debug-session ~/pfad
+
+# Claude kann dann:
+ya emit-to 1337 plugin max-preview       # Plugin triggern
+tail -20 ~/.local/state/yazi/yazi.log              # Errors lesen
+tmux2png SESSION_NAME                              # Layout-Screenshot
+```
+
+**Wichtig:** Plugin-Argumente IMMER mit `--args=` angeben. `ya emit-to 1337 plugin NAME` ohne args tut bei vielen Plugins nichts.
 
 ## Skill
 

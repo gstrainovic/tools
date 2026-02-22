@@ -1,0 +1,18 @@
+#!/bin/bash
+# yazi-debug-session — Startet yazi mit fester Client-ID und aktivem Logging
+# Verwendung: yazi-debug-session [VERZEICHNIS]
+#
+# Claude kann dann Plugins testen via:
+#   ya emit-to 1337 plugin PLUGIN_NAME --args=...
+# Logs lesen:
+#   tail -f ~/.local/state/yazi/yazi.log
+
+DIR="${1:-$HOME}"
+CLIENT_ID=1337
+
+echo "Starte yazi mit Client-ID $CLIENT_ID"
+echo "Plugin-Befehle senden: ya emit-to $CLIENT_ID plugin PLUGIN --args=..."
+echo "Logs: tail -f ~/.local/state/yazi/yazi.log"
+echo ""
+
+YAZI_LOG=debug yazi --client-id "$CLIENT_ID" "$DIR"
