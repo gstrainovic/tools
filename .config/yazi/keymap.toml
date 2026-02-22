@@ -21,9 +21,6 @@ prepend_keymap = [
     # Fuzzy grep (rg + fzf) — opens result in nvim
     { on = "<C-f>", run = "plugin yafg", desc = "Fuzzy grep (rg+fzf)" },
 
-    # ESC: Reset to 2-panel layout + normal escape behavior
-    { on = "<Esc>", run = ["plugin preview-force-max -- reset", "escape"], desc = "Reset to 2-panel / Escape" },
-    
     # Quick flat view
     { on = ["g", "f"], run = "search_do --via=fd --args='-d 1'", desc = "Flat view (depth 1)" },
     
