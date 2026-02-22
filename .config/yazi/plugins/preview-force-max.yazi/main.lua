@@ -3,14 +3,21 @@ return {
 	entry = function(st, job)
 		local arg = job and job.args and job.args[1]
 
-		-- Reset: restore original layout
+		-- Reset: restore original layout from rt.mgr.ratio (yazi.toml values)
 		if arg == "reset" then
-			if st.old then
-				Tab.layout = st.old
-				st.old = nil
-				st.parent, st.current, st.preview = nil, nil, nil
-				ui.render()
+			Tab.layout = function(self)
+				local R = rt.mgr.ratio
+				local all = R.parent + R.current + R.preview
+				self._chunks = ui.Layout()
+					:direction(ui.Layout.HORIZONTAL)
+					:constraints({
+						ui.Constraint.Ratio(R.parent, all),
+						ui.Constraint.Ratio(R.current, all),
+						ui.Constraint.Ratio(R.preview, all),
+					})
+					:split(self._area)
 			end
+			ui.render()
 			return
 		end
 
