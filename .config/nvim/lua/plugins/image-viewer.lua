@@ -26,15 +26,15 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     local reveal_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
     local reveal_ok = vim.v.shell_error == 0
 
-    -- If reveal succeeded, trigger fullscreen preview in yazi
+    -- If reveal succeeded, trigger fullscreen preview using max-preview plugin
     if reveal_ok then
       vim.defer_fn(function()
-        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "preview-fullscreen" })
+        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "max-preview" })
         local plugin_ok = vim.v.shell_error == 0
         if not plugin_ok then
-          vim.notify("⚠️ Plugin fullscreen failed: " .. tostring(plugin_result), vim.log.levels.WARN)
+          vim.notify("⚠️ max-preview plugin failed", vim.log.levels.WARN)
         end
-      end, 200)  -- Increased delay to 200ms
+      end, 200)
     end
 
     vim.schedule(function()
