@@ -80,7 +80,7 @@ fi
 echo ""
 echo "--- Scripts ---"
 # Plattformübergreifende Scripts
-for script in ide nvim-ide-open nvim-split wez-send-key; do
+for script in img-preview wez-send-key; do
     cp "$SCRIPT_DIR/$script" "$BIN_DIR/$script"
     chmod +x "$BIN_DIR/$script" 2>/dev/null || true
     echo "$script -> $BIN_DIR/$script"
@@ -153,7 +153,7 @@ echo ""
 echo "Naechste Schritte:"
 echo "  1. Neues Terminal oeffnen (damit PATH aktualisiert ist)"
 echo "  2. Claude Code neu starten (damit MCPs geladen werden)"
-echo "  3. Test: ide ~/projekte"
+echo "  3. Test: img-preview /path/to/image.png"
 if ! $IS_WINDOWS; then
     echo "  4. Test: tmux2png"
 fi
