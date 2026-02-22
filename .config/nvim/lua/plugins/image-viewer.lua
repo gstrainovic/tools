@@ -31,13 +31,14 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
       vim.defer_fn(function()
         -- Reset to normal layout first (no-args = reset), then set to max-preview
         -- This ensures idempotent behavior regardless of current toggle state
+        -- Shorter delay (100ms) minimizes visible toggle flicker
         vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane" })
         local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane", "max-preview" })
         local plugin_ok = vim.v.shell_error == 0
         if not plugin_ok then
           vim.notify("⚠️ toggle-pane plugin failed", vim.log.levels.WARN)
         end
-      end, 200)
+      end, 100)
     end
 
     vim.schedule(function()
