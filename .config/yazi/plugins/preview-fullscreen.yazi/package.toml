@@ -1,0 +1,9 @@
+[package]
+name = "preview-fullscreen"
+version = "0.1.0"
+description = "Auto-fullscreen preview for images and PDFs"
+authors = ["user"]
+
+[[package.deps]]
+use = "mikavilpas/yazi.nvim"
+optional = true
