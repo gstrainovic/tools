@@ -8,7 +8,7 @@ Dieses Verzeichnis enthält Hilfsmittel zum Steuern und Beobachten von Terminal-
 bash ~/tools/setup.sh
 ```
 
-Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, ide, nvim-ide-open, yazi-Config, Skill und MCP-Config.
+Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, img-preview, yazi-Config, Skill und MCP-Config.
 
 **Voraussetzungen:** `uv`, `cargo`, `go`, WezTerm, yazi, neovim.
 
@@ -16,9 +16,7 @@ Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, ide, n
 
 | Datei | Beschreibung |
 |-------|-------------|
-| `ide` | WezTerm-Layout: yazi (30%) + nvim (70%) als Split |
-| `nvim-ide-open` | Datei an laufenden nvim-Server senden (yazi-Opener) |
-| `nvim-split` | Nvim als rechten WezTerm-Split öffnen (Claude-Modus) |
+| `img-preview` | Bild/PDF im Terminal anzeigen via wezterm imgcat |
 | `wez-send-key` | Tastendrücke an WezTerm-Pane senden (nvim-Notation) |
 | `wez-screenshot` | XDG Portal Screenshot (GNOME Wayland, echte Pixel) |
 | `wez-screenshot-windows.ps1` | Screenshot für Windows |
@@ -34,22 +32,7 @@ Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, ide, n
 
 | Shortcut | Aktion |
 |----------|--------|
-| `Ctrl+Shift+Z` | Pane Zoom Toggle (yazi aus-/einblenden) |
 | `Ctrl+Shift+S` | Screenshot via XDG Portal (nur Linux) |
-
-## IDE-Modus: yazi + nvim (WezTerm Split)
-
-```
-┌──────────────┬───────────────────────────┐
-│  yazi (30%)  │      nvim (70%)           │
-│  Datei-      │      --listen             │
-│  Browser     │      /tmp/nvim-ide.sock   │
-└──────────────┴───────────────────────────┘
-```
-
-- `ide [dir]` startet das Layout
-- Dateien in yazi öffnen sich automatisch im nvim-Split via `nvim-ide-open`
-- Socket: `/tmp/nvim-ide.sock`
 
 ## tmux2png
 
