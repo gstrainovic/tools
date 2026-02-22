@@ -26,19 +26,16 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
     local reveal_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "reveal", "--", filepath })
     local reveal_ok = vim.v.shell_error == 0
 
-    -- If reveal succeeded, force fullscreen preview (idempotent: reset then set)
+    -- If reveal succeeded, force fullscreen preview (single idempotent call)
     if reveal_ok then
       vim.defer_fn(function()
-        -- Reset to normal layout first (no-args = reset), then set to max-preview
-        -- This ensures idempotent behavior regardless of current toggle state
-        -- Shorter delay (100ms) minimizes visible toggle flicker
-        vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane" })
-        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "toggle-pane", "max-preview" })
+        -- preview-force-max: idempotent plugin that always sets fullscreen (no toggle logic)
+        local plugin_result = vim.fn.system({ "ya", "emit-to", YAZI_IDE_ID, "plugin", "preview-force-max" })
         local plugin_ok = vim.v.shell_error == 0
         if not plugin_ok then
-          vim.notify("⚠️ toggle-pane plugin failed", vim.log.levels.WARN)
+          vim.notify("⚠️ preview-force-max plugin failed", vim.log.levels.WARN)
         end
-      end, 100)
+      end, 50)
     end
 
     vim.schedule(function()
@@ -48,7 +45,7 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
       end
 
       if reveal_ok then
-        vim.notify("🖼️  Preview: " .. vim.fn.fnamemodify(filepath, ":t") .. " (layout toggle in 200ms)", vim.log.levels.INFO)
+        vim.notify("🖼️  Preview: " .. vim.fn.fnamemodify(filepath, ":t") .. " (fullscreen)", vim.log.levels.INFO)
       else
         vim.notify("❌ yazi nicht erreichbar (YAZI_IDE_ID=" .. YAZI_IDE_ID .. ")", vim.log.levels.WARN)
       end
