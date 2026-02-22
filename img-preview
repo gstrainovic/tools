@@ -44,4 +44,6 @@ case "$EXT" in
         ;;
 esac
 
+echo ""
+echo "[any key to close]"
 read -n 1 -s -r
