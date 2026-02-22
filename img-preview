@@ -1,0 +1,47 @@
+#!/bin/bash
+# img-preview — Bild/PDF im Terminal anzeigen via wezterm imgcat
+# Usage: img-preview [--dry-run] FILE
+set -euo pipefail
+
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+    DRY_RUN=true
+    shift
+fi
+
+FILE="${1:-}"
+
+if [[ -z "$FILE" ]]; then
+    echo "Usage: img-preview [--dry-run] FILE" >&2
+    exit 1
+fi
+
+if [[ ! -f "$FILE" ]] && [[ "$DRY_RUN" == false ]]; then
+    echo "Error: file not found: $FILE" >&2
+    exit 1
+fi
+
+EXT="${FILE##*.}"
+EXT="${EXT,,}"
+
+case "$EXT" in
+    pdf)
+        if [[ "$DRY_RUN" == true ]]; then
+            echo "pdftoppm + imgcat: $FILE"
+            exit 0
+        fi
+        TMP=$(mktemp /tmp/img-preview-XXXXX.png)
+        trap 'rm -f "$TMP"' EXIT
+        pdftoppm -png -f 1 -l 1 -singlefile "$FILE" "${TMP%.png}"
+        wezterm imgcat "$TMP"
+        ;;
+    *)
+        if [[ "$DRY_RUN" == true ]]; then
+            echo "imgcat: $FILE"
+            exit 0
+        fi
+        wezterm imgcat "$FILE"
+        ;;
+esac
+
+read -n 1 -s -r
