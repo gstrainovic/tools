@@ -48,6 +48,54 @@ tmux2png lazyvim /tmp/out.png   # mit Ausgabepfad
 **LIMITATION: Erfasst NUR den Text-Layer (ANSI-Zeichen/Farben).**
 Sixel/Kitty-Pixel-Grafiken werden vom Terminal-Emulator außerhalb des tmux-Buffers gerendert → NICHT sichtbar in tmux2png.
 
+## Windows-spezifische Hinweise
+
+### Tool-Verfügbarkeit auf Windows (Stand Feb 2026)
+| Tool | Verfügbar | Notiz |
+|------|-----------|-------|
+| `cargo` (Rust) | ✅ | via scoop/rustup |
+| `uv` (Python) | ✅ | ~/.local/bin/uv |
+| `wkhtmltoimage` | ✅ | via scoop |
+| `python3` | ✅ | via scoop |
+| `wezterm` | ✅ | via scoop |
+| `go` | ❌ | nicht installiert → neovim-mcp Go-Binary nicht buildbar |
+| `tmux` | ❌ | nicht installiert → tmux2png nicht nutzbar |
+| `libsixel` | ❌ | nicht via scoop/winget → sixelview.nvim funktioniert NICHT auf Windows |
+
+### mcp-neovim-server (npm) — NICHT VERWENDEN auf Windows
+Das npm-Paket `mcp-neovim-server` (v0.5.5) funktioniert **nicht** auf Windows:
+- Es verwendet Unix-Sockets intern (neovim npm-Paket)
+- TCP-Verbindungen (`127.0.0.1:PORT`) werden abgelehnt mit `ERR_STREAM_PREMATURE_CLOSE`
+- Named Pipes funktionieren nicht mit `--listen \\.\pipe\name` (nvim erkennt Pfad nicht)
+- Stattdessen: `neovim-mcp` Go-Binary oder `mcp-tui-driver` verwenden
+
+### WezTerm als Terminal auf Windows — PROBLEMATISCH
+Der WezTerm-CLI-Ansatz hat auf Windows fundamentale Probleme:
+- `wezterm cli list` funktioniert **nur wenn Claude Code selbst IN WezTerm läuft**
+- Aus Git Bash heraus schlägt es fehl: `failed to connect to Socket("gui-sock-XXXXX")`
+- WezTerm-Fenster crasht wenn Claude Code außerhalb läuft und CLI nutzt
+- Screenshots via PowerShell `CopyFromScreen` sind möglich, aber erfordern Fokus-Wechsel
+
+**Empfehlung:** `mcp-tui-driver` verwenden (Rust, via cargo buildbar) — stabiler auf Windows.
+
+### nvim Socket auf Windows
+- nvim mit TCP starten: `nvim --listen 127.0.0.1:6666` (explizit IPv4, **nicht** `localhost:6666`)
+- `localhost:6666` löst auf Windows zu IPv6 `[::1]:6666` auf → Verbindungsprobleme
+- RPC-Befehle senden: `nvim --server 127.0.0.1:6666 --remote-send '<Key>'`
+
+### mcp-tui-driver auf Windows installieren (empfohlen)
+```bash
+cargo install --git https://github.com/michaellee8/mcp-tui-driver
+# Binary liegt dann unter: ~/.cargo/bin/mcp-tui-driver
+```
+MCP in ~/.claude.json eintragen:
+```json
+"tui-driver": {
+  "command": "C:\\Users\\g.strainovic\\.cargo\\bin\\mcp-tui-driver.exe",
+  "args": []
+}
+```
+
 ## MCPs für Terminal-Automation
 
 ### tmux-mcp (`npx -y tmux-mcp`)
