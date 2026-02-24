@@ -10,5 +10,5 @@
 | CudaText | Nein       | Nein        | Ja          | Ja             |           |
 | Kate     | Ja         | Nein        | Nein        | Ja             |           |
 | Fresh    | Ja         | Nein        | Nein        | Ja             |           |
-| Helix    | Nein       | Nein        | Nein        |                |           |
-| LazyVim  | Ja         |             |             | Ja             |           |
+| Helix    | Nein       | Nein        | Nein        | Ja             |           |
+| LazyVim  | Ja         | Ja (Plugin) | Ja (Plugin) | Ja             | PDF/PNG via snacks.nvim image, benötigt Kitty-Terminal + ImageMagick |
