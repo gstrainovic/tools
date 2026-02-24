@@ -5,4 +5,5 @@ return {
   -- mini.pairs: Auto-Klammern-Pairing — oft störender als hilfreich
   -- Auskommentieren wenn gewünscht:
   -- { "echasnovski/mini.pairs", enabled = false },
+
 }
