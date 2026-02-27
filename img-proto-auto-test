@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# img-proto-auto-test — non-interaktiv, für automatisierte Auswertung
+# WICHTIG: Direkt in WezTerm ausführen — NICHT in tmux!
+
+if [[ -n "$TMUX" ]]; then
+  echo "⚠️  WARNUNG: Du bist in tmux — Bildprotokolle funktionieren hier nicht!"
+  exit 1
+fi
+
+IMG="${1:-$(ls -t ~/Bilder/Bildschirmfotos/*.png 2>/dev/null | head -1)}"
+PAUSE="${2:-2}"  # Sekunden zwischen Tests (default 2)
+
+move()  { printf "\033[%d;%dH" "$1" "$2"; }
+clear_screen() { printf "\033[2J\033[H"; }
+bold()  { printf "\033[1m%s\033[0m" "$1"; }
+red()   { printf "\033[31m%s\033[0m" "$1"; }
+green() { printf "\033[32m%s\033[0m" "$1"; }
+cyan()  { printf "\033[36m%s\033[0m" "$1"; }
+
+W=30; H=10
+TIMG() { timg -p"$1" -g"${W}x${H}" "$IMG" 2>/dev/null; }
+
+header() {
+  move 1 1; bold "TEST $1 | Proto: $(cyan "$2") | $3"
+  move 2 1; bold "$(printf '─%.0s' $(seq 1 60))"
+}
+
+proto_name() {
+  case "$1" in i) echo "iTerm2";; k) echo "Kitty";; s) echo "Sixel";; esac
+}
+
+for proto in i k s; do
+  pname=$(proto_name "$proto")
+
+  # ── Test A: Absolute Position ──────────────────────────────────────────
+  clear_screen
+  header "A" "$pname" "Absolute Positionierung"
+  move 4 1;  echo "  ┌$(printf '─%.0s' $(seq 1 $W))┐  ← Bild-Rahmen (Row 5)"
+  move $((5+H)) 1; echo "  └$(printf '─%.0s' $(seq 1 $W))┘  ← untere Kante"
+  move $((5+H+1)) 1; green "  MARKER_UNTER_RAHMEN"
+  move 5 3; TIMG "$proto"
+  sleep "$PAUSE"
+
+  # ── Test B: Text neben Bild ────────────────────────────────────────────
+  clear_screen
+  header "B" "$pname" "Text neben Bild"
+  move 4 1; echo "  Bild Col 2 | Text Col $((W+6))"
+  for i in $(seq 1 $H); do
+    move $((4+i)) $((W+6))
+    green "TEXTZEILE_$i"
+  done
+  move 5 2; TIMG "$proto"
+  sleep "$PAUSE"
+
+  # ── Test C: Zwei Bilder nebeneinander ──────────────────────────────────
+  clear_screen
+  header "C" "$pname" "Zwei Bilder nebeneinander"
+  move 4 $((W/2+2)); cyan "GRENZE"
+  move 5 2;           TIMG "$proto"
+  move 5 $((W+5));    TIMG "$proto"
+  move $((5+H+1)) 1;  green "MARKER_UNTER_BEIDEN"
+  sleep "$PAUSE"
+
+  # ── Test D: Text Sandwich ──────────────────────────────────────────────
+  clear_screen
+  header "D" "$pname" "Text über & unter Bild"
+  move 4 1; red "MARKER_OBEN"
+  move 5 2; TIMG "$proto"
+  green "MARKER_DIREKT_UNTEN"
+  echo ""
+  echo "  (keine Lücke erwartet)"
+  sleep "$PAUSE"
+
+  # ── Test E: Cursor nach Render ─────────────────────────────────────────
+  clear_screen
+  header "E" "$pname" "Cursor-Position nach Render"
+  move 5 2; TIMG "$proto"
+  printf "$(green "█CURSOR_HIER")"
+  move $((5+H+2)) 1; green "MARKER_REFERENZ_ZEILE_$((5+H))"
+  sleep "$PAUSE"
+
+done
+
+clear_screen
+move 3 1; bold "Alle Tests abgeschlossen."

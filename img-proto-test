@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# img-proto-test — Vergleich der drei Terminal-Bildprotokolle
+# Usage: img-proto-test [BILD]
+# WICHTIG: Direkt in WezTerm ausführen — NICHT in tmux (Protokolle werden dort gefiltert!)
+
+if [[ -n "$TMUX" ]]; then
+  echo "⚠️  WARNUNG: Du bist in tmux — Bildprotokolle funktionieren hier nicht!"
+  echo "   Starte das Script direkt in WezTerm (außerhalb von tmux)."
+  exit 1
+fi
+
+IMG="${1:-$(ls -t ~/Bilder/Bildschirmfotos/*.png 2>/dev/null | head -1)}"
+
+if [[ -z "$IMG" || ! -f "$IMG" ]]; then
+  echo "Kein Bild gefunden. Usage: img-proto-test [BILD]"
+  exit 1
+fi
+
+echo "Testbild: $IMG"
+echo "Größe:    $(du -h "$IMG" | cut -f1)"
+echo ""
+
+run_test() {
+  local name="$1"
+  local cmd="$2"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  Protokoll: $name"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  local start end elapsed
+  start=$(date +%s%N)
+  eval "$cmd"
+  end=$(date +%s%N)
+  elapsed=$(( (end - start) / 1000000 ))
+  echo ""
+  echo "  ⏱  ${elapsed}ms"
+  echo ""
+  read -r -p "  [Enter] weiter, [q] abbrechen: " key
+  [[ "$key" == "q" ]] && exit 0
+}
+
+run_test "iTerm2 / OSC 1337  (wezterm imgcat)" "wezterm imgcat \"$IMG\""
+run_test "Kitty Graphics Protocol              (timg -pk)" "timg -pk --fit-width \"$IMG\""
+run_test "Sixel                                (timg -ps)" "timg -ps --fit-width \"$IMG\""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Fertig."
