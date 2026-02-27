@@ -1,0 +1,2 @@
+-- Auto-load: deferred setup after snacks.nvim initializes
+-- The actual setup is triggered via lazy.nvim config function or opts
