@@ -29,11 +29,7 @@ W=30  # Bildbreite in Zellen
 H=12  # Bildhöhe in Zellen
 
 TIMG_PROTO() {
-  case "$1" in
-    i) wezterm imgcat --width "$W" --height "$H" "$IMG" ;;
-    k) timg -pk -g"${W}x${H}" "$IMG" 2>/dev/null ;;
-    s) timg -ps -g"${W}x${H}" "$IMG" 2>/dev/null ;;
-  esac
+  timg -p"$1" -g"${W}x${H}" "$IMG" 2>/dev/null
 }
 
 wait_key() {

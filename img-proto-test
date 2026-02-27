@@ -38,9 +38,9 @@ run_test() {
   [[ "$key" == "q" ]] && exit 0
 }
 
-run_test "iTerm2 / OSC 1337  (wezterm imgcat)" "wezterm imgcat --width 80 \"$IMG\""
-run_test "Kitty Graphics Protocol              (timg -pk)" "timg -pk --fit-width \"$IMG\""
-run_test "Sixel                                (timg -ps)" "timg -ps --fit-width \"$IMG\""
+run_test "iTerm2 / OSC 1337  (timg -pi)" "timg -pi --fit-width \"$IMG\""
+run_test "Kitty Graphics Protocol (timg -pk)"  "timg -pk --fit-width \"$IMG\""
+run_test "Sixel                   (timg -ps)"  "timg -ps --fit-width \"$IMG\""
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Fertig."
