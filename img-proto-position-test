@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# img-proto-position-test — WezTerm Positioning-Bugs erkennen
+# Testet: absolute Position, Text neben Bild, zwei Bilder nebeneinander, Text nach Bild
+# Usage: img-proto-position-test [BILD]
+
+if [[ -n "$TMUX" ]]; then
+  echo "⚠️  WARNUNG: Du bist in tmux — Bildprotokolle funktionieren hier nicht!"
+  echo "   Starte das Script direkt in WezTerm (außerhalb von tmux)."
+  exit 1
+fi
+
+IMG="${1:-$(ls -t ~/Bilder/Bildschirmfotos/*.png 2>/dev/null | head -1)}"
+
+if [[ -z "$IMG" || ! -f "$IMG" ]]; then
+  echo "Kein Bild. Usage: img-proto-position-test [BILD]"
+  exit 1
+fi
+
+# ── Hilfsfunktionen ────────────────────────────────────────────────────────────
+move()  { printf "\033[%d;%dH" "$1" "$2"; }   # Cursor zu Row Col
+save()  { printf "\033[s"; }
+restore() { printf "\033[u"; }
+clear_screen() { printf "\033[2J\033[H"; }
+bold()  { printf "\033[1m%s\033[0m" "$1"; }
+red()   { printf "\033[31m%s\033[0m" "$1"; }
+green() { printf "\033[32m%s\033[0m" "$1"; }
+cyan()  { printf "\033[36m%s\033[0m" "$1"; }
+W=30  # Bildbreite in Zellen
+H=12  # Bildhöhe in Zellen
+
+TIMG_PROTO() {
+  case "$1" in
+    i) wezterm imgcat "$IMG" ;;
+    k) timg -pk -g"${W}x${H}" "$IMG" 2>/dev/null ;;
+    s) timg -ps -g"${W}x${H}" "$IMG" 2>/dev/null ;;
+  esac
+}
+
+wait_key() {
+  echo ""
+  printf "\033[$(tput lines);1H"
+  read -r -p "  $(cyan "[Enter]") weiter  $(red "[q]") beenden: " key
+  [[ "$key" == "q" ]] && { clear_screen; exit 0; }
+}
+
+show_header() {
+  move 1 1
+  bold "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  move 2 1
+  bold "  TEST $1/$TOTAL  |  Protokoll: $(cyan "$PROTO_NAME")  |  $2"
+  move 3 1
+  bold "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+run_all_protocols() {
+  local test_fn="$1"
+  local title="$2"
+  for proto in i k s; do
+    case "$proto" in
+      i) PROTO_NAME="iTerm2 (OSC 1337)" ;;
+      k) PROTO_NAME="Kitty (KGP)" ;;
+      s) PROTO_NAME="Sixel" ;;
+    esac
+    clear_screen
+    show_header "$TEST_NUM" "$title"
+    $test_fn "$proto"
+    wait_key
+    (( TEST_NUM++ ))
+  done
+}
+
+TIMG() { TIMG_PROTO "$1"; }
+
+# ── TEST A: Bild an absoluter Position ─────────────────────────────────────────
+test_absolute() {
+  local p="$1"
+  move 5 1
+  echo "  ┌$(printf '─%.0s' $(seq 1 $W))┐  ← Bild sollte hier erscheinen (Row 6, Col 3)"
+  move 6 1
+  printf "  │"
+  move $((6+H)) 1
+  echo "  └$(printf '─%.0s' $(seq 1 $W))┘"
+  move $((6+H+1)) 1
+  echo "  ↑ untere Kante des Rahmens"
+  # Bild in den Rahmen positionieren
+  move 6 3
+  TIMG "$p"
+  move $((6+H+2)) 1
+  green "  Erwartung: Bild füllt exakt den Rahmen. Überstand = Bug."
+}
+
+# ── TEST B: Text neben Bild ─────────────────────────────────────────────────────
+test_text_beside() {
+  local p="$1"
+  move 5 1
+  echo "  Bild links (Col 2), Text rechts (Col $((W+5))) — überschreibt Bild den Text?"
+  move 6 2
+  TIMG "$p" &
+  local timg_pid=$!
+  # Text rechts daneben schreiben während timg rendert
+  for i in $(seq 1 $H); do
+    move $((5+i)) $((W+5))
+    printf "$(green "◄ TEXT ZEILE %2d ►")" "$i"
+  done
+  wait "$timg_pid"
+  move $((6+H+1)) 1
+  green "  Erwartung: Alle TEXT-Zeilen rechts sichtbar, kein Überschreiben."
+}
+
+# ── TEST C: Zwei Bilder nebeneinander ──────────────────────────────────────────
+test_two_images() {
+  local p="$1"
+  local col2=$((W+4))
+  move 5 1
+  echo "  Bild 1 (Col 2)   |   Bild 2 (Col $col2)  — überlappen sie?"
+  move 5 $((W/2))
+  printf "$(cyan "|--- GRENZE ---|")"
+  move 6 2
+  TIMG "$p"
+  move 6 $col2
+  TIMG "$p"
+  move $((6+H+1)) 1
+  green "  Erwartung: Beide Bilder klar getrennt, keine Überlappung."
+}
+
+# ── TEST D: Text oberhalb und unterhalb ────────────────────────────────────────
+test_text_sandwich() {
+  local p="$1"
+  move 5 1
+  red "  ▲▲▲ DIESER TEXT MUSS NACH DEM BILD NOCH SICHTBAR SEIN ▲▲▲"
+  move 6 2
+  TIMG "$p"
+  # Cursor sollte jetzt direkt nach dem Bild sein
+  green "  ▼▼▼ DIESER TEXT SOLL DIREKT UNTER DEM BILD ERSCHEINEN ▼▼▼"
+  echo ""
+  echo "  (kein Leerzeilen-Gap erwartet)"
+}
+
+# ── TEST E: Cursor-Position nach Render ────────────────────────────────────────
+test_cursor_after() {
+  local p="$1"
+  move 5 1
+  echo "  Nach dem Bild wird ein '$(green "█")' direkt gedruckt — wo landet es?"
+  move 6 2
+  save
+  TIMG "$p"
+  # Cursor-Position ausgeben
+  printf "$(green "█") ← Cursor hier nach timg"
+  restore
+  move $((6+H+2)) 1
+  green "  Erwartung: '█' direkt nach letzter Bildzeile, korrekte Spalte."
+}
+
+# ── Hauptprogramm ──────────────────────────────────────────────────────────────
+TOTAL=15  # 5 Tests × 3 Protokolle
+TEST_NUM=1
+
+echo "Testbild: $IMG"
+echo "Größe: $(du -h "$IMG" | cut -f1)   Terminal: $(tput cols)×$(tput lines)"
+echo ""
+echo "Protokolle: iTerm2 → Kitty → Sixel, je 5 Tests"
+read -r -p "$(cyan "[Enter]") starten: " _
+
+run_all_protocols test_absolute       "Absolute Positionierung"
+run_all_protocols test_text_beside    "Text neben Bild"
+run_all_protocols test_two_images     "Zwei Bilder nebeneinander"
+run_all_protocols test_text_sandwich  "Text über & unter Bild"
+run_all_protocols test_cursor_after   "Cursor-Position nach Render"
+
+clear_screen
+move 5 1
+bold "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+move 6 1
+bold "  Alle Tests abgeschlossen."
+move 7 1
+echo "  Notiere welche Protokolle Bugs zeigten:"
+move 8 1
+echo "    i = iTerm2,  k = Kitty,  s = Sixel"
+move 10 1
