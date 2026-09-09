@@ -5,12 +5,6 @@
     "args": ["-y", "tmux-mcp"],
     "env": {}
   },
-  "neovim": {
-    "command": "/home/g/.local/bin/neovim-mcp",
-    "env": {
-      "NVIM_MCP_LISTEN_ADDRESS": "/tmp/nvim.sock"
-    }
-  },
   "tui-driver": {
     "command": "/home/g/.cargo/bin/mcp-tui-driver",
     "args": []

@@ -17,8 +17,8 @@ Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, img-pr
 | Datei | Beschreibung |
 |-------|-------------|
 | `img-preview` | Bild/PDF im Terminal anzeigen via wezterm imgcat |
+| `gui-screenshot` | Vollbild-Screenshot via ydotool Shift+Print (GNOME Wayland) |
 | `wez-send-key` | Tastendrücke an WezTerm-Pane senden (nvim-Notation) |
-| `wez-screenshot` | XDG Portal Screenshot (GNOME Wayland, echte Pixel) |
 | `wez-screenshot-windows.ps1` | Screenshot für Windows |
 | `tmux2png` | tmux-Session → lesbares PNG via tmux2html + wkhtmltoimage |
 | `setup.sh` | Einrichtungs-Script für neuen PC (alles in einem Schritt) |
