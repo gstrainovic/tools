@@ -13,8 +13,14 @@ noch eigenständige Terminal-Scripts.
 | `tmux2png` | tmux-Session oder Pane als PNG rendern |
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
-| `screenshot-msdf.sh` | Headless-Screenshot via Xvfb für ein externes Zig-Projekt |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
+
+Dazu `.bashrc` mit den Shell-Aliasen des Repos. Sie wird nicht kopiert, sondern am Ende
+von `~/.bashrc` gesourced:
+
+```bash
+[ -f "$HOME/projects/tools/.bashrc" ] && source "$HOME/projects/tools/.bashrc"
+```
 
 ### tmux2png
 

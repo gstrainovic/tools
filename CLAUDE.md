@@ -21,7 +21,7 @@ mcp-tui-driver, die Scripts nach `~/.local/bin`, den Claude-Skill und die MCP-Co
 | `tmux2png` | tmux-Session → lesbares PNG via tmux2html + wkhtmltoimage |
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print (GNOME Wayland) |
 | `img-proto-test` | Vergleich der drei Terminal-Bildprotokolle via timg |
-| `screenshot-msdf.sh` | Headless-Screenshot via Xvfb + ImageMagick (für ein Zig-Projekt, hier nur abgelegt) |
+| `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `tui-screenshot-skill.md` | Claude-Skill-Dokumentation für tui-screenshot |
 | `mcps.json` | MCP-Server-Konfigurationen (aus `~/.claude.json`) |
