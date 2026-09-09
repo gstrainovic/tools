@@ -62,6 +62,13 @@ for f in "$ROOT"/*.sh "$ROOT"/tmux2png "$ROOT"/img-proto-test "$ROOT"/tests/*.sh
     fi
 done
 
+# Test 5: .bashrc ist sourcebar (wird von ~/.bashrc eingebunden, kein Script)
+if bash -n "$ROOT/.bashrc" 2>/dev/null; then
+    pass ".bashrc: Syntax ok"
+else
+    fail ".bashrc: Syntax-Fehler"
+fi
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
