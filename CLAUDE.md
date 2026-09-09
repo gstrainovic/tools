@@ -1,111 +1,64 @@
 # Tools — TUI/Terminal Automation
 
-Dieses Verzeichnis enthält Hilfsmittel zum Steuern und Beobachten von Terminal-Anwendungen (nvim, tmux, yazi, TUIs).
+Hilfsmittel zum Steuern und Beobachten von Terminal-Anwendungen unter GNOME Wayland.
+Stack: Ghostty → tmux → TUI-Tools. Reine Terminal-Werkzeuge, keine Editor- oder Dateimanager-Configs.
 
 ## Setup auf neuem PC
 
 ```bash
-bash ~/tools/setup.sh
+bash ~/projects/tools/setup.sh
 ```
 
-Installiert automatisch: tmux2html, mcp-tui-driver, neovim-mcp, tmux2png, img-preview, yazi-Config, Skill und MCP-Config.
+Installiert: System-Pakete (tmux, wkhtmltopdf, timg, ydotool, ImageMagick), tmux2html,
+mcp-tui-driver, die Scripts nach `~/.local/bin`, den Claude-Skill und die MCP-Config.
 
-**Voraussetzungen:** `uv`, `cargo`, `go`, WezTerm, yazi, neovim.
+**Voraussetzungen:** `uv`, `cargo`, `python3`.
 
 ## Dateien
 
 | Datei | Beschreibung |
 |-------|-------------|
-| `img-preview` | Bild/PDF im Terminal anzeigen via wezterm imgcat |
-| `gui-screenshot` | Vollbild-Screenshot via ydotool Shift+Print (GNOME Wayland) |
-| `wez-send-key` | Tastendrücke an WezTerm-Pane senden (nvim-Notation) |
-| `wez-screenshot-windows.ps1` | Screenshot für Windows |
 | `tmux2png` | tmux-Session → lesbares PNG via tmux2html + wkhtmltoimage |
-| `setup.sh` | Einrichtungs-Script für neuen PC (alles in einem Schritt) |
+| `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print (GNOME Wayland) |
+| `img-proto-test` | Vergleich der drei Terminal-Bildprotokolle via timg |
+| `screenshot-msdf.sh` | Headless-Screenshot via Xvfb + ImageMagick (für ein Zig-Projekt, hier nur abgelegt) |
+| `setup.sh` | Einrichtungs-Script für neuen PC |
 | `tui-screenshot-skill.md` | Claude-Skill-Dokumentation für tui-screenshot |
 | `mcps.json` | MCP-Server-Konfigurationen (aus `~/.claude.json`) |
-| `.config/yazi/` | Yazi-Konfiguration (symlinked nach `~/.config/yazi/`) |
-| `yazi-debug-session` | Yazi mit fester Client-ID 1337 + Debug-Logging starten |
-| `.config/wezterm/wezterm.lua` | WezTerm-Config: Keybindings |
-
-## WezTerm Keybindings
-
-| Shortcut | Aktion |
-|----------|--------|
-| `Ctrl+Shift+Z` | Pane Zoom (TogglePaneZoomState) |
+| `tests/` | Konsistenz-Tests für Doku und Scripts |
 
 ## tmux2png
 
 ```bash
 tmux2png                        # aktuelle Session → /tmp/tmux-TIMESTAMP.png
-tmux2png lazyvim                # Session "lazyvim"
-tmux2png lazyvim:0.0            # spezifische Pane
-tmux2png lazyvim /tmp/out.png   # mit Ausgabepfad
+tmux2png dev                    # Session "dev"
+tmux2png dev:0.0                # spezifische Pane
+tmux2png dev /tmp/out.png       # mit Ausgabepfad
 ```
 
 **Intern:** `tmux2html TARGET -o HTML` → `wkhtmltoimage --width 1400 HTML PNG`
 
 **LIMITATION: Erfasst NUR den Text-Layer (ANSI-Zeichen/Farben).**
-Sixel/Kitty-Pixel-Grafiken werden vom Terminal-Emulator außerhalb des tmux-Buffers gerendert → NICHT sichtbar in tmux2png.
+Kitty-Graphics- und Sixel-Pixel werden vom Terminal-Emulator außerhalb des tmux-Buffers
+gerendert → NICHT sichtbar in tmux2png. Für echte Pixel: `gui-screenshot.sh`.
 
-## Windows-spezifische Hinweise
+## gui-screenshot.sh
 
-### Tool-Verfügbarkeit auf Windows (Stand Feb 2026)
-| Tool | Verfügbar | Notiz |
-|------|-----------|-------|
-| `cargo` (Rust) | ✅ | via scoop/rustup |
-| `uv` (Python) | ✅ | ~/.local/bin/uv |
-| `wkhtmltoimage` | ✅ | via scoop |
-| `python3` | ✅ | via scoop |
-| `wezterm` | ✅ | via scoop |
-| `go` | ❌ | nicht installiert → neovim-mcp Go-Binary nicht buildbar |
-| `tmux` | ❌ | nicht installiert → tmux2png nicht nutzbar |
-| `libsixel` | ❌ | nicht via scoop/winget → sixelview.nvim funktioniert NICHT auf Windows |
+Simuliert Shift+Print via ydotool und wartet auf die neue Datei in `~/Bilder/Bildschirmfotos`.
+Startet `ydotoold` bei Bedarf per sudo. `grim` und `gnome-screenshot` funktionieren auf
+GNOME 49 nicht (Portal-Bug `Failed to associate portal window`).
 
-### mcp-neovim-server (npm) — NICHT VERWENDEN auf Windows
-Das npm-Paket `mcp-neovim-server` (v0.5.5) funktioniert **nicht** auf Windows:
-- Es verwendet Unix-Sockets intern (neovim npm-Paket)
-- TCP-Verbindungen (`127.0.0.1:PORT`) werden abgelehnt mit `ERR_STREAM_PREMATURE_CLOSE`
-- Named Pipes funktionieren nicht mit `--listen \\.\pipe\name` (nvim erkennt Pfad nicht)
-- Stattdessen: `neovim-mcp` Go-Binary oder `mcp-tui-driver` verwenden
+## img-proto-test
 
-### WezTerm als Terminal auf Windows — PROBLEMATISCH
-Der WezTerm-CLI-Ansatz hat auf Windows fundamentale Probleme:
-- `wezterm cli list` funktioniert **nur wenn Claude Code selbst IN WezTerm läuft**
-- Aus Git Bash heraus schlägt es fehl: `failed to connect to Socket("gui-sock-XXXXX")`
-- WezTerm-Fenster crasht wenn Claude Code außerhalb läuft und CLI nutzt
-- Screenshots via PowerShell `CopyFromScreen` sind möglich, aber erfordern Fokus-Wechsel
-
-**Empfehlung:** `mcp-tui-driver` verwenden (Rust, via cargo buildbar) — stabiler auf Windows.
-
-### nvim Socket auf Windows
-- nvim mit TCP starten: `nvim --listen 127.0.0.1:6666` (explizit IPv4, **nicht** `localhost:6666`)
-- `localhost:6666` löst auf Windows zu IPv6 `[::1]:6666` auf → Verbindungsprobleme
-- RPC-Befehle senden: `nvim --server 127.0.0.1:6666 --remote-send '<Key>'`
-
-### mcp-tui-driver auf Windows installieren (empfohlen)
-```bash
-cargo install --git https://github.com/michaellee8/mcp-tui-driver
-# Binary liegt dann unter: ~/.cargo/bin/mcp-tui-driver
-```
-MCP in ~/.claude.json eintragen:
-```json
-"tui-driver": {
-  "command": "C:\\Users\\g.strainovic\\.cargo\\bin\\mcp-tui-driver.exe",
-  "args": []
-}
-```
+Zeigt dasselbe Bild nacheinander per iTerm2-Protokoll, Kitty Graphics Protocol und Sixel,
+mit Zeitmessung. **Muss außerhalb von tmux laufen** — tmux filtert die Protokolle weg.
+Ghostty spricht Kitty Graphics Protocol nativ.
 
 ## MCPs für Terminal-Automation
 
 ### tmux-mcp (`npx -y tmux-mcp`)
 - Sessions/Panes auflisten, Output capturen, Befehle ausführen
 - Tools: `list-sessions`, `list-panes`, `capture-pane`, `execute-command`
-
-### neovim-mcp (`~/.local/bin/neovim-mcp`)
-- Neovim direkt über RPC/Socket steuern
-- Socket: `/tmp/nvim.sock` (via `NVIM_MCP_LISTEN_ADDRESS`)
-- Nvim muss mit `--listen /tmp/nvim.sock` gestartet sein
 
 ### tui-driver (`~/.cargo/bin/mcp-tui-driver`)
 - TUI-Apps starten, Key-Events senden, Accessibility-Snapshots
@@ -116,24 +69,18 @@ MCP in ~/.claude.json eintragen:
 ```
 1. tmux ls                          # Session-Namen herausfinden
 2. tmux2png SESSION_NAME            # PNG erzeugen
-3. Read-Tool → /tmp/tmux-*.png     # PNG in Claude Code anzeigen
+3. Read-Tool → /tmp/tmux-*.png      # PNG in Claude Code anzeigen
 ```
 
-## Yazi Debugging (Claude-Workflow)
-
-Yazi läuft **NICHT** in headless tmux (Terminal response timeout). User startet yazi im echten Terminal.
+## Tests
 
 ```bash
-# User startet (einmalig):
-yazi-debug-session ~/pfad
-
-# Claude kann dann:
-ya emit-to 1337 plugin max-preview       # Plugin triggern
-tail -20 ~/.local/state/yazi/yazi.log              # Errors lesen
-tmux2png SESSION_NAME                              # Layout-Screenshot
+bash tests/test-repo-consistency.sh
 ```
 
-**Wichtig:** Plugin-Argumente IMMER mit `--args=` angeben. `ya emit-to 1337 plugin NAME` ohne args tut bei vielen Plugins nichts.
+Prüft, dass Doku und `setup.sh` nur auf real vorhandene Dateien verweisen, dass keine
+Referenzen auf abgeschaffte Tools zurückkommen und dass alle Scripts syntaktisch valide
+und ausführbar sind.
 
 ## Skill
 
