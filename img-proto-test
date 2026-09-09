@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # img-proto-test — Vergleich der drei Terminal-Bildprotokolle
 # Usage: img-proto-test [BILD]
-# WICHTIG: Direkt in WezTerm ausführen — NICHT in tmux (Protokolle werden dort gefiltert!)
+# WICHTIG: Direkt im Terminal ausführen — NICHT in tmux (Protokolle werden dort gefiltert!)
 
 if [[ -n "$TMUX" ]]; then
   echo "⚠️  WARNUNG: Du bist in tmux — Bildprotokolle funktionieren hier nicht!"
-  echo "   Starte das Script direkt in WezTerm (außerhalb von tmux)."
+  echo "   Starte das Script direkt im Terminal (außerhalb von tmux)."
   exit 1
 fi
 
