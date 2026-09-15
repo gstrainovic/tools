@@ -13,6 +13,7 @@ noch eigenständige Terminal-Scripts.
 | `tmux2png` | tmux-Session oder Pane als PNG rendern |
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
+| `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 
 Dazu `.bashrc` mit den Shell-Aliasen des Repos. Sie wird nicht kopiert, sondern am Ende
@@ -53,6 +54,23 @@ img-proto-test [BILD]           # ohne Argument: neuester Screenshot
 
 Zeigt dasselbe Bild per iTerm2-Protokoll, Kitty Graphics Protocol und Sixel mit
 Zeitmessung. Muss außerhalb von tmux laufen.
+
+### mailbox
+
+```bash
+mailbox accounts                           # Konten und Verbindungstest
+mailbox list --unread                      # ungelesene Mails aller Konten
+mailbox read firma 42                      # Kopfzeilen, Anhänge, Text
+mailbox send firma --to x@y.ch --subject "Offerte" --body-file text.txt --attach offerte.pdf
+mailbox reply firma 42 --body-file antwort.txt
+```
+
+Für Agenten gedacht, die Mails im Namen einer Person lesen und senden, während die Person
+dasselbe Postfach in einem normalen Mailprogramm sieht. Liest und schreibt direkt auf dem
+Server: gesendete Mails landen im Ordner «Gesendet», gelesen ist überall gelesen, Antworten
+hängen am Gesprächsfaden. Nur Python-Standardbibliothek. Konten nach der Vorlage
+`mailbox-accounts.example.toml` in `~/.config/mail/accounts.toml`, Passwörter je Konto in
+einer eigenen Datei.
 
 ## Setup
 

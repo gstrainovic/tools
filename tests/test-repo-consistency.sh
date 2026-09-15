@@ -69,6 +69,18 @@ else
     fail ".bashrc: Syntax-Fehler"
 fi
 
+# Test 6: mailbox.py kompiliert und seine Unit-Tests laufen (ohne Netz)
+if python3 -m py_compile "$ROOT/mailbox.py" 2>/dev/null; then
+    pass "mailbox.py: Syntax ok"
+else
+    fail "mailbox.py: Syntax-Fehler"
+fi
+if (cd "$ROOT" && python3 -m unittest -q test_mailbox.py >/dev/null 2>&1); then
+    pass "test_mailbox.py: Unit-Tests grün"
+else
+    fail "test_mailbox.py: Unit-Tests rot"
+fi
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

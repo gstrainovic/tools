@@ -1,0 +1,19 @@
+# Vorlage für ~/.config/mail/accounts.toml (mailbox.py). Ein Abschnitt pro Konto, der Abschnittsname ist der
+# Kontoname in den Befehlen (mailbox list firma). Passwörter NICHT hier eintragen, sondern je Konto in die unter
+# password_file genannte Datei (eine Zeile, chmod 600).
+
+[privat]
+address = "vorname@gmail.com"
+name = "Vorname Nachname"
+imap = "imap.gmail.com"
+smtp = "smtp.gmail.com"
+password_file = "~/.config/mail/privat.pass"   # Google App-Passwort
+sent_folder = ""                               # Gmail legt gesendete Mails selbst ab
+
+[firma]
+address = "info@example.ch"
+name = "Vorname Nachname"
+imap = "mail.infomaniak.com"
+smtp = "mail.infomaniak.com"
+password_file = "~/.config/mail/firma.pass"    # Infomaniak: Gerätekennwort pro Programm
+sent_folder = "Sent"
