@@ -10,7 +10,8 @@ bash ~/projects/tools/setup.sh
 ```
 
 Installiert: System-Pakete (tmux, wkhtmltopdf, timg, ydotool, ImageMagick), tmux2html,
-mcp-tui-driver, die Scripts nach `~/.local/bin`, den Claude-Skill und die MCP-Config.
+mcp-tui-driver, die Scripts nach `~/.local/bin` (mailbox als Verknüpfung), die Konten-Vorlage für mailbox,
+den Claude-Skill und die MCP-Config.
 
 **Voraussetzungen:** `uv`, `cargo`, `python3`.
 
@@ -21,6 +22,9 @@ mcp-tui-driver, die Scripts nach `~/.local/bin`, den Claude-Skill und die MCP-Co
 | `tmux2png` | tmux-Session → lesbares PNG via tmux2html + wkhtmltoimage |
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print (GNOME Wayland) |
 | `img-proto-test` | Vergleich der drei Terminal-Bildprotokolle via timg |
+| `mailbox.py` | Postfächer per IMAP/SMTP lesen und schreiben, als `~/.local/bin/mailbox` verknüpft |
+| `test_mailbox.py` | Unit-Tests für `mailbox.py` ohne Netz (`python3 -m unittest test_mailbox.py`) |
+| `mailbox-accounts.example.toml` | Vorlage für `~/.config/mail/accounts.toml` |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `tui-screenshot-skill.md` | Claude-Skill-Dokumentation für tui-screenshot |
@@ -53,6 +57,24 @@ GNOME 49 nicht (Portal-Bug `Failed to associate portal window`).
 Zeigt dasselbe Bild nacheinander per iTerm2-Protokoll, Kitty Graphics Protocol und Sixel,
 mit Zeitmessung. **Muss außerhalb von tmux laufen** — tmux filtert die Protokolle weg.
 Ghostty spricht Kitty Graphics Protocol nativ.
+
+## mailbox
+
+```bash
+mailbox accounts                                   # Konten und Verbindungstest
+mailbox list [KONTO] --unread                      # ohne KONTO: alle Konten mit Passwortdatei
+mailbox read KONTO UID
+mailbox search KONTO 'SINCE 01-Sep-2026'           # IMAP-Suchsyntax
+mailbox send KONTO --to x@y.ch --subject "…" --body-file text.txt [--attach datei.pdf] [--dry-run]
+mailbox reply KONTO UID --body-file text.txt       # Re:, In-Reply-To und References gesetzt
+mailbox move KONTO UID Trash
+```
+
+Konten in `~/.config/mail/accounts.toml`, Passwörter je Konto in einer eigenen Datei, nie im Repo.
+Gesendete Mails landen per IMAP APPEND im Server-Ordner (`sent_folder`), ein fehlender Ordner wird angelegt.
+Infomaniak vergibt Gerätekennwörter pro Programm (Manager → Adresse → «Geräte verbunden»).
+Python 3.13+: `email.utils.getaddresses` liefert für leere Felder `('', '')`, darum filtert `addresses()` leere
+Kopfzeilen vorher; ohne das weist SMTP die Nachricht mit `SMTPRecipientsRefused: {}` ab.
 
 ## MCPs für Terminal-Automation
 

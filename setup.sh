@@ -58,6 +58,16 @@ install_script tmux2png       tmux2png
 install_script gui-screenshot.sh gui-screenshot
 install_script img-proto-test img-proto-test
 
+# mailbox als Verknüpfung, damit Änderungen im Repo sofort gelten; Konten-Vorlage nur anlegen, wenn keine existiert
+ln -sfn "$SCRIPT_DIR/mailbox.py" "$BIN_DIR/mailbox"
+echo "mailbox.py -> $BIN_DIR/mailbox (Verknüpfung)"
+mkdir -p "$HOME/.config/mail" && chmod 700 "$HOME/.config/mail"
+if [ ! -f "$HOME/.config/mail/accounts.toml" ]; then
+    cp "$SCRIPT_DIR/mailbox-accounts.example.toml" "$HOME/.config/mail/accounts.toml"
+    chmod 600 "$HOME/.config/mail/accounts.toml"
+    echo "Vorlage nach ~/.config/mail/accounts.toml kopiert, Konten und Passwortdateien eintragen"
+fi
+
 # --- Claude Code Skill ---
 echo ""
 echo "--- Claude Code Skill ---"
