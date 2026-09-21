@@ -118,5 +118,24 @@ class Nachrichten(unittest.TestCase):
         self.assertIn("Offerte", line)
 
 
+class Suche(unittest.TestCase):
+    def test_ascii_bleibt_unveraendert(self):
+        self.assertEqual(mb.search_args('SUBJECT "neue Anmeldung"'), (['SUBJECT "neue Anmeldung"'], None))
+
+    def test_umlaut_geht_als_utf8_literal_ans_ende(self):
+        args, literal = mb.search_args('SUBJECT "Prüfung" SINCE 01-Sep-2026')
+        self.assertEqual(args, ["CHARSET", "UTF-8", "SINCE 01-Sep-2026", "SUBJECT"])
+        self.assertEqual(literal, "Prüfung".encode())
+
+    def test_header_mit_feldname(self):
+        args, literal = mb.search_args('HEADER Subject "Rückmeldung"')
+        self.assertEqual(args, ["CHARSET", "UTF-8", "HEADER Subject"])
+        self.assertEqual(literal, "Rückmeldung".encode())
+
+    def test_zwei_umlaut_begriffe_werden_abgelehnt(self):
+        with self.assertRaises(SystemExit):
+            mb.search_args('FROM "Müller" SUBJECT "Prüfung"')
+
+
 if __name__ == "__main__":
     unittest.main()

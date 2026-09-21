@@ -270,11 +270,30 @@ def cmd_folders(accounts: dict[str, Account], args) -> None:
     conn.logout()
 
 
+NON_ASCII_TERM = re.compile(r'((?:HEADER\s+\S+)|\w+)\s+"([^"]*[^\x00-\x7f][^"]*)"', re.IGNORECASE)
+
+
+def search_args(criteria: str) -> tuple[list[str], bytes | None]:
+    """IMAP-Suche als Argumente für conn.uid("search", ...). Ein Begriff mit Umlaut geht als UTF-8-Literal mit
+    CHARSET UTF-8; imaplib hängt das Literal ans Kommandoende, darum wandert der Begriff nach hinten (die Suchschlüssel
+    sind UND-verknüpft, die Reihenfolge ist egal). imaplib kennt nur ein Literal pro Kommando."""
+    matches = list(NON_ASCII_TERM.finditer(criteria))
+    if not matches:
+        return [criteria], None
+    if len(matches) > 1:
+        raise SystemExit("Nur ein Suchbegriff mit Umlaut pro Suche möglich")
+    match = matches[0]
+    rest = (criteria[:match.start()] + criteria[match.end():]).strip()
+    return ["CHARSET", "UTF-8", *([rest] if rest else []), match.group(1)], match.group(2).encode()
+
+
 def list_account(acc: Account, folder: str, unread_only: bool, limit: int, query: str | None = None) -> list[str]:
     conn = imap_connect(acc)
     conn.select(folder, readonly=True)
-    criteria = query or ("UNSEEN" if unread_only else "ALL")
-    status, data = conn.uid("search", None, criteria)
+    args, literal = search_args(query or ("UNSEEN" if unread_only else "ALL"))
+    if literal is not None:
+        conn.literal = literal
+    status, data = conn.uid("search", *args)
     uids = data[0].split() if status == "OK" and data and data[0] else []
     lines = []
     for uid in uids[-limit:][::-1]:
