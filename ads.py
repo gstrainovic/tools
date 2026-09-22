@@ -18,6 +18,8 @@ Befehle:
     ads campaigns [--all]                        Kampagnen (ohne --all ohne entfernte)
     ads query "SELECT ... FROM ..."              beliebige GAQL-Abfrage, eine Zeile pro Ergebnis
     ads remove ID [ID ...] [--dry-run]           Kampagnen entfernen (endgültig, Statistik bleibt)
+    ads create SPEC.json [--validate-only]       Suchkampagne anlegen, immer pausiert, Gesamtbudget mit Enddatum
+    ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
 Konto: --customer 8173987962 oder Umgebungsvariable GOOGLE_ADS_CUSTOMER_ID.
 """
 from __future__ import annotations
@@ -57,6 +59,135 @@ def remove_operations(client, customer_id: str, ids: list[str]):
         op.remove = service.campaign_path(customer_id, cid)
         ops.append(op)
     return ops
+
+
+REQUIRED = ("campaign", "start", "end", "total_budget_chf", "max_cpc_chf", "ad_group", "final_url",
+            "geo_target_constant", "language_constant", "keywords_phrase", "headlines", "descriptions")
+
+
+def check_spec(spec: dict) -> list[str]:
+    """Fehler in einer Kampagnenbeschreibung, leer wenn gültig. Neue Kampagnen starten immer pausiert."""
+    errors = [f"{key} fehlt" for key in REQUIRED if key not in spec]
+    if errors:
+        return errors
+    if spec.get("status", "PAUSED") != "PAUSED":
+        errors.append("status muss PAUSED sein, aktiviert wird erst nach Freigabe mit `ads enable`")
+    if not 3 <= len(spec["headlines"]) <= 15:
+        errors.append("3 bis 15 Titel nötig")
+    if not 2 <= len(spec["descriptions"]) <= 4:
+        errors.append("2 bis 4 Beschreibungen nötig")
+    errors += [f"Titel über 30 Zeichen: {h}" for h in spec["headlines"] if len(h) > 30]
+    errors += [f"Beschreibung über 90 Zeichen: {d}" for d in spec["descriptions"] if len(d) > 90]
+    if not spec["keywords_phrase"]:
+        errors.append("keine Keywords")
+    return errors
+
+
+def micros(chf: float) -> int:
+    return int(round(chf * 1_000_000))
+
+
+def create_operations(c, customer_id: str, spec: dict) -> list:
+    """Budget, Kampagne, Ort, Sprache, Anzeigengruppe, Keywords und Anzeige als eine Transaktion (temporäre IDs)."""
+    ops = []
+
+    def op(kind: str):
+        o = c.get_type("MutateOperation")
+        ops.append(o)
+        return getattr(o, kind).create
+
+    budget_rn = c.get_service("CampaignBudgetService").campaign_budget_path(customer_id, "-1")
+    campaign_rn = c.get_service("CampaignService").campaign_path(customer_id, "-2")
+    group_rn = c.get_service("AdGroupService").ad_group_path(customer_id, "-3")
+
+    b = op("campaign_budget_operation")
+    b.resource_name = budget_rn
+    b.name = f"{spec['campaign']} Gesamtbudget"
+    b.period = c.enums.BudgetPeriodEnum.CUSTOM_PERIOD
+    b.total_amount_micros = micros(spec["total_budget_chf"])
+    b.explicitly_shared = False
+
+    k = op("campaign_operation")
+    k.resource_name = campaign_rn
+    k.name = spec["campaign"]
+    k.status = c.enums.CampaignStatusEnum.PAUSED
+    k.advertising_channel_type = c.enums.AdvertisingChannelTypeEnum.SEARCH
+    k.campaign_budget = budget_rn
+    k.start_date_time = spec["start"]
+    k.end_date_time = spec["end"]
+    k.target_spend.cpc_bid_ceiling_micros = micros(spec["max_cpc_chf"])
+    k.network_settings.target_google_search = True
+    k.network_settings.target_search_network = False
+    k.network_settings.target_content_network = False
+    k.network_settings.target_partner_search_network = False
+    k.contains_eu_political_advertising = c.enums.EuPoliticalAdvertisingStatusEnum.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
+
+    for field, value in (("location", spec["geo_target_constant"]), ("language", spec["language_constant"])):
+        cc = op("campaign_criterion_operation")
+        cc.campaign = campaign_rn
+        getattr(cc, field).__setattr__("geo_target_constant" if field == "location" else "language_constant", value)
+
+    g = op("ad_group_operation")
+    g.resource_name = group_rn
+    g.name = spec["ad_group"]
+    g.campaign = campaign_rn
+    g.status = c.enums.AdGroupStatusEnum.ENABLED
+    g.type_ = c.enums.AdGroupTypeEnum.SEARCH_STANDARD
+    g.cpc_bid_micros = micros(spec["max_cpc_chf"])
+
+    for text in spec["keywords_phrase"]:
+        kw = op("ad_group_criterion_operation")
+        kw.ad_group = group_rn
+        kw.status = c.enums.AdGroupCriterionStatusEnum.ENABLED
+        kw.keyword.text = text
+        kw.keyword.match_type = c.enums.KeywordMatchTypeEnum.PHRASE
+
+    ad = op("ad_group_ad_operation")
+    ad.ad_group = group_rn
+    ad.status = c.enums.AdGroupAdStatusEnum.ENABLED
+    ad.ad.final_urls.append(spec["final_url"])
+    for text in spec["headlines"]:
+        asset = c.get_type("AdTextAsset")
+        asset.text = text
+        ad.ad.responsive_search_ad.headlines.append(asset)
+    for text in spec["descriptions"]:
+        asset = c.get_type("AdTextAsset")
+        asset.text = text
+        ad.ad.responsive_search_ad.descriptions.append(asset)
+    return ops
+
+
+def cmd_create(args) -> None:
+    spec = json.loads(Path(args.spec).read_text())
+    errors = check_spec(spec)
+    if errors:
+        sys.exit("Kampagnenbeschreibung ungültig:\n  " + "\n  ".join(errors))
+    c = client()
+    request = c.get_type("MutateGoogleAdsRequest")
+    request.customer_id = args.customer
+    request.mutate_operations.extend(create_operations(c, args.customer, spec))
+    request.validate_only = args.validate_only
+    response = c.get_service("GoogleAdsService").mutate(request=request)
+    if args.validate_only:
+        print(f"gültig: {len(request.mutate_operations)} Operationen, nichts angelegt")
+        return
+    for r in response.mutate_operation_responses:
+        for field in ("campaign_result", "ad_group_result", "campaign_budget_result"):
+            if r._pb.HasField(field):
+                print(f"angelegt: {getattr(r, field).resource_name}")
+
+
+def set_status(args, status: str) -> None:
+    c = client()
+    ops = []
+    for cid in args.ids:
+        o = c.get_type("CampaignOperation")
+        o.update.resource_name = c.get_service("CampaignService").campaign_path(args.customer, cid)
+        o.update.status = getattr(c.enums.CampaignStatusEnum, status)
+        o.update_mask.paths.append("status")
+        ops.append(o)
+    for r in c.get_service("CampaignService").mutate_campaigns(customer_id=args.customer, operations=ops).results:
+        print(f"{status}: {r.resource_name}")
 
 
 def cmd_login(args) -> None:
@@ -132,8 +263,16 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("ids", nargs="+")
     s.add_argument("--dry-run", action="store_true")
     s.set_defaults(fn=cmd_remove)
+    s = sub.add_parser("create")
+    s.add_argument("spec", help="JSON-Datei mit Kampagne, Budget, Keywords und Anzeige")
+    s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
+    s.set_defaults(fn=cmd_create)
+    for name, status in (("enable", "ENABLED"), ("pause", "PAUSED")):
+        s = sub.add_parser(name)
+        s.add_argument("ids", nargs="+")
+        s.set_defaults(fn=lambda a, st=status: set_status(a, st))
     args = p.parse_args(argv)
-    if args.cmd in ("campaigns", "query", "remove") and not args.customer:
+    if args.cmd not in ("login", "customers") and not args.customer:
         p.error("--customer fehlt (oder GOOGLE_ADS_CUSTOMER_ID setzen)")
     args.fn(args)
 

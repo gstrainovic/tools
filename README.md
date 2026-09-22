@@ -64,6 +64,8 @@ export GOOGLE_ADS_CUSTOMER_ID=8173987962
 ads campaigns [--all]                      # ID, Status, Typ, Budget, Name
 ads query "SELECT campaign.name FROM campaign"
 ads remove ID [ID ...] [--dry-run]
+ads create SPEC.json [--validate-only]     # Suchkampagne, immer pausiert, Gesamtbudget mit Enddatum
+ads enable ID | ads pause ID
 ```
 
 Läuft mit `uv` (Abhängigkeiten im Skriptkopf). Zugang: OAuth-Client «Google Ads CLI» (Desktop) im
