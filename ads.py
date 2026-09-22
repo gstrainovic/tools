@@ -20,6 +20,7 @@ Befehle:
     ads remove ID [ID ...] [--dry-run]           Kampagnen entfernen (endgültig, Statistik bleibt)
     ads create SPEC.json [--validate-only]       Suchkampagne anlegen, immer pausiert, Gesamtbudget mit Enddatum
     ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
+    ads keywords DATEI|-                         Suchvolumen und Klickpreise (Schweiz, Deutsch), braucht Basic
 Konto: --customer 8173987962 oder Umgebungsvariable GOOGLE_ADS_CUSTOMER_ID.
 """
 from __future__ import annotations
@@ -200,6 +201,38 @@ def set_status(args, status: str) -> None:
         print(f"{status}: {r.resource_name}")
 
 
+def keyword_lines(lines) -> list[str]:
+    """Keywords aus einer Datei: eines pro Zeile, # für Kommentare, Gross/Klein egal, jedes nur einmal."""
+    seen, out = set(), []
+    for line in lines:
+        text = line.strip().lower()
+        if text and not text.startswith("#") and text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
+
+
+def cmd_keywords(args) -> None:
+    """Suchvolumen und Klickpreise aus dem Keyword-Planer (braucht API-Zugriffsebene Basic)."""
+    source = sys.stdin if args.file == "-" else open(args.file, encoding="utf-8")
+    keywords = keyword_lines(source)
+    c = client()
+    request = c.get_type("GenerateKeywordHistoricalMetricsRequest")
+    request.customer_id = args.customer
+    request.keywords.extend(keywords)
+    request.language = args.language
+    request.geo_target_constants.append(args.geo)
+    request.keyword_plan_network = c.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH
+    rows = []
+    for r in c.get_service("KeywordPlanIdeaService").generate_keyword_historical_metrics(request=request).results:
+        m = r.keyword_metrics
+        rows.append((m.avg_monthly_searches, r.text, m.competition.name,
+                     m.low_top_of_page_bid_micros / 1e6, m.high_top_of_page_bid_micros / 1e6))
+    print("Suchen/Monat\tWettbewerb\tCPC tief-hoch CHF\tKeyword")
+    for searches, text, comp, low, high in sorted(rows, reverse=True):
+        print(f"{searches}\t{comp}\t{low:.2f}-{high:.2f}\t{text}")
+
+
 def cmd_login(args) -> None:
     from google_auth_oauthlib.flow import InstalledAppFlow
     flow = InstalledAppFlow.from_client_secrets_file(str(CLIENT_SECRET), scopes=[SCOPE])
@@ -277,6 +310,11 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("spec", help="JSON-Datei mit Kampagne, Budget, Keywords und Anzeige")
     s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
     s.set_defaults(fn=cmd_create)
+    s = sub.add_parser("keywords")
+    s.add_argument("file", help="Datei mit einem Keyword pro Zeile, - für stdin")
+    s.add_argument("--geo", default="geoTargetConstants/2756", help="Standard Schweiz")
+    s.add_argument("--language", default="languageConstants/1001", help="Standard Deutsch")
+    s.set_defaults(fn=cmd_keywords)
     for name, status in (("enable", "ENABLED"), ("pause", "PAUSED")):
         s = sub.add_parser(name)
         s.add_argument("ids", nargs="+")
