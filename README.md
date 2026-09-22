@@ -15,6 +15,7 @@ noch eigenständige Terminal-Scripts.
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
+| `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 
 Dazu `.bashrc` mit den Shell-Aliasen des Repos. Sie wird nicht kopiert, sondern am Ende
@@ -71,6 +72,18 @@ ads enable ID | ads pause ID
 Läuft mit `uv` (Abhängigkeiten im Skriptkopf). Zugang: OAuth-Client «Google Ads CLI» (Desktop) im
 Cloud-Projekt `auto-service` (`gen-lang-client-0650867108`), Zugriffsebene der Ads API mindestens Explorer;
 Developer-Tokens gibt es seit 09.09.2026 nicht mehr. Google Ads Scripts sieht Smart-Kampagnen nicht, die API schon.
+
+### bing
+
+```bash
+bing login                                 # einmal: Google-Anmeldung, Refresh-Token nach ~/.config/bing-ads/
+bing campaigns | bing ads
+bing replace-url ALT NEU [--dry-run]
+bing budget ID CHF | bing pause ID | bing enable ID
+```
+
+Developer-Token, Kunden- und Konto-ID in `~/.config/bing-ads/config.toml`; das Konto ist per Google angelegt,
+angemeldet wird mit dem OAuth-Client von `ads`. suds schickt leere Felder mit, darum `blank()` vor jedem Update.
 
 ### mailbox
 
