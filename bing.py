@@ -18,6 +18,8 @@ Befehle:
     bing replace-url ALT NEU [--dry-run]   Ziel-URL in allen Anzeigen ersetzen (exakter Treffer)
     bing budget ID CHF                     Tagesbudget einer Kampagne setzen
     bing pause ID ... | bing enable ID ... Kampagnen anhalten oder einschalten
+    bing report [--period LastThirtyDays]  Einblendungen, Klicks, Kosten pro Kampagne
+    bing network [--set alle|bing]         Suchnetzwerk der Anzeigengruppen (alle = mit DuckDuckGo und Partnern)
 """
 from __future__ import annotations
 
@@ -159,6 +161,80 @@ def cmd_replace_url(args) -> None:
                 svc.UpdateAds(AdGroupId=g.Id, Ads=batch)
 
 
+NETWORKS = {"alle": "OwnedAndOperatedAndSyndicatedSearch", "bing": "OwnedAndOperatedOnly"}
+
+
+def summarize(rows) -> dict:
+    """Einblendungen, Klicks und Kosten pro Kampagne aus den Zeilen des Leistungsberichts."""
+    out: dict = {}
+    for r in rows:
+        imp, clicks, spend = out.get(r["CampaignName"], (0, 0, 0.0))
+        out[r["CampaignName"]] = (imp + int(r["Impressions"]), clicks + int(r["Clicks"]),
+                                  round(spend + float(r["Spend"]), 2))
+    return out
+
+
+def cmd_report(args) -> None:
+    import csv
+    import tempfile
+    from bingads.authorization import AuthorizationData
+    from bingads.service_client import ServiceClient
+    from bingads.v13.reporting import ReportingDownloadParameters, ReportingServiceManager
+    cfg = load_config()
+    auth = oauth()
+    auth.request_oauth_tokens_by_refresh_token(REFRESH.read_text().strip())
+    data = AuthorizationData(account_id=cfg["account_id"], customer_id=cfg["customer_id"],
+                             developer_token=cfg["developer_token"], authentication=auth)
+    reporting = ServiceClient("ReportingService", version=13, authorization_data=data)
+    request = reporting.factory.create("CampaignPerformanceReportRequest")
+    request.Format = "Csv"
+    request.ReportName = "wartungsheft"
+    request.ReturnOnlyCompleteData = False
+    request.ExcludeReportHeader = True
+    request.ExcludeReportFooter = True
+    request.Aggregation = "Summary"
+    scope = reporting.factory.create("AccountThroughCampaignReportScope")
+    scope.AccountIds = {"long": [cfg["account_id"]]}
+    scope.Campaigns = None
+    request.Scope = scope
+    time = reporting.factory.create("ReportTime")
+    time.PredefinedTime = args.period
+    time.CustomDateRangeStart = None
+    time.CustomDateRangeEnd = None
+    time.ReportTimeZone = "AmsterdamBerlinBernRomeStockholmVienna"
+    request.Time = time
+    columns = reporting.factory.create("ArrayOfCampaignPerformanceReportColumn")
+    columns.CampaignPerformanceReportColumn.append(["CampaignName", "CampaignId", "Impressions", "Clicks", "Spend"])
+    request.Columns = columns
+    with tempfile.TemporaryDirectory() as tmp:
+        path = ReportingServiceManager(authorization_data=data).download_file(ReportingDownloadParameters(
+            report_request=request, result_file_directory=tmp, result_file_name="report.csv", overwrite_result_file=True))
+        rows = list(csv.DictReader(open(path, encoding="utf-8-sig"))) if path else []
+    print("Kampagne\tEinblendungen\tKlicks\tKosten CHF")
+    for name, (imp, clicks, spend) in summarize(rows).items():
+        print(f"{name}\t{imp}\t{clicks}\t{spend:.2f}")
+    if not rows:
+        print("(noch keine Daten im Zeitraum)")
+
+
+def cmd_network(args) -> None:
+    svc, cfg = service()
+    for c in campaigns(svc, cfg):
+        if args.id and c.Id != args.id:
+            continue
+        for g in ad_groups(svc, c.Id):
+            if args.set is None:
+                print(f"{c.Name}\t{g.Id}\t{g.Network}")
+                continue
+            update = blank(svc.factory.create("AdGroup"))
+            update.Id = g.Id
+            update.Network = NETWORKS[args.set]
+            batch = svc.factory.create("ArrayOfAdGroup")
+            batch.AdGroup.append(update)
+            svc.UpdateAdGroups(CampaignId=c.Id, AdGroups=batch)
+            print(f"{c.Name}\t{g.Id}\t{g.Network} -> {NETWORKS[args.set]}")
+
+
 def update_campaign(campaign_id: int, **fields) -> None:
     svc, cfg = service()
     c = blank(svc.factory.create("Campaign"))
@@ -187,6 +263,13 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("id", type=int)
     s.add_argument("chf", type=float)
     s.set_defaults(fn=lambda a: update_campaign(a.id, DailyBudget=a.chf, BudgetType="DailyBudgetStandard"))
+    s = sub.add_parser("report")
+    s.add_argument("--period", default="LastThirtyDays", help="Today, Yesterday, LastSevenDays, LastThirtyDays, ThisMonth")
+    s.set_defaults(fn=cmd_report)
+    s = sub.add_parser("network")
+    s.add_argument("--id", type=int, help="nur diese Kampagne")
+    s.add_argument("--set", choices=sorted(NETWORKS), help="alle = Bing plus Partner wie DuckDuckGo, Yahoo, Ecosia")
+    s.set_defaults(fn=cmd_network)
     for name, status in (("pause", "Paused"), ("enable", "Active")):
         s = sub.add_parser(name)
         s.add_argument("ids", nargs="+", type=int)

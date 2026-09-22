@@ -29,5 +29,19 @@ class Config(unittest.TestCase):
             path.unlink()
 
 
+class Networks(unittest.TestCase):
+    def test_kurzname_zu_api_wert(self):
+        self.assertEqual(bing.NETWORKS["alle"], "OwnedAndOperatedAndSyndicatedSearch")
+        self.assertEqual(bing.NETWORKS["bing"], "OwnedAndOperatedOnly")
+
+
+class Summarize(unittest.TestCase):
+    def test_summiert_pro_kampagne(self):
+        rows = [{"CampaignName": "A", "Impressions": "10", "Clicks": "2", "Spend": "1.50"},
+                {"CampaignName": "A", "Impressions": "5", "Clicks": "1", "Spend": "0.70"},
+                {"CampaignName": "B", "Impressions": "0", "Clicks": "0", "Spend": "0"}]
+        self.assertEqual(bing.summarize(rows), {"A": (15, 3, 2.2), "B": (0, 0, 0.0)})
+
+
 if __name__ == "__main__":
     unittest.main()
