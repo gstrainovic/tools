@@ -57,5 +57,14 @@ class CheckSpec(unittest.TestCase):
         self.assertTrue(ads.check_spec({**SPEC, "status": "ENABLED"}))
 
 
+class KeywordLines(unittest.TestCase):
+    def test_leere_zeilen_und_kommentare_fallen_weg(self):
+        self.assertEqual(ads.keyword_lines(["serviceheft app\n", "\n", "# Kommentar\n", "  mfk app  \n"]),
+                         ["serviceheft app", "mfk app"])
+
+    def test_doppelte_nur_einmal(self):
+        self.assertEqual(ads.keyword_lines(["a", "A", "a"]), ["a"])
+
+
 if __name__ == "__main__":
     unittest.main()
