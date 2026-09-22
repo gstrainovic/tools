@@ -49,6 +49,10 @@ class CheckSpec(unittest.TestCase):
         del spec["total_budget_chf"]
         self.assertTrue(any("total_budget_chf" in e for e in ads.check_spec(spec)))
 
+    def test_ausschliessende_keywords_sind_liste(self):
+        self.assertTrue(ads.check_spec({**SPEC, "negative_keywords": "gps"}))
+        self.assertEqual(ads.check_spec({**SPEC, "negative_keywords": ["gps", "fahrtenbuch"]}), [])
+
     def test_startet_nie_aktiv(self):
         self.assertTrue(ads.check_spec({**SPEC, "status": "ENABLED"}))
 

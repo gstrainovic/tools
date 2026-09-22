@@ -80,6 +80,8 @@ def check_spec(spec: dict) -> list[str]:
     errors += [f"Beschreibung über 90 Zeichen: {d}" for d in spec["descriptions"] if len(d) > 90]
     if not spec["keywords_phrase"]:
         errors.append("keine Keywords")
+    if not isinstance(spec.get("negative_keywords", []), list):
+        errors.append("negative_keywords muss eine Liste sein")
     return errors
 
 
@@ -126,6 +128,14 @@ def create_operations(c, customer_id: str, spec: dict) -> list:
         cc = op("campaign_criterion_operation")
         cc.campaign = campaign_rn
         getattr(cc, field).__setattr__("geo_target_constant" if field == "location" else "language_constant", value)
+
+    # Ausschliessende Keywords auf Kampagnenebene (Wortgruppe): Suchen, die mehr wollen als das Produkt bietet
+    for text in spec.get("negative_keywords", []):
+        neg = op("campaign_criterion_operation")
+        neg.campaign = campaign_rn
+        neg.negative = True
+        neg.keyword.text = text
+        neg.keyword.match_type = c.enums.KeywordMatchTypeEnum.PHRASE
 
     g = op("ad_group_operation")
     g.resource_name = group_rn
