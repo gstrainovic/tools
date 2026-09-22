@@ -14,6 +14,7 @@ noch eigenständige Terminal-Scripts.
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
+| `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 
 Dazu `.bashrc` mit den Shell-Aliasen des Repos. Sie wird nicht kopiert, sondern am Ende
@@ -54,6 +55,20 @@ img-proto-test [BILD]           # ohne Argument: neuester Screenshot
 
 Zeigt dasselbe Bild per iTerm2-Protokoll, Kitty Graphics Protocol und Sixel mit
 Zeitmessung. Muss außerhalb von tmux laufen.
+
+### ads
+
+```bash
+ads login                                  # einmal: OAuth im Browser, Refresh-Token nach ~/.config/google-ads/
+export GOOGLE_ADS_CUSTOMER_ID=8173987962
+ads campaigns [--all]                      # ID, Status, Typ, Budget, Name
+ads query "SELECT campaign.name FROM campaign"
+ads remove ID [ID ...] [--dry-run]
+```
+
+Läuft mit `uv` (Abhängigkeiten im Skriptkopf). Zugang: OAuth-Client «Google Ads CLI» (Desktop) im
+Cloud-Projekt `auto-service` (`gen-lang-client-0650867108`), Zugriffsebene der Ads API mindestens Explorer;
+Developer-Tokens gibt es seit 09.09.2026 nicht mehr. Google Ads Scripts sieht Smart-Kampagnen nicht, die API schon.
 
 ### mailbox
 
