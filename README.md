@@ -80,6 +80,8 @@ bing login                                 # einmal: Google-Anmeldung, Refresh-T
 bing campaigns | bing ads
 bing replace-url ALT NEU [--dry-run]
 bing budget ID CHF | bing pause ID | bing enable ID
+bing report [--period Today|LastSevenDays|LastThirtyDays]
+bing network [--set alle|bing]             # alle = mit DuckDuckGo, Yahoo, Ecosia (Microsoft-Partnernetz)
 ```
 
 Developer-Token, Kunden- und Konto-ID in `~/.config/bing-ads/config.toml`; das Konto ist per Google angelegt,
