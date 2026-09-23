@@ -80,7 +80,7 @@ bing login                                 # einmal: Google-Anmeldung, Refresh-T
 bing campaigns | bing ads
 bing replace-url ALT NEU [--dry-run]
 bing budget ID CHF | bing pause ID | bing enable ID
-bing report [--period Today|LastSevenDays|LastThirtyDays]
+bing report [--period Today|LastSevenDays|Last30Days]   # Standard Last30Days, Werte des API-Enums ReportTimePeriod
 bing network [--set alle|bing]             # alle = mit DuckDuckGo, Yahoo, Ecosia (Microsoft-Partnernetz)
 ```
 

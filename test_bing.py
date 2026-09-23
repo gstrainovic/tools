@@ -43,5 +43,24 @@ class Summarize(unittest.TestCase):
         self.assertEqual(bing.summarize(rows), {"A": (15, 3, 2.2), "B": (0, 0, 0.0)})
 
 
+class ReportPeriod(unittest.TestCase):
+    def period(self, *argv):
+        seen = []
+        original = bing.cmd_report
+        bing.cmd_report = lambda a: seen.append(a.period)
+        try:
+            bing.main(["report", *argv])
+        finally:
+            bing.cmd_report = original
+        return seen[0]
+
+    def test_standard_ist_api_wert_fuer_30_tage(self):
+        self.assertEqual(self.period(), "Last30Days")
+
+    def test_unbekannter_zeitraum_scheitert_vor_dem_api_aufruf(self):
+        with self.assertRaises(SystemExit):
+            self.period("--period", "LastThirtyDays")
+
+
 if __name__ == "__main__":
     unittest.main()

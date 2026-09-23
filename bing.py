@@ -18,7 +18,7 @@ Befehle:
     bing replace-url ALT NEU [--dry-run]   Ziel-URL in allen Anzeigen ersetzen (exakter Treffer)
     bing budget ID CHF                     Tagesbudget einer Kampagne setzen
     bing pause ID ... | bing enable ID ... Kampagnen anhalten oder einschalten
-    bing report [--period LastThirtyDays]  Einblendungen, Klicks, Kosten pro Kampagne
+    bing report [--period Last30Days]      Einblendungen, Klicks, Kosten pro Kampagne
     bing network [--set alle|bing]         Suchnetzwerk der Anzeigengruppen (alle = mit DuckDuckGo und Partnern)
 """
 from __future__ import annotations
@@ -162,6 +162,7 @@ def cmd_replace_url(args) -> None:
 
 
 NETWORKS = {"alle": "OwnedAndOperatedAndSyndicatedSearch", "bing": "OwnedAndOperatedOnly"}
+PERIODS = ["Today", "Yesterday", "LastSevenDays", "Last14Days", "Last30Days", "ThisMonth", "LastMonth"]
 
 
 def summarize(rows) -> dict:
@@ -264,7 +265,7 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("chf", type=float)
     s.set_defaults(fn=lambda a: update_campaign(a.id, DailyBudget=a.chf, BudgetType="DailyBudgetStandard"))
     s = sub.add_parser("report")
-    s.add_argument("--period", default="LastThirtyDays", help="Today, Yesterday, LastSevenDays, LastThirtyDays, ThisMonth")
+    s.add_argument("--period", default="Last30Days", choices=PERIODS, help="Werte des API-Enums ReportTimePeriod")
     s.set_defaults(fn=cmd_report)
     s = sub.add_parser("network")
     s.add_argument("--id", type=int, help="nur diese Kampagne")
