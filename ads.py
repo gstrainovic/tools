@@ -86,6 +86,29 @@ def check_spec(spec: dict) -> list[str]:
     return errors
 
 
+DEMAND_GEN_REQUIRED = ("campaign", "start", "end", "total_budget_chf", "max_cpc_chf", "ad_group", "final_url",
+                       "geo_target_constant", "language_constant", "video_id", "logo", "business_name",
+                       "headlines", "long_headlines", "descriptions")
+
+
+def check_demand_gen(spec: dict) -> list[str]:
+    """Fehler in einer Demand-Gen-Videokampagne, leer wenn gültig. Startet immer pausiert."""
+    errors = [f"{key} fehlt" for key in DEMAND_GEN_REQUIRED if key not in spec]
+    if errors:
+        return errors
+    if spec.get("status", "PAUSED") != "PAUSED":
+        errors.append("status muss PAUSED sein, aktiviert wird erst nach Freigabe mit `ads enable`")
+    for key, name in (("headlines", "Titel"), ("long_headlines", "lange Titel"), ("descriptions", "Beschreibungen")):
+        if not 1 <= len(spec[key]) <= 5:
+            errors.append(f"1 bis 5 {name} nötig")
+    errors += [f"Titel über 40 Zeichen: {h}" for h in spec["headlines"] if len(h) > 40]
+    errors += [f"langer Titel über 90 Zeichen: {h}" for h in spec["long_headlines"] if len(h) > 90]
+    errors += [f"Beschreibung über 90 Zeichen: {d}" for d in spec["descriptions"] if len(d) > 90]
+    if len(spec["business_name"]) > 25:
+        errors.append(f"Firmenname über 25 Zeichen: {spec['business_name']}")
+    return errors
+
+
 def micros(chf: float) -> int:
     return int(round(chf * 1_000_000))
 

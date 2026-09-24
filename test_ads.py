@@ -57,6 +57,35 @@ class CheckSpec(unittest.TestCase):
         self.assertTrue(ads.check_spec({**SPEC, "status": "ENABLED"}))
 
 
+DG = {
+    "campaign": "T", "start": "2026-09-24 00:00:00", "end": "2026-10-23 23:59:59", "total_budget_chf": 50,
+    "max_cpc_chf": 1, "ad_group": "G", "final_url": "https://wartungsheft.ch/youtube",
+    "geo_target_constant": "geoTargetConstants/2756", "language_constant": "languageConstants/1001",
+    "video_id": "abc123", "logo": "logo.png", "business_name": "Wartungsheft",
+    "headlines": ["Rechnung fotografieren"], "long_headlines": ["Dein Servicebuch auf dem Handy"],
+    "descriptions": ["30 Tage gratis testen"],
+}
+
+
+class CheckDemandGen(unittest.TestCase):
+    def test_gueltig(self):
+        self.assertEqual(ads.check_demand_gen(DG), [])
+
+    def test_titel_hoechstens_40(self):
+        self.assertTrue(any("40" in e for e in ads.check_demand_gen({**DG, "headlines": ["x" * 41]})))
+
+    def test_firmenname_hoechstens_25(self):
+        self.assertTrue(any("25" in e for e in ads.check_demand_gen({**DG, "business_name": "x" * 26})))
+
+    def test_video_pflicht(self):
+        spec = dict(DG)
+        del spec["video_id"]
+        self.assertTrue(any("video_id" in e for e in ads.check_demand_gen(spec)))
+
+    def test_startet_nie_aktiv(self):
+        self.assertTrue(ads.check_demand_gen({**DG, "status": "ENABLED"}))
+
+
 class KeywordLines(unittest.TestCase):
     def test_leere_zeilen_und_kommentare_fallen_weg(self):
         self.assertEqual(ads.keyword_lines(["serviceheft app\n", "\n", "# Kommentar\n", "  mfk app  \n"]),
