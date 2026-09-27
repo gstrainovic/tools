@@ -18,6 +18,9 @@ noch eigenständige Terminal-Scripts.
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
+| `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
+
+Unter `skills/` liegen User-Skills für Claude Code, je Ordner eine `SKILL.md`.
 
 Dazu `.bashrc` mit den Shell-Aliasen des Repos. Sie wird nicht kopiert, sondern am Ende
 von `~/.bashrc` gesourced:
