@@ -12,7 +12,8 @@ bash ~/projects/tools/setup.sh
 Installiert: System-Pakete (tmux, wkhtmltopdf, timg, ydotool, ImageMagick), tmux2html,
 mcp-tui-driver, die Konten-Vorlage für mailbox und die MCP-Config. `link.sh` (läuft in `setup.sh`,
 auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` und jeden Ordner unter
-`skills/` nach `~/.claude/skills/<name>`.
+`skills/` nach `~/.claude/skills/<name>`, dazu die Skills aus dem privaten Repo
+`~/projects/skills-privat` (setup.sh klont es).
 
 **Voraussetzungen:** `uv`, `cargo`, `python3`.
 
@@ -45,7 +46,7 @@ Ghostty spricht Kitty Graphics Protocol nativ.
 
 ## mailbox
 
-Konten, IMAP/SMTP, Befehle und Entwicklung: Skill mailbox (`skills/mailbox/SKILL.md`).
+Konten, IMAP/SMTP, Befehle und Entwicklung: Skill mailbox (im privaten Repo `~/projects/skills-privat`).
 
 ## Tests
 

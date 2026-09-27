@@ -1,6 +1,7 @@
 #!/bin/bash
 # link.sh — Verknüpfungen aus diesem Repo anlegen, idempotent, ohne sudo:
-#   Scripts nach ~/.local/bin, Claude-Skills (skills/<name>/) nach ~/.claude/skills/<name>.
+#   Scripts nach ~/.local/bin, Claude-Skills (skills/<name>/ und ~/projects/skills-privat/skills/<name>/)
+#   nach ~/.claude/skills/<name>.
 # Wird von setup.sh aufgerufen und kann allein laufen: bash ~/projects/tools/link.sh
 
 set -euo pipefail
@@ -28,8 +29,8 @@ link "$SCRIPT_DIR"/gui-screenshot.sh "$BIN_DIR/gui-screenshot"
 link "$SCRIPT_DIR"/img-proto-test    "$BIN_DIR/img-proto-test"
 link "$SCRIPT_DIR"/mailbox.py        "$BIN_DIR/mailbox"
 
-# Claude-Skills
-for dir in "$SCRIPT_DIR"/skills/*/; do
+# Claude-Skills, dazu die aus dem privaten Repo skills-privat, falls es geklont ist
+for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do
     [[ -f "$dir/SKILL.md" ]] || continue
     name="$(basename "$dir")"
     link "${dir%/}" "$SKILL_DIR/$name"

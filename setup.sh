@@ -47,6 +47,11 @@ fi
 # --- Scripts und Claude-Skills (Verknüpfungen, damit Änderungen im Repo sofort gelten) ---
 echo ""
 echo "--- Scripts und Claude-Skills ---"
+# private Skills (mailbox, produktidee-validierung) liegen im privaten Repo skills-privat
+if [ ! -d "$HOME/projects/skills-privat" ]; then
+    gh repo clone gstrainovic/skills-privat "$HOME/projects/skills-privat" \
+        || echo "skills-privat nicht geklont (gh nicht angemeldet?), private Skills fehlen"
+fi
 bash "$SCRIPT_DIR/link.sh"
 
 # Konten-Vorlage für mailbox nur anlegen, wenn keine existiert

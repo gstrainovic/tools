@@ -118,6 +118,18 @@ else
 fi
 rm -rf "$TMP_HOME"
 
+# Test 9: link.sh verknüpft auch die Skills aus dem privaten Repo ~/projects/skills-privat
+TMP_HOME="$(mktemp -d)"
+mkdir -p "$TMP_HOME/projects/skills-privat/skills/probe"
+printf -- '---\nname: probe\ndescription: Test\n---\n' > "$TMP_HOME/projects/skills-privat/skills/probe/SKILL.md"
+if HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1 \
+    && [[ "$(readlink -e "$TMP_HOME/.claude/skills/probe")" == "$TMP_HOME/projects/skills-privat/skills/probe" ]]; then
+    pass "link.sh: private Skills aus ~/projects/skills-privat verknüpft"
+else
+    fail "link.sh: private Skills aus ~/projects/skills-privat fehlen"
+fi
+rm -rf "$TMP_HOME"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
