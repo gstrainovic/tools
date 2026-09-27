@@ -10,7 +10,7 @@ FAIL=0
 fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 
-DOCS=(CLAUDE.md README.md setup.sh tui-screenshot-skill.md tmux2png img-proto-test)
+DOCS=(CLAUDE.md README.md setup.sh link.sh tmux2png img-proto-test)
 
 # Test 1: Keine Referenzen auf abgeschaffte Tools
 for term in wezterm WezTerm yazi Yazi nvim neovim Neovim lazyvim LazyVim zed Zed; do
@@ -80,6 +80,43 @@ if (cd "$ROOT" && python3 -m unittest -q test_mailbox.py >/dev/null 2>&1); then
 else
     fail "test_mailbox.py: Unit-Tests rot"
 fi
+
+# Test 7: Jeder Skill unter skills/ hat Frontmatter mit name = Ordnername und einer description
+for skill in "$ROOT"/skills/*/; do
+    [[ -d "$skill" ]] || continue
+    name="$(basename "$skill")"
+    file="$skill/SKILL.md"
+    if [[ ! -f "$file" ]]; then
+        fail "skills/$name: SKILL.md fehlt"
+        continue
+    fi
+    if [[ "$(head -1 "$file")" == "---" ]] \
+        && awk 'NR>1 && /^---$/ {exit} NR>1' "$file" | grep -qx "name: $name" \
+        && awk 'NR>1 && /^---$/ {exit} NR>1' "$file" | grep -qE '^description: .+'; then
+        pass "skills/$name: Frontmatter ok"
+    else
+        fail "skills/$name: Frontmatter ohne 'name: $name' oder description"
+    fi
+done
+
+# Test 8: link.sh verknüpft die Skills nach ~/.claude/skills (ohne echtes HOME anzufassen)
+TMP_HOME="$(mktemp -d)"
+if HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1 && HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1; then
+    ok=1
+    for skill in "$ROOT"/skills/*/; do
+        name="$(basename "$skill")"
+        [[ "$(readlink -e "$TMP_HOME/.claude/skills/$name")" == "$(readlink -e "$skill")" ]] || ok=0
+    done
+    [[ "$(readlink -e "$TMP_HOME/.local/bin/gui-screenshot")" == "$ROOT/gui-screenshot.sh" ]] || ok=0
+    if [[ $ok -eq 1 ]]; then
+        pass "link.sh: Skills und Scripts verknüpft, zweimal ausführbar"
+    else
+        fail "link.sh: Verknüpfungen fehlen oder zeigen falsch"
+    fi
+else
+    fail "link.sh: läuft nicht fehlerfrei (zweimal hintereinander)"
+fi
+rm -rf "$TMP_HOME"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

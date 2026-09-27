@@ -44,36 +44,18 @@ else
     exit 1
 fi
 
-# --- Scripts ---
+# --- Scripts und Claude-Skills (Verknüpfungen, damit Änderungen im Repo sofort gelten) ---
 echo ""
-echo "--- Scripts ---"
-install_script() {
-    local src="$1" name="$2"
-    cp "$SCRIPT_DIR/$src" "$BIN_DIR/$name"
-    chmod +x "$BIN_DIR/$name"
-    echo "$src -> $BIN_DIR/$name"
-}
+echo "--- Scripts und Claude-Skills ---"
+bash "$SCRIPT_DIR/link.sh"
 
-install_script tmux2png       tmux2png
-install_script gui-screenshot.sh gui-screenshot
-install_script img-proto-test img-proto-test
-
-# mailbox als Verknüpfung, damit Änderungen im Repo sofort gelten; Konten-Vorlage nur anlegen, wenn keine existiert
-ln -sfn "$SCRIPT_DIR/mailbox.py" "$BIN_DIR/mailbox"
-echo "mailbox.py -> $BIN_DIR/mailbox (Verknüpfung)"
+# Konten-Vorlage für mailbox nur anlegen, wenn keine existiert
 mkdir -p "$HOME/.config/mail" && chmod 700 "$HOME/.config/mail"
 if [ ! -f "$HOME/.config/mail/accounts.toml" ]; then
     cp "$SCRIPT_DIR/mailbox-accounts.example.toml" "$HOME/.config/mail/accounts.toml"
     chmod 600 "$HOME/.config/mail/accounts.toml"
     echo "Vorlage nach ~/.config/mail/accounts.toml kopiert, Konten und Passwortdateien eintragen"
 fi
-
-# --- Claude Code Skill ---
-echo ""
-echo "--- Claude Code Skill ---"
-mkdir -p ~/.claude/skills/tui-screenshot
-cp "$SCRIPT_DIR/tui-screenshot-skill.md" ~/.claude/skills/tui-screenshot/SKILL.md
-echo "tui-screenshot Skill installiert"
 
 # --- Claude Code MCP-Konfiguration ---
 echo ""
