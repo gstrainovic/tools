@@ -287,9 +287,18 @@ def search_args(criteria: str) -> tuple[list[str], bytes | None]:
     return ["CHARSET", "UTF-8", *([rest] if rest else []), match.group(1)], match.group(2).encode()
 
 
+def imap_folder(name: str) -> str:
+    """Ordnernamen für IMAP quoten, imaplib tut das nicht ("[Gmail]/Alle Nachrichten")."""
+    if name.startswith('"') and name.endswith('"') and len(name) > 1:
+        return name
+    if re.search(r'[\s"\\(){%*]', name):
+        return '"' + name.replace("\\", "\\\\").replace('"', '\\"') + '"'
+    return name
+
+
 def list_account(acc: Account, folder: str, unread_only: bool, limit: int, query: str | None = None) -> list[str]:
     conn = imap_connect(acc)
-    conn.select(folder, readonly=True)
+    conn.select(imap_folder(folder), readonly=True)
     args, literal = search_args(query or ("UNSEEN" if unread_only else "ALL"))
     if literal is not None:
         conn.literal = literal
@@ -318,7 +327,7 @@ def cmd_search(accounts: dict[str, Account], args) -> None:
 def cmd_read(accounts: dict[str, Account], args) -> None:
     acc = accounts[args.account]
     conn = imap_connect(acc)
-    conn.select(args.folder, readonly=True)
+    conn.select(imap_folder(args.folder), readonly=True)
     msg, unread = fetch(conn, args.uid)
     conn.logout()
     for field in ("From", "To", "Cc", "Reply-To", "Date", "Subject", "Message-ID"):
@@ -368,7 +377,7 @@ def cmd_send(accounts: dict[str, Account], args) -> None:
 def cmd_reply(accounts: dict[str, Account], args) -> None:
     acc = accounts[args.account]
     conn = imap_connect(acc)
-    conn.select(args.folder, readonly=True)
+    conn.select(imap_folder(args.folder), readonly=True)
     original, _ = fetch(conn, args.uid)
     conn.logout()
     to, cc = reply_recipients(original, acc.address, args.all)
@@ -387,7 +396,7 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
 
 def mark(acc: Account, folder: str, uid: str, seen: bool) -> None:
     conn = imap_connect(acc)
-    conn.select(folder)
+    conn.select(imap_folder(folder))
     conn.uid("store", uid, "+FLAGS" if seen else "-FLAGS", r"(\Seen)")
     conn.logout()
 
@@ -402,10 +411,11 @@ def cmd_unseen(accounts: dict[str, Account], args) -> None:
 
 def cmd_move(accounts: dict[str, Account], args) -> None:
     conn = imap_connect(accounts[args.account])
-    conn.select(args.folder)
-    status, _ = conn.uid("move", args.uid, args.target)
+    conn.select(imap_folder(args.folder))
+    target = imap_folder(args.target)
+    status, _ = conn.uid("move", args.uid, target)
     if status != "OK":
-        conn.uid("copy", args.uid, args.target)
+        conn.uid("copy", args.uid, target)
         conn.uid("store", args.uid, "+FLAGS", r"(\Deleted)")
         conn.expunge()
     conn.logout()
