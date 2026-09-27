@@ -137,5 +137,46 @@ class Suche(unittest.TestCase):
             mb.search_args('FROM "Müller" SUBJECT "Prüfung"')
 
 
+class Ordnernamen(unittest.TestCase):
+    def test_einfacher_name_bleibt(self):
+        self.assertEqual(mb.imap_folder("INBOX"), "INBOX")
+        self.assertEqual(mb.imap_folder("[Gmail]/Spam"), "[Gmail]/Spam")
+
+    def test_leerzeichen_wird_gequotet(self):
+        self.assertEqual(mb.imap_folder("[Gmail]/Alle Nachrichten"), '"[Gmail]/Alle Nachrichten"')
+
+    def test_anfuehrungszeichen_und_backslash_werden_escaped(self):
+        self.assertEqual(mb.imap_folder('a "b"\\c'), '"a \\"b\\"\\\\c"')
+
+    def test_schon_gequotet_bleibt(self):
+        self.assertEqual(mb.imap_folder('"Alle Nachrichten"'), '"Alle Nachrichten"')
+
+    def test_move_quotet_ziel_und_quelle(self):
+        aufrufe = []
+
+        class Conn:
+            def select(self, folder, readonly=False):
+                aufrufe.append(("select", folder))
+                return "OK", [b"1"]
+
+            def uid(self, *args):
+                aufrufe.append(("uid", *args))
+                return "OK", [None]
+
+            def logout(self):
+                pass
+
+        original = mb.imap_connect
+        mb.imap_connect = lambda acc: Conn()
+        try:
+            args = type("A", (), {"account": "x", "folder": "[Gmail]/Alle Nachrichten", "uid": "7",
+                                  "target": "[Gmail]/Alle Nachrichten"})()
+            mb.cmd_move({"x": None}, args)
+        finally:
+            mb.imap_connect = original
+        self.assertIn(("select", '"[Gmail]/Alle Nachrichten"'), aufrufe)
+        self.assertIn(("uid", "move", "7", '"[Gmail]/Alle Nachrichten"'), aufrufe)
+
+
 if __name__ == "__main__":
     unittest.main()
