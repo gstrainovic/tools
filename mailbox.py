@@ -60,6 +60,7 @@ class Account:
     smtp: str
     password_file: Path
     sent_folder: str = "Sent"
+    drafts_folder: str = "Drafts"
     imap_port: int = 993
     smtp_port: int = 465
 
@@ -94,6 +95,7 @@ def load_accounts(path: Path = CONFIG) -> dict[str, Account]:
             smtp=cfg.get("smtp", cfg["imap"]),
             password_file=Path(cfg["password_file"]),
             sent_folder=cfg.get("sent_folder", "Sent"),
+            drafts_folder=cfg.get("drafts_folder", "Drafts"),
             imap_port=int(cfg.get("imap_port", 993)),
             smtp_port=int(cfg.get("smtp_port", 465)),
         )
@@ -427,6 +429,18 @@ def smtp_send(acc: Account, msg: EmailMessage) -> None:
         conn.logout()
 
 
+def save_draft(acc: Account, msg: EmailMessage) -> None:
+    """Legt die Nachricht als Entwurf in den Entwurfsordner, ohne sie zu senden; Thunderbird zeigt sie dort."""
+    conn = imap_connect(acc)
+    try:
+        conn.create(imap_folder(acc.drafts_folder))
+    except imaplib.IMAP4.error:
+        pass
+    conn.append(imap_folder(acc.drafts_folder), r"(\Draft \Seen)",
+                imaplib.Time2Internaldate(__import__("time").time()), msg.as_bytes())
+    conn.logout()
+
+
 def read_body(path: str) -> str:
     return Path(path).read_text(encoding="utf-8").rstrip("\n") + "\n"
 
@@ -437,6 +451,10 @@ def cmd_send(accounts: dict[str, Account], args) -> None:
                         attachments=[Path(a) for a in args.attach])
     if args.dry_run:
         print(msg.as_string())
+        return
+    if args.draft:
+        save_draft(acc, msg)
+        print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {args.subject}")
         return
     smtp_send(acc, msg)
     print(f"gesendet als {acc.address} an {', '.join(args.to)}: {args.subject}")
@@ -456,6 +474,10 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
     )
     if args.dry_run:
         print(msg.as_string())
+        return
+    if args.draft:
+        save_draft(acc, msg)
+        print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {msg['Subject']}")
         return
     smtp_send(acc, msg)
     mark(acc, args.folder, args.uid, seen=True)
@@ -531,6 +553,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--reply-to")
     p.add_argument("--attach", nargs="*", default=[], help="Dateien anhängen, z. B. den CV als PDF")
     p.add_argument("--dry-run", action="store_true", help="Nachricht nur anzeigen")
+    p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
     p.set_defaults(fn=cmd_send)
 
     p = sub.add_parser("reply")
@@ -541,6 +564,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--attach", nargs="*", default=[])
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
     p.set_defaults(fn=cmd_reply)
 
     for name, fn in (("seen", cmd_seen), ("unseen", cmd_unseen)):
