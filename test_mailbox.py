@@ -79,7 +79,7 @@ class Nachrichten(unittest.TestCase):
         self.assertEqual(msg["Cc"], "chef@example.ch")
         self.assertEqual(msg["Reply-To"], "info@wartungsheft.ch")
         self.assertIn("@wartungsheft.ch>", msg["Message-ID"])
-        self.assertEqual(msg.get_content().strip(), "Hallo")
+        self.assertEqual(msg.get_body(("plain",)).get_content().strip(), "Hallo")
 
     def test_haengt_dateien_an(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -116,6 +116,82 @@ class Nachrichten(unittest.TestCase):
         self.assertIn("14.09.2026 10:30", line)
         self.assertIn("Müller", line)
         self.assertIn("Offerte", line)
+
+
+SIGNATUR = ("Guten Tag\n\nText mit <Tag> & Co.\n\nFreundliche Grüsse\nGoran Strainovic\n\nStrainovic IT\n"
+            "Bahnstrasse 9b, 9323 Steinach\ninfo@strainovic-it.ch\nwww.strainovic-it.ch\n")
+
+
+class HtmlFassung(unittest.TestCase):
+    def test_alternative_mit_text_und_html(self):
+        msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR)
+        self.assertEqual(msg.get_content_type(), "multipart/alternative")
+        typen = [p.get_content_type() for p in msg.iter_parts()]
+        self.assertEqual(typen, ["text/plain", "text/html"])
+        self.assertEqual(msg.get_body(("plain",)).get_content(), SIGNATUR)
+
+    def test_anhang_um_die_alternative(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pdf = Path(tmp) / "CV.pdf"
+            pdf.write_bytes(b"%PDF-1.4")
+            msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR, attachments=[pdf])
+        self.assertEqual(msg.get_content_type(), "multipart/mixed")
+        teile = list(msg.iter_parts())
+        self.assertEqual(teile[0].get_content_type(), "multipart/alternative")
+        self.assertEqual([p.get_content_type() for p in teile[0].iter_parts()], ["text/plain", "text/html"])
+        self.assertEqual([p.get_filename() for p in msg.iter_attachments()], ["CV.pdf"])
+
+    def test_html_umlaute_utf8(self):
+        msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR)
+        html = msg.get_body(("html",))
+        self.assertEqual(html.get_content_charset(), "utf-8")
+        self.assertIn("Freundliche Grüsse", html.get_content())
+        roh = email.message_from_bytes(msg.as_bytes(), policy=email.policy.default)
+        self.assertIn("Grüsse", roh.get_body(("html",)).get_content())
+
+    def test_jede_zeile_eigener_umbruch(self):
+        html = mb.text_to_html(SIGNATUR)
+        self.assertIn("Strainovic IT<br>\nBahnstrasse 9b, 9323 Steinach<br>\n", html)
+        self.assertIn("Freundliche Grüsse<br>\nGoran Strainovic</p>", html)
+        self.assertEqual(html.count("<p"), 4)
+
+    def test_escaping(self):
+        html = mb.text_to_html("a < b & c > d\n")
+        self.assertIn("a &lt; b &amp; c &gt; d", html)
+        self.assertNotIn("<Tag>", mb.text_to_html(SIGNATUR))
+
+    def test_links_fuer_urls_und_mailadressen(self):
+        html = mb.text_to_html("Siehe https://uid.strainovic-it.ch/?a=1&b=2. Oder www.strainovic-it.ch, info@strainovic-it.ch\n")
+        self.assertIn('<a href="https://uid.strainovic-it.ch/?a=1&amp;b=2">https://uid.strainovic-it.ch/?a=1&amp;b=2</a>. ', html)
+        self.assertIn('<a href="https://www.strainovic-it.ch">www.strainovic-it.ch</a>,', html)
+        self.assertIn('<a href="mailto:info@strainovic-it.ch">info@strainovic-it.ch</a>', html)
+
+    def test_zitat_als_blockquote(self):
+        html = mb.text_to_html("Danke\n\nAm 1.9. schrieb X:\n> Frage <1>\n> zweite Zeile\n")
+        self.assertIn("<blockquote", html)
+        self.assertIn("Frage &lt;1&gt;<br>\nzweite Zeile", html)
+        self.assertNotIn("&gt; Frage", html)
+
+    def test_schlicht_ohne_bilder(self):
+        html = mb.text_to_html(SIGNATUR)
+        self.assertIn("font-family", html)
+        self.assertNotIn("<img", html)
+        self.assertNotIn("<script", html)
+
+    def test_dry_run_zeigt_beide_teile(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "b.txt"
+            body.write_text(SIGNATUR, encoding="utf-8")
+            args = type("A", (), {"account": "x", "to": ["a@b.ch"], "subject": "T", "body_file": str(body), "cc": [],
+                                  "bcc": [], "reply_to": None, "attach": [], "dry_run": True})()
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                mb.cmd_send({"x": account()}, args)
+        self.assertIn("multipart/alternative", out.getvalue())
+        self.assertIn("text/plain", out.getvalue())
+        self.assertIn("text/html", out.getvalue())
 
 
 class Suche(unittest.TestCase):
