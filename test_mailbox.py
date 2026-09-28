@@ -119,7 +119,7 @@ class Nachrichten(unittest.TestCase):
 
 
 SIGNATUR = ("Guten Tag\n\nText mit <Tag> & Co.\n\nFreundliche Grüsse\nGoran Strainovic\n\nStrainovic IT\n"
-            "Bahnstrasse 9b, 9323 Steinach\ninfo@strainovic-it.ch\nwww.strainovic-it.ch\n")
+            "Bahnstrasse 9b\n9323 Steinach\ninfo@strainovic-it.ch\nwww.strainovic-it.ch\n")
 
 
 class HtmlFassung(unittest.TestCase):
@@ -151,7 +151,7 @@ class HtmlFassung(unittest.TestCase):
 
     def test_jede_zeile_eigener_umbruch(self):
         html = mb.text_to_html(SIGNATUR)
-        self.assertIn("Strainovic IT<br>\nBahnstrasse 9b, 9323 Steinach<br>\n", html)
+        self.assertIn("Strainovic IT<br>\nBahnstrasse 9b<br>\n9323 Steinach<br>\n", html)
         self.assertIn("Freundliche Grüsse<br>\nGoran Strainovic</p>", html)
         self.assertEqual(html.count("<p"), 4)
 
