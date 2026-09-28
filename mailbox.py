@@ -25,6 +25,8 @@ Befehle:
     mailbox seen KONTO UID | mailbox unseen KONTO UID
     mailbox move KONTO UID ZIELORDNER
     mailbox folders KONTO
+send und reply schicken multipart/alternative: den Text unverändert plus eine daraus erzeugte schlichte HTML-Fassung
+(jede Zeile mit <br>, Links, «>»-Zitate als Blockquote), damit Outlook keine Zeilen zusammenzieht.
 Ohne KONTO bei list: alle Konten. Ausgabe ist Text, eine Zeile pro Mail, UID ist die IMAP-UID im Ordner.
 """
 from __future__ import annotations
@@ -43,7 +45,7 @@ from dataclasses import dataclass
 from email.header import decode_header, make_header
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid, parsedate_to_datetime
-from html import unescape
+from html import escape, unescape
 from pathlib import Path
 
 CONFIG = Path(os.environ.get("MAILBOX_CONFIG", "~/.config/mail/accounts.toml")).expanduser()
@@ -160,6 +162,71 @@ def addresses(*fields: object) -> list[str]:
     return [addr for _, addr in email.utils.getaddresses(values) if addr]
 
 
+LINK = re.compile(r"(?P<url>(?:https?://|www\.)[^\s<>\"]+)|(?P<mail>[\w.+-]+@[\w-]+(?:\.[\w-]+)+)")
+HTML_STYLE = ("font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; "
+              "font-size: 14px; line-height: 1.5; color: #222222;")
+P_STYLE = "margin: 0 0 1em 0;"
+QUOTE_STYLE = "margin: 0 0 1em 0; padding-left: 0.8em; border-left: 3px solid #cccccc; color: #555555;"
+
+
+def linkify(line: str) -> str:
+    """Eine Textzeile HTML-escapen, URLs und Mailadressen als Links; Satzzeichen am Ende gehören nicht zum Link."""
+    out, pos = [], 0
+    for m in LINK.finditer(line):
+        target = m.group(0)
+        trail = ""
+        if m.group("url"):
+            stripped = target.rstrip(".,;:!?)")
+            trail, target = target[len(stripped):], stripped
+            href = target if target.startswith("http") else f"https://{target}"
+        else:
+            href = f"mailto:{target}"
+        out.append(escape(line[pos:m.start()]))
+        out.append(f'<a href="{escape(href)}">{escape(target)}</a>{escape(trail)}')
+        pos = m.end()
+    out.append(escape(line[pos:]))
+    return "".join(out)
+
+
+def _html_blocks(lines: list[str]) -> list[str]:
+    """Absätze (durch Leerzeilen getrennt) als <p>, jede Zeile mit <br>; Zeilen mit «>» als <blockquote>."""
+    blocks: list[str] = []
+    paragraph: list[str] = []
+    quote: list[str] = []
+
+    def flush_paragraph():
+        if paragraph:
+            blocks.append(f'<p style="{P_STYLE}">' + "<br>\n".join(linkify(ln) for ln in paragraph) + "</p>")
+            paragraph.clear()
+
+    def flush_quote():
+        if quote:
+            inner = "\n".join(_html_blocks([re.sub(r"^> ?", "", ln) for ln in quote]))
+            blocks.append(f'<blockquote style="{QUOTE_STYLE}">\n{inner}\n</blockquote>')
+            quote.clear()
+
+    for line in lines:
+        if line.startswith(">"):
+            flush_paragraph()
+            quote.append(line)
+        elif not line.strip():
+            flush_paragraph()
+            flush_quote()
+        else:
+            flush_quote()
+            paragraph.append(line.rstrip())
+    flush_paragraph()
+    flush_quote()
+    return blocks
+
+
+def text_to_html(text: str) -> str:
+    """HTML-Fassung einer Textmail, damit Outlook keine Zeilen zusammenklebt: schlicht, ohne Bilder und Tracking."""
+    body = "\n".join(_html_blocks(text.splitlines()))
+    return ('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n</head>\n'
+            f'<body>\n<div style="{HTML_STYLE}">\n{body}\n</div>\n</body>\n</html>\n')
+
+
 def reply_subject(subject: str) -> str:
     return subject if re.match(r"(?i)^\s*(re|aw|wg|fwd?)\s*:", subject) else f"Re: {subject}"
 
@@ -192,6 +259,7 @@ def build_message(
         msg["In-Reply-To"] = in_reply_to
         msg["References"] = f"{references} {in_reply_to}".strip() if references else in_reply_to
     msg.set_content(body)
+    msg.add_alternative(text_to_html(body), subtype="html")
     for path in attachments or []:
         path = Path(path).expanduser()
         if not path.is_file():
