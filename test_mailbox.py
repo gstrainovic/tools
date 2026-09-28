@@ -254,5 +254,69 @@ class Ordnernamen(unittest.TestCase):
         self.assertIn(("uid", "move", "7", '"[Gmail]/Alle Nachrichten"'), aufrufe)
 
 
+class Entwuerfe(unittest.TestCase):
+    def test_entwurf_landet_im_entwurfsordner_ohne_smtp(self):
+        aufrufe = []
+
+        class Conn:
+            def create(self, folder):
+                aufrufe.append(("create", folder))
+
+            def append(self, folder, flags, date, data):
+                aufrufe.append(("append", folder, flags, data))
+                return "OK", [None]
+
+            def logout(self):
+                pass
+
+        acc = mb.Account(key="x", address="info@example.ch", name="Info", imap="i", smtp="s",
+                         password_file=Path("/nicht/da"), drafts_folder="Entwürfe")
+        msg = mb.build_message(acc, ["kunde@example.ch"], "Betreff", "Text\n")
+        original_imap, original_smtp = mb.imap_connect, mb.smtplib.SMTP_SSL
+        mb.imap_connect = lambda a: Conn()
+        mb.smtplib.SMTP_SSL = lambda *a, **k: self.fail("Entwurf darf nicht per SMTP gehen")
+        try:
+            mb.save_draft(acc, msg)
+        finally:
+            mb.imap_connect, mb.smtplib.SMTP_SSL = original_imap, original_smtp
+        append = [a for a in aufrufe if a[0] == "append"][0]
+        self.assertEqual(append[1], mb.imap_folder("Entwürfe"))
+        self.assertIn(r"\Draft", append[2])
+        self.assertIn(b"multipart/alternative", append[3])
+
+    def test_entwurfsordner_aus_konfiguration_mit_standard(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "a.toml"
+            p.write_text('[a]\naddress="a@b.ch"\nimap="i"\npassword_file="x"\n'
+                         '[g]\naddress="g@b.ch"\nimap="i"\npassword_file="x"\ndrafts_folder="[Gmail]/Entwürfe"\n',
+                         encoding="utf-8")
+            konten = mb.load_accounts(p)
+        self.assertEqual(konten["a"].drafts_folder, "Drafts")
+        self.assertEqual(konten["g"].drafts_folder, "[Gmail]/Entwürfe")
+
+    def test_send_und_reply_kennen_draft(self):
+        for argv in (["send", "x", "--to", "a@b.ch", "--subject", "s", "--body-file", "f", "--draft"],
+                     ["reply", "x", "7", "--body-file", "f", "--draft"]):
+            aufgerufen = {}
+            original = mb.load_accounts
+            mb.load_accounts = lambda *a, **k: {}
+            try:
+                parser_args = None
+                import argparse as _ap
+                orig_parse = _ap.ArgumentParser.parse_args
+
+                def fang(self, args=None, namespace=None):
+                    ns = orig_parse(self, args, namespace)
+                    aufgerufen["draft"] = getattr(ns, "draft", None)
+                    raise SystemExit(0)
+                _ap.ArgumentParser.parse_args = fang
+                with self.assertRaises(SystemExit):
+                    mb.main(argv)
+            finally:
+                _ap.ArgumentParser.parse_args = orig_parse
+                mb.load_accounts = original
+            self.assertTrue(aufgerufen["draft"], argv[0])
+
+
 if __name__ == "__main__":
     unittest.main()
