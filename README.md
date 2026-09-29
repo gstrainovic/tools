@@ -17,6 +17,8 @@ noch eigenständige Terminal-Scripts.
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
+| `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
+| `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 | `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
 
