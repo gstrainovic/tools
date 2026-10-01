@@ -155,6 +155,11 @@ Python) schicken, nie ganze Seiten in den Verlauf holen:
 
 Bot-Schutz (Cloudflare-Prüfseite) umgeht keiner dieser Wege, auch Jina nicht.
 
+Websites finden, die eine bestimmte Technik einbinden: `urlscan search 'domain:js.hs-scripts.com AND
+page.domain:*.ch' --all --size 1000` (urlscan/urlscan-cli, Binärdatei aus dem GitHub-Release nach
+`~/.local/bin`). Der Schlüssel des Kontos kommt per `urlscan key set -` aus der Standardeingabe in den
+GNOME-Schlüsselbund oder als `URLSCAN_API_KEY` aus `~/.config/urlscan/key`; `urlscan search count` zählt nur.
+
 ## Setup
 
 ```bash
