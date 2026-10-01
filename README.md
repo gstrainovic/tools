@@ -137,6 +137,24 @@ Neues Gerät:
    (Gerätekonto → «Zugriffstoken erstellen»); Widerrufen verlangt das Master-Passwort.
 4. `geheimnisse holen`
 
+### Webseiten für Recherchen lesen
+
+Reihenfolge, vom billigsten zum teuersten Weg; die Ausgabe immer durch einen Filter (`rg`, kurzes
+Python) schicken, nie ganze Seiten in den Verlauf holen:
+
+1. `curl -sL -A "Mozilla/5.0" <url>`: reicht für statische Seiten, Sitemaps und öffentliche JSON-Schnittstellen.
+2. `LIGHTPANDA_DISABLE_TELEMETRY=true lightpanda fetch --dump markdown --wait-until networkidle <url>`:
+   für Seiten, die erst per JavaScript entstehen. lightpanda (lightpanda-io/browser, Binärdatei aus dem
+   GitHub-Release nach `~/.local/bin`) ist ein Browser ohne Oberfläche und gibt die fertige Seite als Markdown
+   aus. Ohne `--wait-until networkidle` fehlen nachgeladene Inhalte; `--dump-selector <css>` schneidet auf
+   ein Element zu.
+3. `google-chrome --headless=new --virtual-time-budget=8000 --dump-dom <url>`: wenn lightpanda eine Seite
+   nicht schafft; liefert rohes HTML und ist langsamer.
+4. Playwright mit dem installierten Chrome nur, wenn geklickt werden muss; die Chrome-Erweiterung nur für
+   Seiten hinter einem Login.
+
+Bot-Schutz (Cloudflare-Prüfseite) umgeht keiner dieser Wege, auch Jina nicht.
+
 ## Setup
 
 ```bash
