@@ -80,6 +80,11 @@ if (cd "$ROOT" && python3 -m unittest -q test_mailbox.py >/dev/null 2>&1); then
 else
     fail "test_mailbox.py: Unit-Tests rot"
 fi
+if (cd "$ROOT" && python3 -m unittest -q test_geheimnisse.py >/dev/null 2>&1); then
+    pass "test_geheimnisse.py: Unit-Tests grün"
+else
+    fail "test_geheimnisse.py: Unit-Tests rot"
+fi
 
 # Test 7: Jeder Skill unter skills/ hat Frontmatter mit name = Ordnername und einer description
 for skill in "$ROOT"/skills/*/; do
