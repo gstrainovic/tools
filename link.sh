@@ -28,6 +28,7 @@ link "$SCRIPT_DIR"/tmux2png          "$BIN_DIR/tmux2png"
 link "$SCRIPT_DIR"/gui-screenshot.sh "$BIN_DIR/gui-screenshot"
 link "$SCRIPT_DIR"/img-proto-test    "$BIN_DIR/img-proto-test"
 link "$SCRIPT_DIR"/mailbox.py        "$BIN_DIR/mailbox"
+link "$SCRIPT_DIR"/geheimnisse.py    "$BIN_DIR/geheimnisse"
 
 # Claude-Skills, dazu die aus dem privaten Repo skills-privat, falls es geklont ist
 for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do

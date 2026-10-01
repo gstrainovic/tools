@@ -14,6 +14,7 @@ noch eigenständige Terminal-Scripts.
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
+| `geheimnisse.py` | Dateien mit Zugangsdaten über den Bitwarden Secrets Manager zwischen Geräten abgleichen |
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
@@ -109,6 +110,32 @@ Server: gesendete Mails landen im Ordner «Gesendet», gelesen ist überall gele
 hängen am Gesprächsfaden. Nur Python-Standardbibliothek. Konten nach der Vorlage
 `mailbox-accounts.example.toml` in `~/.config/mail/accounts.toml`, Passwörter je Konto in
 einer eigenen Datei.
+
+### geheimnisse
+
+```bash
+geheimnisse status                         # Tresor gegen lokale Dateien: gleich, abweichend, fehlt lokal
+geheimnisse hochladen dms/.env ~/.config/jina/key
+geheimnisse holen                          # fehlende Dateien an ihren Platz, --ueberschreiben für abweichende
+```
+
+Dateien mit Zugangsdaten (`.env`, Schlüssel, Tokens) liegen im Bitwarden Secrets Manager
+(vault.bitwarden.eu, Organisation «Strainovic IT», Projekt `strainovic`, Gratisplan mit 3 Projekten und
+3 Gerätekonten). Ein Geheimnis heisst wie der Pfad der Datei: relativ zu `~/projects` (`dms/apps/dms/.env`)
+oder mit `~/` relativ zum Home-Verzeichnis (`~/.config/jina/key`); der Wert ist der Dateiinhalt. Werte
+werden nie ausgegeben, auch nicht der Fehlertext von `bws`, weil er Argumente wiederholt. Nach jeder
+Änderung einer solchen Datei wieder hochladen. Tests ohne Netz: `python3 -m unittest test_geheimnisse.py`.
+
+Neues Gerät:
+
+1. `bws` installieren (bitwarden/sdk-sm): unter Linux die Binärdatei aus dem GitHub-Release nach
+   `~/.local/bin`, unter Windows `iwr https://bws.bitwarden.com/install | iex`.
+2. `bws config server-base https://vault.bitwarden.eu`
+3. Zugriffstoken des Geräts nach `~/.config/bws/token` (Windows `%USERPROFILE%\.config\bws\token`),
+   Rechte 600. Je Gerät ein eigenes Gerätekonto mit eigenem Token (`laptop`, `pc-2`, das dritte ist frei),
+   damit sich ein Gerät einzeln sperren lässt. Ein Token zeigt der Web-Tresor nur beim Erzeugen
+   (Gerätekonto → «Zugriffstoken erstellen»); Widerrufen verlangt das Master-Passwort.
+4. `geheimnisse holen`
 
 ## Setup
 
