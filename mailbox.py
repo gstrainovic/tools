@@ -14,6 +14,7 @@ einer eigenen Datei (Anwendungs- oder Gerätekennwort, Modus 600), nie in der TO
     smtp = "mail.infomaniak.com"
     password_file = "~/.config/mail/firma.pass"
     sent_folder = "Sent"        # Kopie per IMAP APPEND; "" wenn der Server selbst ablegt (Gmail)
+    login = "info@example.ch"   # nur nötig, wenn address ein Domain-Alias eines anderen Postfachs ist
 
 Befehle:
     mailbox accounts                                   Konten und Verbindungstest
@@ -63,6 +64,11 @@ class Account:
     drafts_folder: str = "Drafts"
     imap_port: int = 993
     smtp_port: int = 465
+    login_name: str = ""  # Anmeldung, wenn sie vom Absender abweicht (Domain-Alias)
+
+    @property
+    def login(self) -> str:
+        return self.login_name or self.address
 
     @property
     def has_password(self) -> bool:
@@ -98,6 +104,7 @@ def load_accounts(path: Path = CONFIG) -> dict[str, Account]:
             drafts_folder=cfg.get("drafts_folder", "Drafts"),
             imap_port=int(cfg.get("imap_port", 993)),
             smtp_port=int(cfg.get("smtp_port", 465)),
+            login_name=cfg.get("login", ""),
         )
     return accounts
 
@@ -297,7 +304,7 @@ def format_line(account_key: str, uid: str, msg: email.message.Message, unread: 
 
 def imap_connect(account: Account) -> imaplib.IMAP4_SSL:
     conn = imaplib.IMAP4_SSL(account.imap, account.imap_port)
-    conn.login(account.address, account.password)
+    conn.login(account.login, account.password)
     return conn
 
 
@@ -416,7 +423,7 @@ def smtp_send(acc: Account, msg: EmailMessage) -> None:
     if not recipients:
         raise SystemExit("Keine Empfänger")
     with smtplib.SMTP_SSL(acc.smtp, acc.smtp_port) as smtp:
-        smtp.login(acc.address, acc.password)
+        smtp.login(acc.login, acc.password)
         smtp.send_message(msg, to_addrs=recipients)
     if acc.sent_folder:
         conn = imap_connect(acc)

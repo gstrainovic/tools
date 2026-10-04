@@ -34,6 +34,17 @@ class Konfiguration(unittest.TestCase):
         self.assertEqual(accounts["gmail"].sent_folder, "")
         self.assertEqual(accounts["wh"].smtp, "mail.infomaniak.com")
         self.assertEqual(accounts["wh"].sent_folder, "Sent")
+        self.assertEqual(accounts["wh"].login, "info@wartungsheft.ch")
+
+    def test_alias_absender_meldet_sich_mit_dem_postfach_an(self):
+        # Domain-Alias: Absender info@x.dev, Anmeldung am Postfach info@x.ch
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "accounts.toml"
+            path.write_text('[dev]\naddress="info@x.dev"\nlogin="info@x.ch"\nimap="mail.infomaniak.com"\n'
+                            'password_file="/tmp/y"\n', encoding="utf-8")
+            acc = mb.load_accounts(path)["dev"]
+        self.assertEqual(acc.login, "info@x.ch")
+        self.assertIn("info@x.dev", acc.sender)
 
 
 class Kopfzeilen(unittest.TestCase):
