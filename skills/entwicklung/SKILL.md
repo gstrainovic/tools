@@ -22,6 +22,15 @@ Gilt für jedes Modell (Fable neigt besonders dazu) und gehört in jeden Plan f�
 - **Umgesetzt wird ein Nebenbefund nur in eigenen Produkten**, als eigener Commit mit eigenem Test, getrennt von der eigentlichen Änderung.
 - **Nie nebenbei** in Kundencode, in Plugins, die bei wordpress.org in Prüfung liegen, und in den Läufen auf dem Server (find-jobs-lauf: Code-Lauf baut keine neuen Funktionen).
 
+## Mehrsprachige Produkte
+
+- **Alles Sichtbare übersetzen, auch im System des Kunden:** Bietet ein Produkt Sprachen an (de, fr, it, en), dann
+  nicht nur eigene Seiten und Mails, sondern auch alles, was es beim Kunden anlegt oder hineinschreibt: Felder,
+  Gruppen, Auswahlwerte, Status- und Fehlertexte in HubSpot, bexio, myfactory, WordPress usw. Sprache je Kunde bei
+  der Einrichtung festlegen und speichern; interne Schlüssel (Feldnamen für die API) bleiben gleich.
+- **Test gegen Lücken:** ein Test, der für jede Sprache jeden Text verlangt, damit kein neuer Text nur deutsch
+  dazukommt. Vor Videos oder Screenshots in einer Sprache prüfen, dass im Bild nichts Deutsches übrig bleibt.
+
 ## Python
 
 - Immer `uv`, nie `pip` direkt. Passt die Python-Version nicht, holt uv sie: `uv python install 3.13`, `uv venv --python 3.13`, `uv run --python 3.13`. Nicht aufgeben, bevor diese Wege versucht sind.
