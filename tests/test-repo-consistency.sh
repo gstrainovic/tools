@@ -149,6 +149,20 @@ else
 fi
 rm -rf "$TMP_HOME"
 
+# Test 11: öffentliches Repo ohne Kunden- oder Arbeitgebernamen (Sperrliste aus dem privaten find-jobs, falls da)
+SPERRLISTE="$HOME/projects/find-jobs/akquise/website-sperrbegriffe.txt"
+if [[ -f "$SPERRLISTE" ]]; then
+    muster="$(grep -v '^[[:space:]]*#' "$SPERRLISTE" | sed '/^[[:space:]]*$/d' | paste -sd'|')"
+    treffer="$(git -C "$ROOT" ls-files -z | xargs -0 grep -l -i -E "$muster" -- 2>/dev/null | grep -v '^tests/' || true)"
+    if [[ -z "$treffer" ]]; then
+        pass "öffentliches Repo: keine Begriffe aus der Sperrliste"
+    else
+        fail "öffentliches Repo: Sperrbegriffe in: $treffer"
+    fi
+else
+    pass "öffentliches Repo: Sperrliste nicht vorhanden, übersprungen"
+fi
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
