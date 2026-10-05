@@ -328,6 +328,30 @@ class Entwuerfe(unittest.TestCase):
                 mb.load_accounts = original
             self.assertTrue(aufgerufen["draft"], argv[0])
 
+    def test_mehrfaches_attach_behaelt_alle_dateien(self):
+        # Früher galt bei «--attach a --attach b» still nur b; der Empfänger bekam Anhänge nicht
+        for argv in (["send", "x", "--to", "a@b.ch", "--subject", "s", "--body-file", "f",
+                      "--attach", "a.pdf", "--attach", "b.pdf", "c.pdf"],
+                     ["reply", "x", "7", "--body-file", "f", "--attach", "a.pdf", "--attach", "b.pdf", "c.pdf"]):
+            aufgerufen = {}
+            original = mb.load_accounts
+            mb.load_accounts = lambda *a, **k: {}
+            import argparse as _ap
+            orig_parse = _ap.ArgumentParser.parse_args
+
+            def fang(self, args=None, namespace=None):
+                ns = orig_parse(self, args, namespace)
+                aufgerufen["attach"] = getattr(ns, "attach", None)
+                raise SystemExit(0)
+            _ap.ArgumentParser.parse_args = fang
+            try:
+                with self.assertRaises(SystemExit):
+                    mb.main(argv)
+            finally:
+                _ap.ArgumentParser.parse_args = orig_parse
+                mb.load_accounts = original
+            self.assertEqual(aufgerufen["attach"], ["a.pdf", "b.pdf", "c.pdf"], argv[0])
+
 
 if __name__ == "__main__":
     unittest.main()
