@@ -11,8 +11,10 @@ Reihenfolge, das erste passende nehmen:
    kein Schlüssel in `.secrets/` oder `~/.config/` liegt, zuerst in den Einstellungen nach «API», «API-Tokens»,
    «Entwickler» oder einer CLI suchen und einen Token mit den nötigen Rechten (lesen und schreiben) anlegen lassen,
    bevor irgendetwas durchgeklickt wird; Ablage in `.secrets/` bzw. `~/.config/<system>/` und sofort
-   `geheimnisse hochladen` (Tresor). Token nie in den Chat oder als Befehlszeile eingeben lassen, sondern
-   `! wl-paste -n > <datei> && chmod 600 <datei>` nach dem Kopieren. Beim Anlegen per API die zurückgegebene ID
+   `geheimnisse hochladen` (Tresor). Token nie in den Chat oder als Befehlszeile eingeben lassen. Ablauf: Goran
+   kopiert den Token und schreibt «bereit»; dann selbst `wl-paste -n > <datei> && chmod 600 <datei>` ausführen
+   (Bash läuft in seiner Wayland-Sitzung), nur Länge und Zeichenart ausgeben, mit einem lesenden API-Aufruf prüfen,
+   hochladen und die Zwischenablage mit `wl-copy --clear` leeren. Beim Anlegen per API die zurückgegebene ID
    festhalten (zum Ändern und Löschen).
 2. **playwright-cli** (Skill `playwright-cli`) für alles Interaktive: unbekannte Masken erkunden, einrichten,
    prüfen (myfactory, bexio, REDAXO, WordPress, Portale ohne Bot-Schutz). Kein Tool-Schema im Kontext, Snapshots
