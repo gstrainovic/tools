@@ -135,6 +135,20 @@ else
 fi
 rm -rf "$TMP_HOME"
 
+# Test 10: link.sh verknüpft die globale CLAUDE.md aus skills-privat und sichert eine vorhandene echte Datei
+TMP_HOME="$(mktemp -d)"
+mkdir -p "$TMP_HOME/projects/skills-privat/claude" "$TMP_HOME/.claude"
+echo "# Global" > "$TMP_HOME/projects/skills-privat/claude/CLAUDE.md"
+echo "# Alt" > "$TMP_HOME/.claude/CLAUDE.md"
+if HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1 \
+    && [[ "$(readlink -e "$TMP_HOME/.claude/CLAUDE.md")" == "$TMP_HOME/projects/skills-privat/claude/CLAUDE.md" ]] \
+    && grep -q '# Alt' "$TMP_HOME"/.claude/CLAUDE.md.vor-link-* 2>/dev/null; then
+    pass "link.sh: globale CLAUDE.md aus skills-privat verknüpft, alte Datei gesichert"
+else
+    fail "link.sh: globale CLAUDE.md nicht verknüpft oder alte Datei nicht gesichert"
+fi
+rm -rf "$TMP_HOME"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

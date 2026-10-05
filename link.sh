@@ -1,7 +1,7 @@
 #!/bin/bash
 # link.sh — Verknüpfungen aus diesem Repo anlegen, idempotent, ohne sudo:
 #   Scripts nach ~/.local/bin, Claude-Skills (skills/<name>/ und ~/projects/skills-privat/skills/<name>/)
-#   nach ~/.claude/skills/<name>.
+#   nach ~/.claude/skills/<name>, die globale ~/.claude/CLAUDE.md aus ~/projects/skills-privat/claude/.
 # Wird von setup.sh aufgerufen und kann allein laufen: bash ~/projects/tools/link.sh
 
 set -euo pipefail
@@ -36,6 +36,15 @@ for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do
     name="$(basename "$dir")"
     link "${dir%/}" "$SKILL_DIR/$name"
 done
+
+# Globale Claude-Richtlinien aus dem privaten Repo; eine vorhandene echte Datei wird vorher gesichert
+GLOBAL_CLAUDE="$HOME/projects/skills-privat/claude/CLAUDE.md"
+if [[ -f "$GLOBAL_CLAUDE" ]]; then
+    if [[ -f "$HOME/.claude/CLAUDE.md" && ! -L "$HOME/.claude/CLAUDE.md" ]]; then
+        mv "$HOME/.claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md.vor-link-$(date +%Y%m%d%H%M%S)"
+    fi
+    link "$GLOBAL_CLAUDE" "$HOME/.claude/CLAUDE.md"
+fi
 
 # Kopie aus früheren setup.sh-Läufen, Inhalt steht jetzt im Skill screenshots
 if [[ -d "$SKILL_DIR/tui-screenshot" && ! -L "$SKILL_DIR/tui-screenshot" ]]; then
