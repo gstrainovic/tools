@@ -20,7 +20,7 @@ Gilt für jedes Modell (Fable neigt besonders dazu) und gehört in jeden Plan f�
 - **Nur ändern, was die Aufgabe verlangt.** Gezielte Änderungen statt ganze Dateien neu zu schreiben; Prüfskripte nicht als feste Tests einchecken, Tests nur auf Verhalten (siehe «Tests»).
 - **Nebenbefunde melden, nicht nebenbei umsetzen:** veralteter Code oder Kommentar, Fehler, fehlende Tests, Aufräumbedarf kommen am Ende als Liste in den Bericht. Goran oder ein eigener Schritt entscheidet.
 - **Umgesetzt wird ein Nebenbefund nur in eigenen Produkten**, als eigener Commit mit eigenem Test, getrennt von der eigentlichen Änderung.
-- **Nie nebenbei** in Kundencode (etwa Druckdaten-Tool), in Plugins, die bei wordpress.org in Prüfung liegen, und in den Läufen auf dem Server (find-jobs-lauf: Code-Lauf baut keine neuen Funktionen).
+- **Nie nebenbei** in Kundencode, in Plugins, die bei wordpress.org in Prüfung liegen, und in den Läufen auf dem Server (find-jobs-lauf: Code-Lauf baut keine neuen Funktionen).
 
 ## Python
 
