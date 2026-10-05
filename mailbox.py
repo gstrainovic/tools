@@ -558,7 +558,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--subject", required=True)
     p.add_argument("--body-file", required=True)
     p.add_argument("--reply-to")
-    p.add_argument("--attach", nargs="*", default=[], help="Dateien anhängen, z. B. den CV als PDF")
+    p.add_argument("--attach", nargs="+", action="extend", default=[],
+                   help="Dateien anhängen, z. B. den CV als PDF; mehrfach angegeben werden alle angehängt")
     p.add_argument("--dry-run", action="store_true", help="Nachricht nur anzeigen")
     p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
     p.set_defaults(fn=cmd_send)
@@ -568,7 +569,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("uid")
     p.add_argument("--body-file", required=True)
     p.add_argument("--all", action="store_true", help="Antwort an alle Empfänger")
-    p.add_argument("--attach", nargs="*", default=[])
+    p.add_argument("--attach", nargs="+", action="extend", default=[])
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
