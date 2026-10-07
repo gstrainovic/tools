@@ -1,6 +1,6 @@
 ---
 name: arbeitsweise
-description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und Warte-Schleifen (nie pgrep -f auf den eigenen Befehl), Status «nichts läuft mehr», Tests ohne Zuschauen, Geheimnisse aus Dateien per Skript nutzen, Abläufe nach Skill automatisieren, Rückmeldungen auf alle gleichartigen Stellen anwenden, keine Cloud-Runner. Laden, bevor Hintergrundprozesse, Agenten mit Warte-Schleifen, Tests am Gerät, Automatisierungen, Builds oder CI aufgesetzt werden, wenn ein Passwort gebraucht wird, und wenn Goran etwas korrigiert.
+description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und Warte-Schleifen (nie pgrep -f auf den eigenen Befehl), Status «nichts läuft mehr», Tests ohne Zuschauen, Geheimnisse aus Dateien per Skript nutzen, Abläufe nach Skill automatisieren, Rückmeldungen auf alle gleichartigen Stellen anwenden, keine Cloud-Runner, Modellwahl beim Delegieren (Skript vor Haiku vor Sonnet vor Opus, Entscheide im Hauptmodell). Laden, bevor Hintergrundprozesse, Agenten oder Subagenten gestartet, Tests am Gerät, Automatisierungen, Builds oder CI aufgesetzt werden, wenn ein Passwort gebraucht wird, und wenn Goran etwas korrigiert.
 ---
 
 # Arbeitsweise (alle Repos)
@@ -15,6 +15,33 @@ description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und 
 - Vor der Meldung «nichts läuft mehr»: laufende Agenten, hängende Shells (`ps` nach `sleep` mit bash-Eltern)
   und Test-Container (`docker ps`) prüfen und Verwaistes beenden, weil hängende Shells sonst der Meldung
   widersprechen.
+
+## Modellwahl beim Delegieren
+
+Das Hauptmodell (Fable oder Opus in der Sitzung) ist das teuerste; sein Wochenlimit teilen sich Server und Laptop.
+Vor jeder grösseren Lese- oder Fleissarbeit die Stufen von unten nach oben durchgehen und die erste nehmen, die
+reicht:
+
+1. **Skript statt Modell:** Was ein Skript ohne Sprachmodell erledigt (Websites und Impressen lesen, Listen
+   abgleichen, Logs filtern, Tabellen bauen), kostet keine Tokens. Vorhandene Skripte zuerst (`firmensuche.py`,
+   `jobs.py`, `foren.py`), fehlende kurz schreiben.
+2. **Haiku 4.5, Denkstufe low:** mechanische Ausführung mit vorgegebenem Text und Befehlen (Mail aus Datei senden,
+   Dateien kopieren, Formular nach Anleitung ausfüllen) und Lesearbeit mit festem Rückgabeformat (Impressen,
+   Kontaktdaten, Tabellenwerte aus vielen Seiten).
+3. **Sonnet 5.5, Denkstufe medium:** Lesen und Vorsortieren nach klaren Kriterien (Stellenanzeigen, Forenbeiträge,
+   Suchtreffer, Doku-Recherche mit WebSearch und Jina), Übersetzungen, Tests nach Plan schreiben, Zusammenfassungen
+   langer Fäden.
+4. **Opus 5.5, Denkstufe high:** Code-Änderungen mit TDD in Produkt-Repos, Fehleranalyse, Umsetzungspläne,
+   Prüfung fremden Codes; so läuft auch der Code-Lauf auf find-jobs-lauf.
+5. **Hauptmodell:** alles mit Entscheid oder Folgen: Einordnung von Kandidaten, Antworten an Kunden und
+   Interessenten, Preise, Freigaben, Deutung von Rückmeldungen. Keine Kundenantworten durch Haiku oder Sonnet
+   (Sonnet antwortete Interessenten zu oft falsch).
+
+Faustregeln: Ab etwa zehn Seiten oder Dateien Lesearbeit delegieren, darunter selbst machen, weil der Auftragstext
+und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Quellen, Rückgabeformat und Verbote
+(keine Claude-in-Chrome-Werkzeuge, nichts senden, nichts committen, keine Dateien ausserhalb des genannten Ordners).
+Ergebnisse eines Subagenten vor der Verwendung stichprobenweise prüfen. Mehrere unabhängige Aufträge gleichzeitig
+starten.
 
 ## Tests ohne Zuschauen
 
