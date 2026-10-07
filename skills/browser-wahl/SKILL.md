@@ -25,7 +25,9 @@ Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwrig
 
 Nachschlagen (Preise, Produktvergleiche, Doku, Marktlücken) läuft über WebSearch, im Notfall über Jina
 (`https://r.jina.ai/<URL>` oder MCP `jina-reader`), nie über Playwright oder Claude in Chrome, weil das Tokens
-kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Recherche-Agenten bekommen im Auftrag wörtlich:
+kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Recherche-Agenten laufen als Sonnet (Lesen und
+Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; Stufen im Skill `arbeitsweise`,
+Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
 markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
 
