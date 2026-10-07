@@ -22,6 +22,11 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
 ## wordpress.org
 
 - `readme.txt`, Plugin-Kopf und Quelltexte sind englisch.
+- `Tags:` in der readme sind die Suchbegriffe der Zielgruppe, nicht Technikwörter: wordpress.org wertet nur die
+  ersten fünf, und Plugin-Spiegel (pluginsdb.com, wphive.com) übernehmen sie unverändert. Je Plugin die Begriffe,
+  die ein Schweizer Shopbetreiber tippt (etwa `schweiz`, `bexio`, `zefix`, `rappen`, `mwst`), neben `woocommerce`
+  und `switzerland`. Eine Tag-Änderung braucht keine neue Version: readme in `trunk/` und im Tag der stabilen
+  Version per SVN committen (`svn-ci.sh`).
 - Externe Dienste im readme-Abschnitt «External services» offenlegen.
 - Pro Konto (gstrainovic) liegt nur ein Plugin gleichzeitig in der Prüfung. Rückfragen der Prüfer im selben Mail-Thread beantworten, nie neu einreichen.
 
