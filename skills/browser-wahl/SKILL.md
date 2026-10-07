@@ -34,7 +34,13 @@ markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
 Jina: Schlüssel in `~/.config/jina/key` (nie anzeigen), für curl
 `-H "Authorization: Bearer $(tr -d '\n' < ~/.config/jina/key)"`. Mit Schlüssel geht auch `jina_search`, eine
 Suche kostet rund 55'000 Tokens Guthaben. Meldet Jina HTTP 402 (`InsufficientBalanceError`), ohne Schlüssel
-aufrufen (20 Abrufe pro Minute). Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht Jina nicht.
+aufrufen (20 Abrufe pro Minute); kein Guthaben nachkaufen. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht
+Jina nicht.
+
+Listen (Zielfirmen, Impressen, Referenzseiten) laufen nie über Jina, sondern über Skripte mit curl
+(`akquise/firmensuche.py` und Einzelskripte); Jina nur für die einzelne Seite, die curl blockt oder per JavaScript
+entsteht. Sind es viele solche Seiten, ein Playwright-Skript mit dem lokalen Chrome (Stufe 3 oben), das rendert
+JavaScript gratis.
 
 ## Claude in Chrome
 
