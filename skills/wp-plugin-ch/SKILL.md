@@ -29,6 +29,9 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
 
 - Quelltext englisch. Alle sichtbaren Texte laufen durch `__()`/`esc_html__()` mit der Text Domain = Slug, auch Texte, die im Zielsystem oder im Protokoll landen.
 - `plugin/<slug>/languages/` enthält `.pot` sowie `.po`/`.mo` für `de_DE`, `de_CH` (ohne ß), `fr_FR`, `it_IT`.
+  Ins Paket für wordpress.org kommt nur die `.pot`: `languages/.gitattributes` mit `*.po export-ignore` und
+  `*.mo export-ignore`, das Build-Skript prüft das ZIP. Die Prüfer lehnen mitgelieferte `.po`/`.mo` ab; nach der
+  Freigabe die `.po` auf translate.wordpress.org importieren.
 - Nach Textänderungen `./bin-uebersetzungen.sh`: `.pot` per `wp i18n make-pot` im Container `wordpress:cli`, `msgmerge` in jede `.po`, `.mo` per `msgfmt -c`. Neue Texte danach in allen `.po` übersetzen und das Skript noch einmal laufen lassen.
 - `Sprache::datei()` bildet die Seitensprache ab: `de_CH*` → `de_CH`, übrige `de*` → `de_DE`, `fr*` → `fr_FR`, `it*` → `it_IT`, sonst Englisch.
 - Laden per `load_textdomain()` auf `init` und bei `change_locale`. `load_plugin_textdomain()` meldet Plugin Check als veraltet.
