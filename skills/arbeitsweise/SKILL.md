@@ -54,8 +54,14 @@ starten.
 - **Bilder sparsam:** Vorschaubilder nur bei neuen oder geänderten Vorlagen, eine Firma je Vorlage; keine
   Kontaktbögen über alle Vorlagen ohne Anlass.
 - **Keine Abfrageschleifen** mit kurzen Intervallen für Mails oder DNS; einmal prüfen, bei Bedarf später nochmals.
-- **Lange Sitzungen** erzeugen mit jedem Aufruf Kosten für den ganzen Verlauf; nach einem abgeschlossenen Thema
-  die Zusammenfassung zulassen statt weiterzuarbeiten, als wäre der Verlauf gratis.
+- **Lange Sitzungen sind der grösste Posten, nicht die Agenten.** Jeder Aufruf liest den ganzen Verlauf aus dem
+  Cache (Sitzung vom 07./08.10.2026: 1'242 Aufrufe, 885 Millionen Cache-Tokens auf Fable, 428 $ von 520 $;
+  Agenten nur 17 %, Chrome-Werkzeugausgaben 20 %). Ab rund 150'000 Tokens Verlauf oder nach einem
+  abgeschlossenen Thema: neue Sitzung starten (Stand steht in TODO.md und AGENTS.md), nicht weiterarbeiten.
+- **Fable hat ein eigenes Wochenlimit** (72 % bei 40 % Gesamt): Routine (Nachhalten, Versand, Listen, Deploys)
+  in Sitzungen mit Opus oder Sonnet (`/model`), Fable für Entscheide, Kundentexte und Recherchen mit Urteil.
+- **Chrome-Werkzeuge** lassen Seiteninhalte im Verlauf; nach einer Browser-Aufgabe die Sitzung beenden oder
+  verdichten, Browserarbeit in eigene kurze Sitzungen legen.
 
 ## Tests ohne Zuschauen
 
