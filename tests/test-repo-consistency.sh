@@ -85,6 +85,11 @@ if (cd "$ROOT" && python3 -m unittest -q test_geheimnisse.py >/dev/null 2>&1); t
 else
     fail "test_geheimnisse.py: Unit-Tests rot"
 fi
+if (cd "$ROOT" && python3 -m unittest -q test_thunderbird_konten.py >/dev/null 2>&1); then
+    pass "test_thunderbird_konten.py: Unit-Tests grün"
+else
+    fail "test_thunderbird_konten.py: Unit-Tests rot"
+fi
 
 # Test 7: Jeder Skill unter skills/ hat Frontmatter mit name = Ordnername und einer description
 for skill in "$ROOT"/skills/*/; do
@@ -113,6 +118,7 @@ if HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1 && HOME="$TMP_HOME" bas
         [[ "$(readlink -e "$TMP_HOME/.claude/skills/$name")" == "$(readlink -e "$skill")" ]] || ok=0
     done
     [[ "$(readlink -e "$TMP_HOME/.local/bin/gui-screenshot")" == "$ROOT/gui-screenshot.sh" ]] || ok=0
+    [[ "$(readlink -e "$TMP_HOME/.local/bin/thunderbird-konten")" == "$ROOT/thunderbird_konten.py" ]] || ok=0
     if [[ $ok -eq 1 ]]; then
         pass "link.sh: Skills und Scripts verknüpft, zweimal ausführbar"
     else

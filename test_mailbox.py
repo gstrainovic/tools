@@ -222,6 +222,43 @@ class HtmlFassung(unittest.TestCase):
         self.assertIn("text/html", out.getvalue())
 
 
+class Abmeldekopf(unittest.TestCase):
+    """Akquise-Mails tragen List-Unsubscribe (Gmail und Yahoo zeigen damit «Abbestellen» statt «Spam melden»);
+    One-Click (List-Unsubscribe-Post, RFC 8058) nur mit einer https-Adresse, die per POST abmeldet."""
+
+    def senden(self, *zusatz: str) -> email.message.Message:
+        import contextlib
+        import io
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "b.txt"
+            body.write_text(SIGNATUR, encoding="utf-8")
+            out = io.StringIO()
+            with mock.patch.object(mb, "load_accounts", lambda: {"x": account()}), contextlib.redirect_stdout(out):
+                mb.main(["send", "x", "--to", "a@b.ch", "--subject", "T", "--body-file", str(body), "--dry-run", *zusatz])
+        return email.message_from_string(out.getvalue())
+
+    def test_akquise_mail_mit_mailto_auf_das_eigene_postfach(self):
+        msg = self.senden("--list-unsubscribe")
+        self.assertEqual(msg["List-Unsubscribe"], "<mailto:info@wartungsheft.ch?subject=Abmelden>")
+        self.assertIsNone(msg["List-Unsubscribe-Post"])
+
+    def test_one_click_nur_mit_url(self):
+        msg = self.senden("--list-unsubscribe", "--unsubscribe-url", "https://www.wartungsheft.ch/abmelden?m=1")
+        self.assertEqual(msg["List-Unsubscribe"],
+                         "<https://www.wartungsheft.ch/abmelden?m=1>, <mailto:info@wartungsheft.ch?subject=Abmelden>")
+        self.assertEqual(msg["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click")
+
+    def test_gewoehnliche_mail_ohne_abmeldekopf(self):
+        msg = self.senden()
+        self.assertIsNone(msg["List-Unsubscribe"])
+        self.assertIsNone(msg["List-Unsubscribe-Post"])
+
+    def test_url_ohne_https_wird_abgelehnt(self):
+        with self.assertRaises(SystemExit):
+            self.senden("--list-unsubscribe", "--unsubscribe-url", "http://www.wartungsheft.ch/abmelden")
+
+
 class Suche(unittest.TestCase):
     def test_ascii_bleibt_unveraendert(self):
         self.assertEqual(mb.search_args('SUBJECT "neue Anmeldung"'), (['SUBJECT "neue Anmeldung"'], None))
