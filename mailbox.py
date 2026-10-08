@@ -506,17 +506,40 @@ def cmd_unseen(accounts: dict[str, Account], args) -> None:
     mark(accounts[args.account], args.folder, args.uid, seen=False)
 
 
+SONDERORDNER = {"trash": rb"\Trash", "papierkorb": rb"\Trash", "spam": rb"\Junk", "junk": rb"\Junk"}
+
+
+def resolve_folder(list_lines: list[bytes], name: str) -> str:
+    """«Trash», «[Gmail]/Trash», «Papierkorb» oder «Spam» → der Ordner, den der Server mit \\Trash bzw. \\Junk
+    kennzeichnet (Gmail: «[Gmail]/Papierkorb», Infomaniak: «Trash»). Andere Namen bleiben, wie sie sind."""
+    kurz = name.rsplit("/", 1)[-1].lower()
+    flag = SONDERORDNER.get(kurz)
+    if not flag:
+        return name
+    for line in list_lines:
+        m = re.match(rb'\((?P<flags>[^)]*)\)\s+"[^"]*"\s+(?P<name>"(?:[^"\\]|\\.)*"|\S+)', line)
+        if m and flag in m.group("flags"):
+            folder = m.group("name").decode("utf-7" if b"&" in m.group("name") else "ascii", errors="replace")
+            return folder.strip('"').replace('\\"', '"')
+    return name
+
+
 def cmd_move(accounts: dict[str, Account], args) -> None:
     conn = imap_connect(accounts[args.account])
+    status, lines = conn.list()
+    target_name = resolve_folder(lines if status == "OK" else [], args.target)
     conn.select(imap_folder(args.folder))
-    target = imap_folder(args.target)
+    target = imap_folder(target_name)
     status, _ = conn.uid("move", args.uid, target)
     if status != "OK":
-        conn.uid("copy", args.uid, target)
+        status, _ = conn.uid("copy", args.uid, target)
+        if status != "OK":
+            conn.logout()
+            raise SystemExit(f"Zielordner {target_name} nicht gefunden, nichts verschoben (mailbox folders KONTO zeigt die Namen)")
         conn.uid("store", args.uid, "+FLAGS", r"(\Deleted)")
         conn.expunge()
     conn.logout()
-    print(f"verschoben nach {args.target}")
+    print(f"verschoben nach {target_name}")
 
 
 def main(argv: list[str] | None = None) -> None:

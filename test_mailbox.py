@@ -242,6 +242,9 @@ class Ordnernamen(unittest.TestCase):
         aufrufe = []
 
         class Conn:
+            def list(self):
+                return "OK", [b'(\\HasNoChildren) "/" "[Gmail]/Alle Nachrichten"']
+
             def select(self, folder, readonly=False):
                 aufrufe.append(("select", folder))
                 return "OK", [b"1"]
@@ -263,6 +266,56 @@ class Ordnernamen(unittest.TestCase):
             mb.imap_connect = original
         self.assertIn(("select", '"[Gmail]/Alle Nachrichten"'), aufrufe)
         self.assertIn(("uid", "move", "7", '"[Gmail]/Alle Nachrichten"'), aufrufe)
+
+    def test_trash_und_spam_werden_auf_die_gekennzeichneten_ordner_des_kontos_aufgeloest(self):
+        # Gmail nennt den Papierkorb «[Gmail]/Papierkorb», Infomaniak «Trash»; die Kennzeichen \Trash und \Junk
+        # aus LIST sagen, welcher Ordner gemeint ist
+        liste = [b'(\\HasNoChildren) "/" "INBOX"', b'(\\HasChildren \\Trash) "/" "[Gmail]/Papierkorb"',
+                 b'(\\HasNoChildren \\Junk) "/" "[Gmail]/Spam"', b'(\\HasNoChildren) "/" "Strainovic IT"']
+        for name in ("Trash", "[Gmail]/Trash", "Papierkorb"):
+            self.assertEqual(mb.resolve_folder(liste, name), "[Gmail]/Papierkorb")
+        self.assertEqual(mb.resolve_folder(liste, "Spam"), "[Gmail]/Spam")
+        self.assertEqual(mb.resolve_folder(liste, "Strainovic IT"), "Strainovic IT")
+        self.assertEqual(mb.resolve_folder([b'(\\HasNoChildren \\Trash) "/" Trash'], "Trash"), "Trash")
+
+    def test_move_loescht_nichts_wenn_der_zielordner_fehlt(self):
+        # Bisher: MOVE scheitert, COPY scheitert still, dann \Deleted plus EXPUNGE, und bei Gmail ist die Mail
+        # nur noch im Archiv statt im Papierkorb
+        aufrufe = []
+
+        class Conn:
+            def list(self):
+                return "OK", [b'(\\HasChildren \\Trash) "/" "[Gmail]/Papierkorb"', b'(\\HasNoChildren) "/" "INBOX"']
+
+            def select(self, folder, readonly=False):
+                return "OK", [b"1"]
+
+            def uid(self, *args):
+                aufrufe.append(("uid", *args))
+                if args[0] in ("move", "copy"):
+                    return "NO", [b"[TRYCREATE] No folder"]
+                return "OK", [None]
+
+            def expunge(self):
+                aufrufe.append(("expunge",))
+
+            def logout(self):
+                pass
+
+        original = mb.imap_connect
+        mb.imap_connect = lambda acc: Conn()
+        try:
+            args = type("A", (), {"account": "x", "folder": "INBOX", "uid": "7", "target": "Gibt-es-nicht"})()
+            with self.assertRaises(SystemExit):
+                mb.cmd_move({"x": None}, args)
+            args.target = "[Gmail]/Trash"
+            with self.assertRaises(SystemExit):
+                mb.cmd_move({"x": None}, args)
+        finally:
+            mb.imap_connect = original
+        self.assertIn(("uid", "move", "7", mb.imap_folder("[Gmail]/Papierkorb")), aufrufe, "Trash muss auf den Papierkorb zeigen")
+        self.assertNotIn(("expunge",), aufrufe)
+        self.assertFalse([a for a in aufrufe if a[1:3] == ("store", "7")], "ohne Kopie kein Löschen")
 
 
 class Entwuerfe(unittest.TestCase):
