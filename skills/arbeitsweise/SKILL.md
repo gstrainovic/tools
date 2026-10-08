@@ -43,6 +43,20 @@ und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Qu
 Ergebnisse eines Subagenten vor der Verwendung stichprobenweise prüfen. Mehrere unabhängige Aufträge gleichzeitig
 starten.
 
+## Tokens sparen (Wochenlimit teilen sich Laptop und Server)
+
+- **Kein Fork für Arbeitsaufträge.** Ein Fork erbt den ganzen Gesprächsverlauf und liest ihn als Erstes ein; bei
+  langen Sitzungen kostet das je Agent 300'000 bis 600'000 Tokens (08.10.2026: acht Agenten, rund drei Millionen,
+  70 % des Wochenlimits in einem Tag). Agenten starten mit leerem Gedächtnis (`general-purpose`) und bekommen einen
+  kurzen Auftrag mit Dateipfaden, Regeln und Berichtsform.
+- **Modell nach Aufgabe:** mechanische Arbeit (Listen bauen, Adressen suchen, Umbrechen, Trockenläufe, Deploys)
+  auf Sonnet (`model: sonnet`); Fable nur für Entscheide, Texte an Kunden und Recherchen mit Urteil.
+- **Bilder sparsam:** Vorschaubilder nur bei neuen oder geänderten Vorlagen, eine Firma je Vorlage; keine
+  Kontaktbögen über alle Vorlagen ohne Anlass.
+- **Keine Abfrageschleifen** mit kurzen Intervallen für Mails oder DNS; einmal prüfen, bei Bedarf später nochmals.
+- **Lange Sitzungen** erzeugen mit jedem Aufruf Kosten für den ganzen Verlauf; nach einem abgeschlossenen Thema
+  die Zusammenfassung zulassen statt weiterzuarbeiten, als wäre der Verlauf gratis.
+
 ## Tests ohne Zuschauen
 
 Tests so bauen, dass niemand davor warten muss: unbeaufsichtigt laufen lassen und danach per Log, Journal
