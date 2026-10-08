@@ -40,6 +40,11 @@ reicht:
 Faustregeln: Ab etwa zehn Seiten oder Dateien Lesearbeit delegieren, darunter selbst machen, weil der Auftragstext
 und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Quellen, Rückgabeformat und Verbote
 (keine Claude-in-Chrome-Werkzeuge, nichts senden, nichts committen, keine Dateien ausserhalb des genannten Ordners).
+**Erst lokal, dann Web:** Vor jeder Web-Recherche und jedem Recherche-Auftrag selbst mit `rg` über alle Repos unter
+`~/projects` suchen (AGENTS.md, todo.md, Recherche-Dateien, Skills), auch nach Stichworten zum Thema, nicht nur nach
+einer bekannten Datei; die Fundstellen in den Auftrag schreiben und dort festhalten, dass eigene Erfahrungen (Anträge,
+Absagen, Sperren) vor Websuchen gelten. Grund: Die Marktplatz-Recherche vom 08.10.2026 übersah, dass Shopware keine
+neuen Partner aufnimmt und HubSpot drei Kunden verlangt, obwohl beides in den Produkt-Repos stand.
 Ergebnisse eines Subagenten vor der Verwendung stichprobenweise prüfen. Mehrere unabhängige Aufträge gleichzeitig
 starten.
 
