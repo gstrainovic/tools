@@ -28,6 +28,8 @@ auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` 
 | `mailbox.py` | Postfächer per IMAP/SMTP lesen und schreiben, als `~/.local/bin/mailbox` verknüpft |
 | `test_mailbox.py` | Unit-Tests für `mailbox.py` ohne Netz (`python3 -m unittest test_mailbox.py`) |
 | `mailbox-accounts.example.toml` | Vorlage für `~/.config/mail/accounts.toml` |
+| `thunderbird_konten.py` | Thunderbird (Flatpak ESR) um fehlende Konten aus `accounts.toml` ergänzen, als `~/.local/bin/thunderbird-konten` verknüpft |
+| `test_thunderbird_konten.py` | Unit-Tests gegen ein Test-Profil im tmp-Ordner, NSS echt (`python3 -m unittest test_thunderbird_konten.py`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `link.sh` | Verknüpfungen für Scripts und Skills |

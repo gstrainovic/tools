@@ -21,7 +21,7 @@ Befehle:
     mailbox list [KONTO] [--unread] [--limit 20] [--folder INBOX]
     mailbox read KONTO UID [--folder INBOX] [--html]
     mailbox search KONTO 'FROM "x"' | 'SUBJECT "y"' | 'SINCE 01-Sep-2026' [--folder INBOX]
-    mailbox send KONTO --to a@b.ch [--cc ...] [--bcc ...] --subject "…" --body-file text.txt [--reply-to ...] [--attach cv.pdf ...] [--dry-run]
+    mailbox send KONTO --to a@b.ch [--cc ...] [--bcc ...] --subject "…" --body-file text.txt [--reply-to ...] [--attach cv.pdf ...] [--list-unsubscribe [--unsubscribe-url https://…]] [--dry-run]
     mailbox reply KONTO UID --body-file text.txt [--all] [--attach ...] [--folder INBOX] [--dry-run]
     mailbox seen KONTO UID | mailbox unseen KONTO UID
     mailbox move KONTO UID ZIELORDNER
@@ -251,6 +251,8 @@ def build_message(
     in_reply_to: str | None = None,
     references: str | None = None,
     attachments: list[Path] | None = None,
+    list_unsubscribe: bool = False,
+    unsubscribe_url: str | None = None,
 ) -> EmailMessage:
     # Zeilen bis 998 Zeichen (RFC 5322): Python 3.13 kodiert sonst lange Message-IDs in In-Reply-To und References
     # als =?utf-8?q?…?=, und Mailprogramme ordnen die Antwort nicht mehr dem Faden zu
@@ -269,6 +271,15 @@ def build_message(
     if in_reply_to:
         msg["In-Reply-To"] = in_reply_to
         msg["References"] = f"{references} {in_reply_to}".strip() if references else in_reply_to
+    if list_unsubscribe:
+        # Akquise-Mails: Abmeldung per Antwort ans eigene Postfach; One-Click (RFC 8058) nur mit https-Adresse
+        ziele = [f"<mailto:{account.address}?subject=Abmelden>"]
+        if unsubscribe_url:
+            if not unsubscribe_url.startswith("https://"):
+                raise SystemExit(f"--unsubscribe-url braucht https: {unsubscribe_url}")
+            ziele.insert(0, f"<{unsubscribe_url}>")
+            msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+        msg["List-Unsubscribe"] = ", ".join(ziele)
     msg.set_content(body)
     msg.add_alternative(text_to_html(body), subtype="html")
     for path in attachments or []:
@@ -457,7 +468,9 @@ def read_body(path: str) -> str:
 def cmd_send(accounts: dict[str, Account], args) -> None:
     acc = accounts[args.account]
     msg = build_message(acc, args.to, args.subject, read_body(args.body_file), cc=args.cc, bcc=args.bcc, reply_to=args.reply_to,
-                        attachments=[Path(a) for a in args.attach])
+                        attachments=[Path(a) for a in args.attach],
+                        list_unsubscribe=getattr(args, "list_unsubscribe", False),
+                        unsubscribe_url=getattr(args, "unsubscribe_url", None))
     if args.dry_run:
         print(msg.as_string())
         return
@@ -587,6 +600,9 @@ def main(argv: list[str] | None = None) -> None:
                    help="Dateien anhängen, z. B. den CV als PDF; mehrfach angegeben werden alle angehängt")
     p.add_argument("--dry-run", action="store_true", help="Nachricht nur anzeigen")
     p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
+    p.add_argument("--list-unsubscribe", action="store_true",
+                   help="Akquise-Mail: Kopfzeile List-Unsubscribe mit mailto an das eigene Postfach (Betreff «Abmelden»)")
+    p.add_argument("--unsubscribe-url", help="https-Adresse für One-Click-Abmeldung (List-Unsubscribe-Post), nur mit --list-unsubscribe")
     p.set_defaults(fn=cmd_send)
 
     p = sub.add_parser("reply")

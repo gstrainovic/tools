@@ -14,6 +14,7 @@ noch eigenständige Terminal-Scripts.
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
+| `thunderbird_konten.py` | Thunderbird um die fehlenden Konten aus der mailbox-Konfiguration ergänzen |
 | `geheimnisse.py` | Dateien mit Zugangsdaten über den Bitwarden Secrets Manager zwischen Geräten abgleichen |
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen |
@@ -110,6 +111,19 @@ Server: gesendete Mails landen im Ordner «Gesendet», gelesen ist überall gele
 hängen am Gesprächsfaden. Nur Python-Standardbibliothek. Konten nach der Vorlage
 `mailbox-accounts.example.toml` in `~/.config/mail/accounts.toml`, Passwörter je Konto in
 einer eigenen Datei.
+
+### thunderbird-konten
+
+```bash
+thunderbird-konten --dry-run               # zeigt, welche Konten Thunderbird fehlen
+thunderbird-konten                         # legt sie an (Thunderbird vorher schliessen)
+```
+
+Gleicht Thunderbird (Flatpak ESR, Profil aus `installs.ini`) mit `~/.config/mail/accounts.toml` ab:
+fehlende Postfächer werden IMAP-Konto mit SMTP-Server (993/465 SSL), ein Konto mit dem `login` eines
+vorhandenen Postfachs wird zusätzliche Identität dort. Ergänzt nur, sichert vorher `prefs.js`,
+`logins.json` und `key4.db` im Profil und trägt die Passwörter über NSS verschlüsselt in `logins.json` ein.
+Bricht ab, solange Thunderbird läuft. Ein zweiter Lauf ändert nichts.
 
 ### geheimnisse
 
