@@ -166,6 +166,12 @@ class HtmlFassung(unittest.TestCase):
         self.assertIn("Freundliche Grüsse<br>\nGoran Strainovic</p>", html)
         self.assertEqual(html.count("<p"), 4)
 
+    def test_keine_feste_schriftfarbe(self):
+        # Feste Farben ohne Hintergrund werden im Dunkelmodus (Thunderbird, Outlook, Apple Mail) unlesbar:
+        # dunkle Schrift auf dunklem Grund. Das Mailprogramm des Empfängers wählt die Farbe selbst.
+        html = mb.text_to_html("Zeile\n\n> Zitat\n")
+        self.assertNotIn("color", html)
+
     def test_escaping(self):
         html = mb.text_to_html("a < b & c > d\n")
         self.assertIn("a &lt; b &amp; c &gt; d", html)

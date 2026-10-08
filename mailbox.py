@@ -173,9 +173,9 @@ def addresses(*fields: object) -> list[str]:
 
 LINK = re.compile(r"(?P<url>(?:https?://|www\.)[^\s<>\"]+)|(?P<mail>[\w.+-]+@[\w-]+(?:\.[\w-]+)+)")
 HTML_STYLE = ("font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; "
-              "font-size: 14px; line-height: 1.5; color: #222222;")
+              "font-size: 14px; line-height: 1.5;")  # keine Farbe: Dunkelmodus des Empfängers soll lesbar bleiben
 P_STYLE = "margin: 0 0 1em 0;"
-QUOTE_STYLE = "margin: 0 0 1em 0; padding-left: 0.8em; border-left: 3px solid #cccccc; color: #555555;"
+QUOTE_STYLE = "margin: 0 0 1em 0; padding-left: 0.8em; border-left: 3px solid #cccccc;"
 
 
 def linkify(line: str) -> str:
