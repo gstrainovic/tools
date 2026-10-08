@@ -108,6 +108,17 @@ class Nachrichten(unittest.TestCase):
         self.assertEqual(msg["In-Reply-To"], "<m1@b.ch>")
         self.assertEqual(msg["References"], "<m0@b.ch> <m1@b.ch>")
 
+    def test_lange_message_id_bleibt_unkodiert(self):
+        # Gmail- und Outlook-IDs sind länger als eine Kopfzeile; als RFC-2047-Wort (=?utf-8?q?…?=) ordnen
+        # Mailprogramme die Antwort nicht mehr dem Faden zu
+        lang = "<CAJx" + "7" * 70 + "Q@mail.gmail.com>"
+        msg = mb.build_message(account(), ["a@b.ch"], "Re: X", "ok\n", in_reply_to=lang, references="<m0@b.ch>")
+        roh = msg.as_bytes().decode()
+        self.assertNotIn("=?", roh.split("\n\n", 1)[0].replace("\r", ""))
+        kopf = email.message_from_bytes(msg.as_bytes(), policy=email.policy.default)
+        self.assertEqual(kopf["In-Reply-To"].strip(), lang)
+        self.assertEqual(" ".join(kopf["References"].split()), f"<m0@b.ch> {lang}")
+
     def test_antwortempfaenger_reply_to_vor_from_und_ohne_eigene_adresse(self):
         original = email.message_from_string(
             "From: Kunde <kunde@example.ch>\nReply-To: buero@example.ch\nTo: info@wartungsheft.ch, partner@example.ch\n"
