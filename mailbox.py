@@ -252,7 +252,9 @@ def build_message(
     references: str | None = None,
     attachments: list[Path] | None = None,
 ) -> EmailMessage:
-    msg = EmailMessage(policy=email.policy.SMTP)
+    # Zeilen bis 998 Zeichen (RFC 5322): Python 3.13 kodiert sonst lange Message-IDs in In-Reply-To und References
+    # als =?utf-8?q?…?=, und Mailprogramme ordnen die Antwort nicht mehr dem Faden zu
+    msg = EmailMessage(policy=email.policy.SMTP.clone(max_line_length=998))
     msg["From"] = account.sender
     msg["To"] = ", ".join(to)
     if cc:
