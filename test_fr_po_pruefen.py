@@ -161,6 +161,12 @@ class SpteRegeln(unittest.TestCase):
         self.meldet_nicht("epicenePunctuation", "Les administrateur·rice sont invités.",
                           "La 2e édition est disponible.", "Envoyer un e-mail de confirmation.")
 
+    def test_einheit_aus_dem_handbuch(self):
+        # Nicht in SPTE: Typografie-Tabelle des Handbuchs, U+00A0 zwischen Zahl und Einheit, Währung oder ×
+        self.meldet("einheit", "Distance de 25 km.", "Prix 25 €.", "Format 40 × 50 cm.", "Total 3 CHF.")
+        self.meldet_nicht("einheit", f"Distance de 25{NB}km.", f"Format 40{NB}×{NB}50{NB}cm.", "CHF 149 par an.",
+                          "25 kilos")
+
     def test_prozent_aus_dem_handbuch(self):
         # Nicht in SPTE: das Handbuch verlangt ein geschütztes Leerzeichen vor %
         self.meldet("prozent", "Remise de 10%", "Remise de 10 %%")
@@ -307,6 +313,143 @@ class Kommandozeile(unittest.TestCase):
         stand = (ziel / "glossar-fr.quelle").read_text(encoding="utf-8")
         self.assertIn(quelle.as_uri(), stand)
         self.assertRegex(stand, r"abgerufen \d{4}-\d{2}-\d{2}")
+
+
+class WeitereFormate(unittest.TestCase):
+    """Shopware-Snippets, Shopware config.xml, composer.json, REDAXO .lang und Textpaare (JSON-Export aus PHP):
+    geprüft wird der französische Wert gegen sein englisches Gegenstück mit denselben Regeln wie in der .po."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.ordner = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def datei(self, name, inhalt):
+        pfad = self.ordner / name
+        pfad.parent.mkdir(parents=True, exist_ok=True)
+        pfad.write_text(inhalt, encoding="utf-8")
+        return pfad
+
+    def aufruf(self, *args):
+        return subprocess.run([sys.executable, str(HIER / "fr_po_pruefen.py"), *map(str, args)],
+                              capture_output=True, text=True, env={**os.environ, "NO_COLOR": "1"})
+
+    def snippets(self, fr_werte):
+        self.datei("snippet/p.en.json", '{\n  "p": {\n    "plugin": "Install the plugin",\n'
+                   '    "fehler": {\n      "art": "Shipping: %art%",\n      "satz": "VAT %satz% %"\n    }\n  }\n}\n')
+        return self.datei("snippet/p.fr.json", '{\n  "p": {\n    "plugin": "%s",\n'
+                          '    "fehler": {\n      "art": "%s",\n      "satz": "%s"\n    }\n  }\n}\n' % fr_werte)
+
+    def test_shopware_snippet_werte_mit_zeile_und_schluessel(self):
+        fr_datei = self.snippets(("Installez l'extension", "Expédition : %art%", f"TVA %satz%{NB}%"))
+        r = self.aufruf(fr_datei)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{fr_datei}:3: quotes", r.stdout)
+        self.assertIn(f"{fr_datei}:5: colon", r.stdout)
+        self.assertIn("p.fehler.art", r.stdout)
+        self.assertIn("Shipping: %art%", r.stdout)  # englisches Original
+        self.assertNotIn(":6:", r.stdout)  # %satz% ist ein Platzhalter, danach U+00A0 vor %
+        self.assertNotIn("badWords", r.stdout)  # der Schlüssel «plugin» ist kein Text
+
+    def test_shopware_snippet_korrekt_ist_gruen(self):
+        r = self.aufruf(self.snippets(("Installez l’extension", f"Expédition{NB}: %art%", f"TVA %satz%{NB}%")))
+        self.assertEqual(0, r.returncode, r.stdout + r.stderr)
+
+    def test_shopware_platzhalter_muessen_gleich_bleiben(self):
+        r = self.aufruf(self.snippets(("Installez l’extension", f"Expédition{NB}: %typ%", f"TVA %satz%{NB}%")))
+        self.assertIn("platzhalter", r.stdout)
+
+    def test_snippet_ohne_englisches_gegenstueck_ist_ein_fehler(self):
+        r = self.aufruf(self.datei("snippet/q.fr.json", '{"a": "Bonjour."}'))
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn("q.en.json", r.stdout + r.stderr)
+
+    def test_shopware_config_xml_nur_fr_gegen_englisches_element(self):
+        xml = self.datei("config/config.xml", """<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <card>
+        <title>Connection</title>
+        <title lang="fr-FR">Connexion</title>
+        <input-field>
+            <label>API key</label>
+            <label lang="de-DE">API-Schlüssel</label>
+            <label lang="fr-FR">Clé API</label>
+            <label lang="it-IT">Chiave dell'API</label>
+            <helpText>Create the key under "Users".</helpText>
+            <helpText lang="fr-FR">À créer sous « Utilisateurs ».</helpText>
+        </input-field>
+    </card>
+</config>
+""")
+        r = self.aufruf(xml)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{xml}:9: glossar:API key", r.stdout)
+        self.assertIn(f"{xml}:12: openFrQuote", r.stdout)
+        self.assertNotIn(":10:", r.stdout)  # it-IT wird nicht geprüft
+        self.assertNotIn(":5:", r.stdout)
+
+    def test_composer_json_beschriftungen_ohne_links(self):
+        composer = self.datei("composer.json", """{
+    "name": "x/y",
+    "description": "Shopware plugin",
+    "extra": {
+        "label": {"en-GB": "Invoices", "fr-FR": "Factures"},
+        "description": {
+            "en-GB": "Creates invoices: fast.",
+            "fr-FR": "Crée des factures : vite."
+        },
+        "supportLink": {"en-GB": "mailto:info@example.ch", "fr-FR": "mailto:info@example.ch"}
+    }
+}
+""")
+        r = self.aufruf(composer)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{composer}:8: colon", r.stdout)
+        self.assertNotIn("mailto", r.stdout)
+        self.assertIn("fr-po-pruefen: 1 Funde", r.stdout)
+
+    def test_redaxo_lang_gegen_en_gb(self):
+        self.datei("lang/en_gb.lang", "a_titel = myfactory: inquiries\n\na_text = {0} entries, plugin settings\n")
+        lang = self.datei("lang/fr_fr.lang", "a_titel = myfactory : demandes\n\na_text = {0} entrées, réglages du plugin\n")
+        r = self.aufruf(lang)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{lang}:1: colon", r.stdout)
+        self.assertIn(f"{lang}:3: badWords", r.stdout)
+        self.assertIn("a_text", r.stdout)
+        self.assertNotIn("openBrace", r.stdout)  # {0} ist ein Platzhalter
+
+    def test_textpaare_aus_php_export(self):
+        paare = self.datei("fr-texte.json", '[{"stelle": "Texte::TEXTE[termin]", "en": "Appointment: ", '
+                           '"fr": "Rendez-vous : "}, {"stelle": "Texte::TEXTE[ok]", "en": "Settings", "fr": "Réglages"}]')
+        r = self.aufruf(paare)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{paare}:1: colon", r.stdout)
+        self.assertIn("Texte::TEXTE[termin]", r.stdout)
+        self.assertIn("fr-po-pruefen: 1 Funde", r.stdout)
+
+    def test_textpaar_ohne_en_prueft_nur_die_typografie(self):
+        # Zusammengesetzte Zeilen (Beschriftung aus geprüften Texten plus Daten) haben kein englisches Gegenstück
+        paare = self.datei("fr-texte.json", '[{"stelle": "zeile", "fr": "Nom : Anna, note"}, '
+                           '{"stelle": "zeile2", "fr": "Commande X"}]')
+        r = self.aufruf(paare)
+        self.assertNotEqual(0, r.returncode)
+        self.assertIn(f"{paare}:1: colon", r.stdout)
+        self.assertNotIn("glossar", r.stdout)
+        self.assertNotIn("original", r.stdout)
+        self.assertIn("fr-po-pruefen: 1 Funde", r.stdout)
+
+    def test_ausnahme_gilt_ueber_das_englische_original_in_jedem_format(self):
+        self.datei("lang/en_gb.lang", "a_tag = Tag of the invoice lines\n")
+        lang = self.datei("lang/fr_fr.lang", "a_tag = Tag des lignes de facture\n")
+        paare = self.datei("fr-texte.json", '[{"stelle": "x", "en": "Tag of the invoice lines", '
+                           '"fr": "Tag des lignes de facture"}]')
+        ausnahmen = self.datei("fr-ausnahmen.toml", '[[ausnahme]]\nregel = "glossar:tag"\n'
+                               'msgid = "Tag of the invoice lines"\ngrund = "Test"\n')
+        r = self.aufruf(lang, paare, "--ausnahmen", ausnahmen)
+        self.assertEqual(0, r.returncode, r.stdout + r.stderr)
+        self.assertIn("2 Übersetzungen in 2 Dateien", r.stdout)
 
 
 if __name__ == "__main__":
