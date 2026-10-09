@@ -47,6 +47,11 @@ reicht:
 7. **Fable sonst sparen:** Recherche auf Sonnet (Sammeln) bzw. Opus (Urteil), Code und Tests auf Opus, interne
    Doku (AGENTS.md, TODO.md, Skills, Commit-Nachrichten), Berichte und Rückfragen an Goran im Hauptmodell, auch wenn
    das Opus ist. Fable bleibt damit für die Texte nach Punkt 6 frei.
+8. **Geschäftskritisches doppelt prüfen:** Bei Recherchen zu Strafen, Haftung, Risiko, Gesetzen, Steuern, Geld,
+   Verträgen und Schulden, und immer bei Zweifel am Ergebnis, nach der Erstrecherche (Opus) Goran eine
+   Zweitrecherche mit dem anderen Modell (Fable) vorschlagen, als nummerierte Frage mit Kostenhinweis. Sagt er ja,
+   beide Ergebnisse vergleichen und Übereinstimmung, Abweichungen und offene Punkte getrennt nennen; bei
+   Abweichungen gilt keines als belegt, bis die Primärquelle (Gesetzestext, Urteil) gelesen ist.
 
 Faustregeln: Ab etwa zehn Seiten oder Dateien Lesearbeit delegieren, darunter selbst machen, weil der Auftragstext
 und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Quellen, Rückgabeformat und Verbote
