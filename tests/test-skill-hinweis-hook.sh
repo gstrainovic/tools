@@ -146,6 +146,7 @@ still "browser-wahl geladen, fremde Domain" "$(chrome_ein navigate https://examp
 still "Prompt ohne Anlass" "$(prompt_ein 'Bau den Hook fertig')"
 still "Teilwort zählt nicht" "$(prompt_ein 'Rechtschreibung und Bankett, Mailand')"
 still "Systemmeldung eines Agenten" "$(prompt_ein '<task-notification> Preis inkl. MwSt, Mails gelesen </task-notification>')"
+still "Nachricht eines Agenten" "$(prompt_ein '<agent-message from="a7e8"> Whisper-Lauf über alle Filme, Mails </agent-message>')"
 still "unbekanntes Werkzeug" "$(jq -n '{hook_event_name:"PreToolUse",tool_name:"Read",tool_input:{file_path:"/home/g/AGENTS.md"}}')"
 
 exit $fehler
