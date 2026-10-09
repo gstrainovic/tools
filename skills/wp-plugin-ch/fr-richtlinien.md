@@ -9,6 +9,12 @@ Quellen:
 
 ## 1. Ablauf PTE (Project Translation Editor)
 
+- Willkommensseite «Bienvenue» (Canvas im Slack wordpressfr, von Goran am 09.10.2026 eingefügt): Guide lesen,
+  Browser-Erweiterungen GlotDict und SPTE installieren (warnen bei Glossarbegriffen und Typografie), bei Bedarf
+  «clavier enrichi»; Vorschläge validiert eine Person mit Rechten, alle im Team ehrenamtlich, es dauert. Bei
+  zurückgewiesenen Vorschlägen (Sébastien Serre, 09.10.2026: «quelques règles non respectées») die Texte nach den
+  Regeln korrigieren und auf translate.wordpress.org neu einreichen.
+
 - Jedes Plugin ist ein eigenes «Projekt». Vorschläge von Beitragenden landen zuerst «en attente de validation»; geprüft wird durch PTE (Projektverantwortliche), GPTE (alle Plugins/Themes) oder GTE (ganzes Ökosystem).
 - Wer das Plugin schreibt und Französisch kann, darf die eigenen Übersetzungen nicht selbst freigeben: Französisch sprechen garantiert nicht, dass die Regeln eingehalten werden.
 - Wer kein Französisch spricht und eine Person übersetzen lässt, lässt sie auf translate.wordpress.org/locale/fr arbeiten. Eine PTE-Anfrage ohne Französischkenntnisse wird nicht angenommen.
