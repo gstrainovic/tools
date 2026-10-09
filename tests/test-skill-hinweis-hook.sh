@@ -95,6 +95,8 @@ for u in https://job-boards.eu.greenhouse.io/firma/jobs/1 https://jobs.ashbyhq.c
 done
 meldet "myfactory"           "myfactory" "" "$(chrome_ein navigate 'https://kunde.myfactory-cloud.ch/')"
 meldet "wordpress.org"       "wp-plugin-ch" "" "$(chrome_ein navigate 'https://wordpress.org/plugins/developers/')"
+meldet "translate.wordpress.org" "wp-plugin-ch" "" "$(chrome_ein navigate 'https://translate.wordpress.org/projects/wp-plugins/x/')"
+meldet "Slack wordpressfr"   "wp-plugin-ch" "" "$(chrome_ein navigate 'https://wordpressfr.slack.com/archives/C0123')"
 
 # D) UserPromptSubmit
 for w in Mail mails E-Mail Eingänge antworten Postfach; do
@@ -103,6 +105,9 @@ done
 meldet "Prompt Lauf"         "laptop-lauf" "" "$(prompt_ein 'Mach den Lauf')" UserPromptSubmit
 meldet "Prompt such Jobs"    "laptop-lauf" "" "$(prompt_ein 'such Jobs')" UserPromptSubmit
 meldet "Prompt Screenshot"   "screenshots" "" "$(prompt_ein 'Schau dir den Screenshot an')" UserPromptSubmit
+for w in Übersetzung übersetzen traductions Polyglots PTE; do
+  meldet "Prompt $w" "wp-plugin-ch" "" "$(prompt_ein "Was ist mit $w vom Plugin")" UserPromptSubmit
+done
 for w in Steuer MWST Bank Preis Vertrag Recht; do
   meldet "Prompt $w" "schweiz" "" "$(prompt_ein "Frage zu $w und so")" UserPromptSubmit
 done

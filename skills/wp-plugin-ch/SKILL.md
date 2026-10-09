@@ -46,4 +46,8 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
 - Laden per `load_textdomain()` auf `init` und bei `change_locale`. `load_plugin_textdomain()` meldet Plugin Check als veraltet.
 - `UebersetzungenTest` schlägt fehl, wenn ein Text im Code nicht in der `.pot` steht, eine Übersetzung fehlt, Platzhalter abweichen oder eine `.mo` nicht zu ihrer `.po` passt.
 - Terminologie Schweiz (MWST/TVA/IVA, Rappen/centimes/centesimi) und wie die WordPress- bzw. WooCommerce-Übersetzung. Französisch siezt («vous»), Italienisch duzt wie die WordPress-Übersetzung.
+- **Französisch:** vor jeder `fr_FR.po`, jedem Vorschlag auf translate.wordpress.org und jeder Nachricht im Slack
+  wordpressfr `fr-richtlinien.md` in diesem Ordner lesen (Stil, Typografie mit geschützten Leerzeichen, Glossar,
+  PTE-Ablauf des französischen Teams); der Hook `skill-hinweis.sh` erinnert bei `.po`-Dateien,
+  translate.wordpress.org, wordpress*.slack.com und Prompts zu Übersetzung, Polyglots und PTE an diesen Skill.
 - E2E installiert die WordPress-Sprachpakete und prüft die Oberfläche je Sprache (en_US, de_CH, fr_FR, it_IT).

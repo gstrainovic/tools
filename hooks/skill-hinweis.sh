@@ -100,6 +100,7 @@ mcp__claude-in-chrome__*)
     hinzu ats-formulare "feste Formularangaben (Gehalt, Kündigungsfrist, Adresse) und Belege mit Links"
   am 'myfactory' && hinzu myfactory "SOAP-Zugang, Oberfläche und Testdaten bei myfactory-Kunden"
   am '(^|\.)wordpress\.org$' && hinzu wp-plugin-ch "Plugin-Verzeichnis, Prüfung und Übersetzungen auf wordpress.org"
+  am '^wordpress[a-z]*\.slack\.com$' && hinzu wp-plugin-ch "Übersetzungsregeln der WordPress-Teams (fr-richtlinien.md) vor jeder Nachricht dort"
   ;;
 esac
 
@@ -112,6 +113,8 @@ if [ "$ereignis" = UserPromptSubmit ]; then
   wort 'mail|mails|e-mail|e-mails|eingänge|antworten|postfach' &&
     hinzu nachhalten "alle Postfächer samt Spam und Gesendet, Freund-Feind-Check, Zuordnung zum Fach-Skill"
   wort 'lauf|such jobs' && hinzu laptop-lauf "Reihenfolge und Schritte des Akquise-Laufs"
+  wort 'übersetz[[:alpha:]]*|traductions?|polyglots?|pte' &&
+    hinzu wp-plugin-ch "Übersetzungen der Plugins, Regeln der Polyglots-Teams (fr-richtlinien.md) und PTE"
   wort 'screenshot' && hinzu screenshots "tmux2png oder gui-screenshot unter GNOME Wayland"
   wort 'steuer|mwst|bank|preis|vertrag|recht' && hinzu schweiz "Schweizer Recht und CHF, nicht deutsches oder EU-Recht"
 fi
