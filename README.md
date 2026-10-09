@@ -17,7 +17,7 @@ noch eigenständige Terminal-Scripts.
 | `thunderbird_konten.py` | Thunderbird um die fehlenden Konten aus der mailbox-Konfiguration ergänzen |
 | `geheimnisse.py` | Dateien mit Zugangsdaten über den Bitwarden Secrets Manager zwischen Geräten abgleichen |
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
-| `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen |
+| `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen; `add-domain DOMAIN` legt eine Domain-Property an (TXT-Token per Site Verification API, Eintrag per Infomaniak-API, bestätigen, Property und Sitemap hinzufügen) |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
 | `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
