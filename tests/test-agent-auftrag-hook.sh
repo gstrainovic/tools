@@ -16,6 +16,7 @@ pruefe "Video ohne Regeln wird abgelehnt" "Nimm den Tutorial-Film auf, Sprechert
 pruefe "Rendern ohne Regeln wird abgelehnt" "Video rendern und schneiden, ohne Ton." deny
 pruefe "mit Regeln läuft durch" "Film aufnehmen. Regeln aus Skill produktvideos: Untertitel als VTT-Spur, nie eingebrannt." keine
 pruefe "ohne Videobezug läuft durch" "Korrigiere die fr_FR.po aller Plugins." keine
+pruefe "Vermerk «Keine Videoarbeit» läuft durch" "Texte korrigieren. Keine Videoarbeit: Videos und .vtt nicht ändern." keine
 grund=$(ein "Werbefilm neu montieren" | "$hook" | jq -r '.hookSpecificOutput.permissionDecisionReason // ""')
 if grep -q "nie eingebrannt" <<<"$grund" && grep -q "produktvideos" <<<"$grund"; then echo "ok   Grund nennt Regel und Skill"; else echo "FAIL Grund nennt Regel und Skill"; fehler=1; fi
 aus=$(ein "Korrigiere Texte" | "$hook")
