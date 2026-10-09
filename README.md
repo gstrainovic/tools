@@ -23,6 +23,9 @@ noch eigenständige Terminal-Scripts.
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 | `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
+| `hooks/modellwahl.sh` | Claude-Code-Hook vor Agent und Workflow: legt die Modellwahl aus dem Skill arbeitsweise vor |
+| `hooks/bash-bearbeiten.sh` | Claude-Code-Hook vor Bash: Hinweis «Edit/Write statt sed, Heredoc oder Umleitung», wenn ein Befehl eine Datei schreibt |
+| `hooks/skill-hinweis.sh` | Claude-Code-Hook vor Bash, Edit/Write, Claude in Chrome und bei jedem Prompt: Hinweis, welcher noch nicht geladene Skill zum Schritt gehört (Tabelle «Anlass → Skill» im Script) |
 
 Unter `skills/` liegen User-Skills für Claude Code, je Ordner eine `SKILL.md`.
 
