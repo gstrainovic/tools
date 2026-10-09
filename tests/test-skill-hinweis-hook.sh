@@ -131,6 +131,7 @@ still "gewöhnliche Datei" "$(datei_ein /home/g/projects/x/notizen.txt)"
 still "browser-wahl geladen, fremde Domain" "$(chrome_ein navigate https://example.com/ "$(transkript browser-wahl)")"
 still "Prompt ohne Anlass" "$(prompt_ein 'Bau den Hook fertig')"
 still "Teilwort zählt nicht" "$(prompt_ein 'Rechtschreibung und Bankett, Mailand')"
+still "Systemmeldung eines Agenten" "$(prompt_ein '<task-notification> Preis inkl. MwSt, Mails gelesen </task-notification>')"
 still "unbekanntes Werkzeug" "$(jq -n '{hook_event_name:"PreToolUse",tool_name:"Read",tool_input:{file_path:"/home/g/AGENTS.md"}}')"
 
 exit $fehler
