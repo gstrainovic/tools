@@ -36,12 +36,17 @@ reicht:
 5. **Hauptmodell:** alles mit Entscheid oder Folgen: Einordnung von Kandidaten, Antworten an Kunden und
    Interessenten, Preise, Freigaben, Deutung von Rückmeldungen. Keine Kundenantworten durch Haiku oder Sonnet
    (Sonnet antwortete Interessenten zu oft falsch).
-6. **Fable für Texte an Arbeitgeber und Kunden:** Bewerbungsmails, Anschreiben, Freitextfelder in Formularen,
-   Antworten an Interessenten und Partner schreibt immer Fable (`model: fable`), auch wenn das Hauptmodell Opus ist
-   (Server-Lauf, Sitzung auf Opus). Fable bekommt Inserat bzw. Mail, die Belege aus dem Skill `ats-formulare` und
-   die Regeln aus AGENTS.md und gibt nur den Text zurück. Formular ausfüllen, Anhänge hochladen und Senden mit dem
-   fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über den Auftrag, die
-   Mechanik nicht.
+6. **Fable für jeden Text, den eine Person ausserhalb liest:** Mails und Antworten an Kunden, Interessenten,
+   Partner und Arbeitgeber, Bewerbungen, Anschreiben, Freitextfelder in Formularen, Upwork-Proposals,
+   Forenbeiträge, Ratgeber und Blogartikel, Produkt- und Landingpages, Marktplatz-, Verzeichnis- und Profiltexte,
+   readme-Beschreibungen von Plugins, Sprechertexte von Videos. Fable (`model: fable`) schreibt sie immer, auch wenn
+   das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
+   Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Ausfüllen, Hochladen, Einbauen und Senden
+   mit dem fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über Auftrag und Ruf,
+   die Mechanik nicht.
+7. **Fable sonst sparen:** Recherche auf Sonnet (Sammeln) bzw. Opus (Urteil), Code und Tests auf Opus, interne
+   Doku (AGENTS.md, TODO.md, Skills, Commit-Nachrichten), Berichte und Rückfragen an Goran im Hauptmodell, auch wenn
+   das Opus ist. Fable bleibt damit für die Texte nach Punkt 6 frei.
 
 Faustregeln: Ab etwa zehn Seiten oder Dateien Lesearbeit delegieren, darunter selbst machen, weil der Auftragstext
 und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Quellen, Rückgabeformat und Verbote
