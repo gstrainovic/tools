@@ -124,8 +124,9 @@ unlesbar=$(transkript mailbox); chmod 000 "$unlesbar"
 meldet "Transkript unlesbar" "mailbox" "" "$(bash_ein 'mailbox send gmail' "$unlesbar")"
 meldet "ohne transcript_path" "mailbox" "" "$(jq -n '{hook_event_name:"PreToolUse",tool_name:"Bash",tool_input:{command:"mailbox send gmail"}}')"
 
-still "mailbox schon geladen" "$(bash_ein 'mailbox send gmail --body-file t.txt' "$(transkript mailbox)")"
-still "alle drei schon geladen" "$(bash_ein 'mailbox reply strainovic 4' "$(transkript mailbox akquise-direkt nachhalten)")"
+# Skills geladen: keine Skill-Zeile mehr, nur noch die Fable-Frage
+meldet "mailbox schon geladen: nur Fable-Frage" "" "mailbox akquise-direkt nachhalten" "$(bash_ein 'mailbox send gmail --body-file t.txt' "$(transkript mailbox)")"
+meldet "alle drei schon geladen: nur Fable-Frage" "" "mailbox akquise-direkt nachhalten" "$(bash_ein 'mailbox reply strainovic 4' "$(transkript mailbox akquise-direkt nachhalten)")"
 still "nur im Text erwähnt zählt nicht als geladen, aber Skill geladen" "$(prompt_ein 'mail' "$(transkript nachhalten)")"
 still "doku-pflege geladen" "$(datei_ein /home/g/projects/x/AGENTS.md "$(transkript doku-pflege)")"
 still "browser-wahl und linkedin geladen" "$(chrome_ein navigate https://www.linkedin.com/feed/ "$(transkript browser-wahl linkedin)")"
