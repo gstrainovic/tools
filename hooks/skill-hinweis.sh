@@ -105,6 +105,8 @@ esac
 if [ "$ereignis" = UserPromptSubmit ]; then
   bevor="du antwortest"
   prompt=$(feld .prompt)
+  # Meldungen fertiger Hintergrund-Agenten kommen auch als Prompt an, sind aber nicht von Goran
+  grep -q '<task-notification>' <<<"$prompt" && exit 0
   wort() { grep -qiwE "$1" <<<"$prompt"; }
   wort 'mail|mails|e-mail|e-mails|eingänge|antworten|postfach' &&
     hinzu nachhalten "alle Postfächer samt Spam und Gesendet, Freund-Feind-Check, Zuordnung zum Fach-Skill"
