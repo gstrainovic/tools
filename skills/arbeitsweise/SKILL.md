@@ -36,6 +36,12 @@ reicht:
 5. **Hauptmodell:** alles mit Entscheid oder Folgen: Einordnung von Kandidaten, Antworten an Kunden und
    Interessenten, Preise, Freigaben, Deutung von Rückmeldungen. Keine Kundenantworten durch Haiku oder Sonnet
    (Sonnet antwortete Interessenten zu oft falsch).
+6. **Fable für Texte an Arbeitgeber und Kunden:** Bewerbungsmails, Anschreiben, Freitextfelder in Formularen,
+   Antworten an Interessenten und Partner schreibt immer Fable (`model: fable`), auch wenn das Hauptmodell Opus ist
+   (Server-Lauf, Sitzung auf Opus). Fable bekommt Inserat bzw. Mail, die Belege aus dem Skill `ats-formulare` und
+   die Regeln aus AGENTS.md und gibt nur den Text zurück. Formular ausfüllen, Anhänge hochladen und Senden mit dem
+   fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über den Auftrag, die
+   Mechanik nicht.
 
 Faustregeln: Ab etwa zehn Seiten oder Dateien Lesearbeit delegieren, darunter selbst machen, weil der Auftragstext
 und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Quellen, Rückgabeformat und Verbote
