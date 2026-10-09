@@ -7,7 +7,7 @@
 yt: YouTube-Kanal aus der Kommandozeile (YouTube Data API v3), ohne YouTube Studio.
 
 Zugang: derselbe OAuth-Client (Typ Desktop) wie `gsc` und `ads`, Datei ~/.config/google-ads/client_secret.json;
-eigener Login mit dem Scope `youtube.force-ssl`, Refresh-Token in ~/.config/youtube/token.json (Modus 600, nie in ein
+eigener Login mit den Scopes `youtube.force-ssl` und `yt-analytics.readonly`, Refresh-Token in ~/.config/youtube/token.json (Modus 600, nie in ein
 Repo). Die YouTube Data API v3 ist im Cloud-Projekt des Clients eingeschaltet (`gcloud services enable
 youtube.googleapis.com`). Kontingent 10'000 Einheiten pro Tag: list 1, update 50, upload 1600.
 
@@ -15,6 +15,7 @@ Befehle:
     yt login [--no-browser]                         OAuth im Browser, speichert den Refresh-Token
     yt videos [--channel ID]                        alle Videos des Kanals (auch privat und Entwurf) mit Sichtbarkeit
     yt get VIDEO-ID                                 Titel, Beschreibung, Tags, Sichtbarkeit als JSON
+    yt stats [--days 28]                            Aufrufe, Wiedergabeminuten, Ø Dauer, neue Abos je Video (Analytics API)
     yt update VIDEO-ID [--title …] [--description-file DATEI] [--tags "a,b,c"] [--language de] [--privacy private|unlisted|public]
     yt upload DATEI --title … [--description-file DATEI] [--tags …] [--language de] [--privacy private] [--thumbnail BILD]
 Kanal: --channel oder Umgebungsvariable YT_CHANNEL, Standard strainovic-it (UCejZg-WBrGzth2W-sLYCNzA). Der Login
@@ -33,12 +34,14 @@ CLIENT_SECRET = Path.home() / ".config" / "google-ads" / "client_secret.json"
 CONFIG_DIR = Path.home() / ".config" / "youtube"
 TOKEN = CONFIG_DIR / "token.json"
 SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
+# Statistik je Video (yt stats) über die YouTube Analytics API; ändert sich die Liste, braucht es `yt login`
+SCOPES = [SCOPE, "https://www.googleapis.com/auth/yt-analytics.readonly"]
 DEFAULT_CHANNEL = os.environ.get("YT_CHANNEL", "UCejZg-WBrGzth2W-sLYCNzA")
 
 
 def cmd_login(args) -> None:
     from google_auth_oauthlib.flow import InstalledAppFlow
-    flow = InstalledAppFlow.from_client_secrets_file(str(CLIENT_SECRET), scopes=[SCOPE])
+    flow = InstalledAppFlow.from_client_secrets_file(str(CLIENT_SECRET), scopes=SCOPES)
     creds = flow.run_local_server(port=0, prompt="consent", access_type="offline", open_browser=not args.no_browser)
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     old = os.umask(0o077)
@@ -49,13 +52,47 @@ def cmd_login(args) -> None:
     print(f"gespeichert: {TOKEN}")
 
 
-def service():
+def credentials():
     from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build
     if not TOKEN.exists():
         sys.exit(f"kein Token, zuerst `yt login` ({TOKEN})")
-    creds = Credentials.from_authorized_user_file(str(TOKEN), [SCOPE])
-    return build("youtube", "v3", credentials=creds, cache_discovery=False)
+    return Credentials.from_authorized_user_file(str(TOKEN))
+
+
+def service():
+    from googleapiclient.discovery import build
+    return build("youtube", "v3", credentials=credentials(), cache_discovery=False)
+
+
+def analytics_service():
+    from googleapiclient.discovery import build
+    return build("youtubeAnalytics", "v2", credentials=credentials(), cache_discovery=False)
+
+
+def video_titles(ids: list[str]) -> dict[str, str]:
+    svc = service()
+    titles: dict[str, str] = {}
+    for start in range(0, len(ids), 50):
+        r = svc.videos().list(part="snippet", id=",".join(ids[start:start + 50])).execute()
+        titles.update({v["id"]: v["snippet"]["title"] for v in r.get("items", [])})
+    return titles
+
+
+def cmd_stats(args) -> None:
+    from datetime import date, timedelta
+    end = date.today()
+    start = end - timedelta(days=args.days)
+    r = analytics_service().reports().query(
+        ids=f"channel=={args.channel}", startDate=start.isoformat(), endDate=end.isoformat(),
+        metrics="views,estimatedMinutesWatched,averageViewDuration,subscribersGained",
+        dimensions="video", sort="-views", maxResults=200,
+    ).execute()
+    rows = r.get("rows", [])
+    titles = video_titles([row[0] for row in rows])
+    print(f"Zeitraum {start} bis {end} (YouTube meldet mit 2 bis 3 Tagen Verzug)")
+    print("ID\tAufrufe\tMinuten\tØ Sekunden\tAbos\tTitel")
+    for vid, views, minutes, avg, subs in rows:
+        print(f"{vid}\t{views}\t{minutes}\t{avg}\t{subs}\t{titles.get(vid, '')}")
 
 
 def uploads_playlist(svc, channel: str) -> str:
@@ -158,6 +195,7 @@ def main() -> None:
     s = sub.add_parser("login"); s.add_argument("--no-browser", action="store_true"); s.set_defaults(fn=cmd_login)
     s = sub.add_parser("videos"); s.set_defaults(fn=cmd_videos)
     s = sub.add_parser("get"); s.add_argument("id"); s.set_defaults(fn=cmd_get)
+    s = sub.add_parser("stats"); s.add_argument("--days", type=int, default=28); s.set_defaults(fn=cmd_stats)
     s = sub.add_parser("update"); s.add_argument("id"); s.add_argument("--title"); s.add_argument("--description-file")
     s.add_argument("--tags"); s.add_argument("--language"); s.add_argument("--privacy", choices=["private", "unlisted", "public"])
     s.set_defaults(fn=cmd_update)
