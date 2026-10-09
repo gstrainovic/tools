@@ -21,6 +21,7 @@ Befehle:
     ads create SPEC.json [--validate-only]       Suchkampagne anlegen, immer pausiert, Gesamtbudget mit Enddatum
     ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
     ads keywords DATEI|-                         Suchvolumen und Klickpreise (Schweiz, Deutsch), braucht Basic
+    ads keywords DATEI|- --verlauf [MONATE]      Monatswerte, letzte 12 Monate gegen Vorjahr (Trend messen)
 Konto: --customer 8173987962 oder Umgebungsvariable GOOGLE_ADS_CUSTOMER_ID.
 """
 from __future__ import annotations
@@ -235,6 +236,35 @@ def keyword_lines(lines) -> list[str]:
     return out
 
 
+def verlauf_zeitraum(heute, monate: int) -> tuple[tuple[int, int], tuple[int, int]]:
+    """(Jahr, Monat) von Anfang und Ende: die letzten `monate` vollen Monate vor dem laufenden."""
+    ende = heute.year * 12 + heute.month - 2
+    anfang = ende - monate + 1
+    return (anfang // 12, anfang % 12 + 1), (ende // 12, ende % 12 + 1)
+
+
+def verlauf_text(results) -> str:
+    """Jahresvergleich je Keyword: letzte 12 Monate gegen die 12 davor, dazu alle Monatswerte."""
+    rows, alle = [], set()
+    for r in results:
+        # month ist der Enum-Wert von MonthOfYear (JANUARY = 2)
+        monate = sorted((v.year, int(v.month) - 1, v.monthly_searches) for v in r.keyword_metrics.monthly_search_volumes)
+        alle.update((j, m) for j, m, _ in monate)
+        werte = [s for _, _, s in monate]
+        neu, alt = werte[-12:], werte[-24:-12]
+        summe_neu = sum(s or 0 for s in neu)
+        if len(alt) == 12 and None not in alt and sum(alt):
+            summe_alt = sum(alt)
+            aenderung = f"{round((summe_neu - summe_alt) * 100 / summe_alt):+d} %"
+        else:
+            summe_alt, aenderung = "–", "–"
+        liste = ",".join("–" if s is None else str(s) for s in werte)
+        rows.append((summe_neu, f"{summe_neu}\t{summe_alt}\t{aenderung}\t{r.text}\t{liste}"))
+    von, bis = (min(alle), max(alle)) if alle else ((0, 0), (0, 0))
+    kopf = f"Letzte 12 Mt\tVorjahr\tÄnderung\tKeyword\tMonate {von[0]}-{von[1]:02d} bis {bis[0]}-{bis[1]:02d}"
+    return "\n".join([kopf] + [zeile for _, zeile in sorted(rows, key=lambda x: -x[0])])
+
+
 def cmd_keywords(args) -> None:
     """Suchvolumen und Klickpreise aus dem Keyword-Planer (braucht API-Zugriffsebene Basic)."""
     source = sys.stdin if args.file == "-" else open(args.file, encoding="utf-8")
@@ -246,6 +276,15 @@ def cmd_keywords(args) -> None:
     request.language = args.language
     request.geo_target_constants.append(args.geo)
     request.keyword_plan_network = c.enums.KeywordPlanNetworkEnum.GOOGLE_SEARCH
+    if args.verlauf:
+        import datetime
+        (j1, m1), (j2, m2) = verlauf_zeitraum(datetime.date.today(), args.verlauf)
+        bereich = request.historical_metrics_options.year_month_range
+        bereich.start.year, bereich.start.month = j1, m1 + 1
+        bereich.end.year, bereich.end.month = j2, m2 + 1
+        service = c.get_service("KeywordPlanIdeaService")
+        print(verlauf_text(service.generate_keyword_historical_metrics(request=request).results))
+        return
     rows = []
     for r in c.get_service("KeywordPlanIdeaService").generate_keyword_historical_metrics(request=request).results:
         m = r.keyword_metrics
@@ -337,6 +376,8 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("file", help="Datei mit einem Keyword pro Zeile, - für stdin")
     s.add_argument("--geo", default="geoTargetConstants/2756", help="Standard Schweiz")
     s.add_argument("--language", default="languageConstants/1001", help="Standard Deutsch")
+    s.add_argument("--verlauf", type=int, nargs="?", const=24, metavar="MONATE",
+                   help="Monatswerte und Jahresvergleich statt Mittelwert (Standard 24, höchstens 48)")
     s.set_defaults(fn=cmd_keywords)
     for name, status in (("enable", "ENABLED"), ("pause", "PAUSED")):
         s = sub.add_parser(name)
