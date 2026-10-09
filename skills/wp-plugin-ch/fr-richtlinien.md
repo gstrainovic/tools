@@ -2,6 +2,11 @@
 
 Abgerufen am 2026-10-09 per Jina Reader. Nur Regeln, die in den Quellen stehen; wo eine Quelle schweigt, steht nichts.
 
+Geltungsbereich (Gorans Entscheide 61a, 62a): Die Regeln gelten voll für Übersetzungen auf translate.wordpress.org
+und die `.po`-Dateien. Für eigene Websites, Werbetexte und Mails gilt nur die Typografie; dort bleiben «plugin» und
+«checkout» (Suchbegriffe der Käufer). Zahlen und Beträge in der Wartungsheft-App bleiben in allen Sprachen im
+Schweizer Format («CHF 1'234.50», «100'000 km»), weil Eingabefelder davon abhängen.
+
 Quellen:
 - Handbuch «Traduire WordPress en français»: https://fr.wordpress.org/team/handbook/polyglots/ (Unterseiten `recommandations/`, `le-glossaire-et-les-erreurs-de-traduction-les-plus-frequentes/`, `les-regles-typographiques-utilisees-pour-la-traduction-de-wp-en-francais/`, `les-outils-utiles-a-la-traduction/spte/` und `/un-clavier-enrichi/`, `organisation-de-lequipe-de-traduction/le-processus-de-validation-des-traductions/` und `/decisions-concernant-la-traduction-de-wordpress/`)
 - PTE-Ablauf: https://fr.wordpress.org/2015/12/18/how-french-community-handles-pte-requests/
