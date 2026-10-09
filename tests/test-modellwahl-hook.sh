@@ -13,6 +13,7 @@ pruefe "Ereignis PreToolUse" "[ \"\$(echo '$aus' | jq -r .hookSpecificOutput.hoo
 kontext=$(echo "$aus" | jq -r .hookSpecificOutput.additionalContext)
 pruefe "nennt Opus für TDD" "grep -q 'Opus' <<<\"\$kontext\" && grep -q 'TDD' <<<\"\$kontext\""
 pruefe "nennt Haiku und Sonnet" "grep -q 'Haiku' <<<\"\$kontext\" && grep -q 'Sonnet' <<<\"\$kontext\""
+pruefe "Bewerbungstexte immer Fable" "grep -q 'Bewerbungs.*Fable' <<<\"\$kontext\""
 pruefe "verweist auf arbeitsweise" "grep -q 'arbeitsweise' <<<\"\$kontext\""
 pruefe "nennt gewähltes Modell" "grep -q 'sonnet' <<<\"\$kontext\""
 pruefe "blockiert nicht" "[ \"\$(echo '$aus' | jq -r '.hookSpecificOutput.permissionDecision // \"keine\"')\" = keine ]"
