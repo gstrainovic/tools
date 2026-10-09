@@ -41,7 +41,8 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
 - Pluginnamen nie übersetzen (Style Guide der Polyglots, gilt auch für die Kurzform ohne «Strainovic IT» in Menü,
   Seitentitel und Sätzen; `UebersetzungenTest` prüft es). Gilt nur für WordPress; das Shopware-Plugin von KLARA
   behält seinen übersetzten Namen («Rechnungen für KLARA», Gorans Entscheid), weil der Shopware Store je Sprache
-  benennt.
+  benennt. Ebenso «Form Inquiries for bexio» (bexio-formular-connector): Es liegt nicht im Verzeichnis, sondern
+  kommt als ZIP von der Landingpage, darum bleibt der übersetzte Name im Menü (Gorans Entscheid 53b).
 - `Sprache::datei()` bildet die Seitensprache ab: `de_CH*` → `de_CH`, übrige `de*` → `de_DE`, `fr*` → `fr_FR`, `it*` → `it_IT`, sonst Englisch.
 - Laden per `load_textdomain()` auf `init` und bei `change_locale`. `load_plugin_textdomain()` meldet Plugin Check als veraltet.
 - `UebersetzungenTest` schlägt fehl, wenn ein Text im Code nicht in der `.pot` steht, eine Übersetzung fehlt, Platzhalter abweichen oder eine `.mo` nicht zu ihrer `.po` passt.
