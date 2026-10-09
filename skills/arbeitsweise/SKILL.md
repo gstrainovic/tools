@@ -66,6 +66,13 @@ neuen Partner aufnimmt und HubSpot drei Kunden verlangt, obwohl beides in den Pr
 Ergebnisse eines Subagenten vor der Verwendung stichprobenweise prüfen. Mehrere unabhängige Aufträge gleichzeitig
 starten.
 
+## Goran wartet nie
+
+Antworten an Goran haben Vorrang vor laufender Arbeit. Was länger als etwa eine Minute dauert (Deploys, Testsuiten,
+Logins, Uploads, Recherchen, Werkzeug-Umbauten), läuft im Hintergrund: als Agent (Modell nach «Modellwahl») oder
+per `run_in_background`, von selbst und ohne seinen Hinweis. Danach sofort antworten, Ergebnis nachreichen, sobald
+es da ist. Kommt mitten in einer Arbeit eine Frage von ihm, zuerst die Frage beantworten.
+
 ## Tokens sparen (Wochenlimit teilen sich Laptop und Server)
 
 - **Kein Fork für Arbeitsaufträge.** Ein Fork erbt den ganzen Gesprächsverlauf und liest ihn als Erstes ein; bei
