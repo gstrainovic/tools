@@ -36,6 +36,7 @@ Bash)
   a='(^|[;&|(`[:space:]])'   # Anfang eines Befehls
   p='(^|[;&|(`[:space:]/])'  # Anfang eines Befehls oder Dateinamens nach einem Pfad
   if hat "${p}mailbox(\.py)?[[:space:]]+(send|reply)([[:space:]]|$)"; then
+    zusatz="Text der Mail von Fable geschrieben (Skill arbeitsweise, Punkt 6)? Wenn nicht: erst von einem Fable-Agenten schreiben lassen."
     hinzu mailbox "Befehle, Konten und Signatur von mailbox"
     rest=$(grep -oE "mailbox(\.py)?[[:space:]]+(send|reply)([[:space:]].*)?$" <<<"$cmd")
     if grep -qE '[[:space:]](strainovic|strainovic-dev|kmu-plugins|ki-flows|wartungsheft)([[:space:]]|$)' <<<"$rest"; then
@@ -115,8 +116,9 @@ if [ "$ereignis" = UserPromptSubmit ]; then
   wort 'steuer|mwst|bank|preis|vertrag|recht' && hinzu schweiz "Schweizer Recht und CHF, nicht deutsches oder EU-Recht"
 fi
 
-[ ${#skills[@]} -gt 0 ] || exit 0
+[ ${#skills[@]} -gt 0 ] || [ -n "${zusatz:-}" ] || exit 0
 text=""
+[ -n "${zusatz:-}" ] && text+="$zusatz"$'\n'
 for i in "${!skills[@]}"; do
   text+="Skill ${skills[$i]} laden (Skill-Tool), bevor $bevor: ${gruende[$i]}"$'\n'
 done
