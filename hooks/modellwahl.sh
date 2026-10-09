@@ -13,6 +13,6 @@ text="Modellwahl (Skill arbeitsweise) vor diesem Agentenstart prüfen. $gewaehlt
 3. Sonnet, Denkstufe medium: Lesen und Vorsortieren nach Kriterien, Übersetzungen, Tests nach fertigem Plan.
 4. Opus, Denkstufe high: Code-Änderungen mit TDD, Fehleranalyse, Umsetzungspläne, Prüfung fremden Codes.
 5. Hauptmodell: Entscheide, Preise, Freigaben, Deutung von Rückmeldungen.
-Bewerbungs- und Kundentexte (Mail, Anschreiben, Freitext für Formulare): immer Fable (model=fable), auch wenn das Hauptmodell Opus ist; Formular ausfüllen und Senden nach fertigem Text: Sonnet oder Haiku.
+Bewerbungs- und Kundentexte und jeder andere Text, den eine Person ausserhalb liest (Mail, Anschreiben, Formular-Freitext, Proposal, Forenbeitrag, Ratgeber, Produktseite, Profil, readme, Videotext): immer Fable (model=fable), auch wenn das Hauptmodell Opus ist; Ausfüllen, Einbauen und Senden nach fertigem Text: Sonnet oder Haiku. Sonst Fable sparen: Recherche Sonnet/Opus, Code Opus, interne Doku und Berichte im Hauptmodell.
 Passt das gewählte Modell nicht: den eben gestarteten Agenten stoppen und mit passendem model neu starten."
 jq -n --arg t "$text" '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $t}}'
