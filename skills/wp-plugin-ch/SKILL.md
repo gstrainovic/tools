@@ -50,4 +50,8 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
   wordpressfr `fr-richtlinien.md` in diesem Ordner lesen (Stil, Typografie mit geschützten Leerzeichen, Glossar,
   PTE-Ablauf des französischen Teams); der Hook `skill-hinweis.sh` erinnert bei `.po`-Dateien,
   translate.wordpress.org, wordpress*.slack.com und Prompts zu Übersetzung, Polyglots und PTE an diesen Skill.
+  Jedes Plugin-Repo hat dafür im `UebersetzungenTest` den Test «Französisch nach den Regeln des französischen
+  Teams» (Apostroph ’, U+00A0 vor `: ; ? ! » %` und nach `«`, «extension», «clé de l’API»). Das Edit-Werkzeug
+  macht aus U+00A0 ein normales Leerzeichen: geschützte Leerzeichen per kleinem Skript setzen, das nur `msgstr`
+  ändert, und danach den Test laufen lassen.
 - E2E installiert die WordPress-Sprachpakete und prüft die Oberfläche je Sprache (en_US, de_CH, fr_FR, it_IT).
