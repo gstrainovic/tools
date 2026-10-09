@@ -19,7 +19,7 @@ noch eigenständige Terminal-Scripts.
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen; `add-domain DOMAIN` legt eine Domain-Property an (TXT-Token per Site Verification API, Eintrag per Infomaniak-API, bestätigen, Property und Sitemap hinzufügen) |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
-| `fr_po_pruefen.py` | Französische `.po` nach den Regeln des französischen WordPress-Teams prüfen (SPTE-Typografie, Glossar, Platzhalter), gemeinsame Prüfung aller WordPress-Plugin-Repos |
+| `fr_po_pruefen.py` | Französische Texte (`.po`, Shopware-Snippets, config.xml, composer.json, REDAXO `.lang`, PHP-Export) nach den Regeln des französischen WordPress-Teams prüfen (SPTE-Typografie, Glossar, Platzhalter), gemeinsame Prüfung der Plugin-Repos |
 | `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
@@ -160,16 +160,21 @@ Neues Gerät:
 
 ```bash
 fr-po-pruefen plugin/*/languages/*-fr_FR.po --ausnahmen fr-ausnahmen.toml   # Exit 1 bei Fund
+fr-po-pruefen snippet/x.fr.json config/config.xml composer.json lang/fr_fr.lang fr-texte.json
 fr-po-pruefen --glossar-aktualisieren   # Glossar-CSV von translate.wordpress.org neu laden
 ```
 
-Läuft per `uv run --script` (Abhängigkeit `regex` für die Lookbehinds aus SPTE). Je Fund: Datei:Zeile des
-`msgstr`, Regel, msgid und msgstr (geschützte Leerzeichen sichtbar als `<U+00A0>`, `<U+202F>`). Geprüft werden
-Typografie und verbotene Wörter nach SPTE (Association-WPFR/SPTE 3.1.1, `utils/rules.js`, GPL-2.0-or-later,
-nachgebaut), das Glossar des französischen Teams wie GlotDict (`fr-po/glossar-fr.csv`, Abrufdatum in
-`fr-po/glossar-fr.quelle`) sowie Platzhalter und HTML-Tags wie im msgid. Regeln, Abweichungen von SPTE und das
-Format der Ausnahmedatei stehen im Kopf des Skripts; wann korrigiert und wann eine Ausnahme eingetragen wird, im
-Skill wp-plugin-ch. Die Plugin-Repos rufen es in `bin-test.sh` auf.
+Läuft per `uv run --script` (Abhängigkeit `regex` für die Lookbehinds aus SPTE). Je Fund: Datei:Zeile, Regel,
+englisches Original und französischer Text (geschützte Leerzeichen sichtbar als `<U+00A0>`, `<U+202F>`). Geprüft
+werden Typografie und verbotene Wörter nach SPTE (Association-WPFR/SPTE 3.1.1, `utils/rules.js`, GPL-2.0-or-later,
+nachgebaut, dazu U+00A0 vor `%` und vor Einheiten aus dem Handbuch), das Glossar des französischen Teams wie
+GlotDict (`fr-po/glossar-fr.csv`, Abrufdatum in `fr-po/glossar-fr.quelle`) sowie Platzhalter und HTML-Tags wie im
+Original. Formate: `.po`, Shopware-Snippet `*.fr.json` gegen `*.en.json`, Shopware `config.xml` (`lang="fr-FR"`
+gegen das Element ohne `lang`), `composer.json` (`extra.*.fr-FR` gegen `en-GB`, ohne Links), REDAXO `fr_fr.lang`
+gegen `en_gb.lang` und Textpaare-JSON `[{"stelle", "en", "fr"}]` aus einem PHP-Export (ohne `en` nur Typografie).
+Regeln, Abweichungen von SPTE und das Format der Ausnahmedatei stehen im Kopf des Skripts; wann korrigiert und
+wann eine Ausnahme eingetragen wird, im Skill wp-plugin-ch. klara-shop-connector und bexio-formular-connector
+rufen es in `bin-test.sh` auf.
 
 ### Webseiten für Recherchen lesen
 

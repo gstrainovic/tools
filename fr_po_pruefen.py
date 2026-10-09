@@ -3,19 +3,30 @@
 # requires-python = ">=3.11"
 # dependencies = ["regex>=2024.11.6"]
 # ///
-"""fr-po-pruefen: französische .po-Dateien nach den Regeln des französischen WordPress-Teams prüfen.
+"""fr-po-pruefen: französische Texte nach den Regeln des französischen WordPress-Teams prüfen.
 
-    fr-po-pruefen DATEI.po [DATEI.po …] [--ausnahmen fr-ausnahmen.toml]
+    fr-po-pruefen DATEI [DATEI …] [--ausnahmen fr-ausnahmen.toml]
     fr-po-pruefen --glossar-aktualisieren
 
-Exit-Code 0 ohne Fund, 1 bei Verstoss oder ungenutzter Ausnahme. Je Fund: Datei:Zeile des msgstr, Regel, msgid.
+Exit-Code 0 ohne Fund, 1 bei Verstoss, ungenutzter Ausnahme oder fehlendem englischem Gegenstück. Je Fund:
+Datei:Zeile, Regel, englisches Original und französischer Text.
 
-Geprüft wird jede Übersetzung (msgstr) auf
+Formate (Erkennung über Name und Inhalt), je französischer Text das englische Original:
+- .po: msgstr gegen msgid (msgid_plural); Platzhalter printf (%s, %1$s, %%).
+- Shopware-Snippet name.fr.json (oder fr-FR): Werte, nicht Schlüssel, gegen name.en.json; Platzhalter %name%.
+- Shopware config.xml: Elemente mit lang="fr-FR" gegen das gleichnamige Geschwister ohne lang.
+- composer.json: unter «extra» jeder Wert «fr-FR» gegen «en-GB», Links (http, mailto) ausgenommen; Platzhalter %name%.
+- REDAXO fr_fr.lang («schluessel = wert») gegen en_gb.lang; Platzhalter {0}.
+- Textpaare-JSON, etwa aus PHP exportiert: [{"stelle": "…", "en": "…", "fr": "…"}]; Zeile = Nummer des Paars.
+  Ohne «en» (zusammengesetzte Zeile aus geprüften Texten und Daten) gilt nur die Typografie.
+Ausnahmen mit «msgid» meinen in allen Formaten den englischen Originaltext.
+
+Geprüft wird jede Übersetzung auf
 1. Typografie und verbotene Wörter wie SPTE (github.com/Association-WPFR/SPTE, utils/rules.js, Version 3.1.1,
    GPL-2.0-or-later; die Regeln sind hier nachgebaut, Namen der Regeln wie dort). Abweichungen: vor «:» und «»»
    gilt nur U+00A0 (Gorans Entscheid 64b; vor «; ! ?» genügt U+00A0 oder U+202F wie in SPTE), Platzhalter zählen
    als Wort (SPTEs Ausnahmen für ' neben %s entfallen), HTML-Tags und URLs werden vorher ausgeblendet, dazu
-   «prozent» aus dem Handbuch (U+00A0 vor %).
+   «prozent» und «einheit» aus dem Handbuch (U+00A0 vor %, zwischen Zahl und Einheit, Währung oder ×).
 2. Glossar des französischen Teams (fr-po/glossar-fr.csv) wie GlotDict: kommt ein englischer Begriff im msgid
    vor, muss eine der französischen Entsprechungen mindestens gleich oft im msgstr stehen. Erkennung der
    englischen Formen angelehnt an GlotPress (gp_glossary_add_suffixes: -s, -es, -ies, -ed, -ing); Varianten mit
@@ -32,12 +43,14 @@ Ausnahmen (TOML, je Repo):
 import argparse
 import csv
 import datetime
+import json
 import sys
 import tomllib
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+from xml.etree import ElementTree
 
 import regex
 
@@ -115,6 +128,8 @@ SPTE = [  # (Regel, Beschreibung, Muster, Flags)
      regex.M),
     # Nicht in SPTE: Handbuch, Typografie-Tabelle
     ("prozent", "vor «%» fehlt U+00A0", rf"(?<!{NB}|^)%", regex.M),
+    ("einheit", "zwischen Zahl und Einheit, Währung oder «×» fehlt U+00A0",
+     r"(?<=\d)[ \t](?=(?:×|mm|cm|km|m²|kg|CHF|€|\$)(?!\w))", regex.M),
 ]
 REGELN = [(name, text, regex.compile(muster, flags)) for name, text, muster, flags in SPTE]
 
@@ -161,15 +176,16 @@ class Ausnahmen:
         return [a for i, a in enumerate(self.regeln) if i not in self.genutzt]
 
 
-def _ausblenden(text, unveraendert):
-    """Text ohne Tags, URLs und unveränderte Texte; Platzhalter werden zu «X», «%%» zu «%»."""
+def _ausblenden(text, unveraendert, platzhalter=PLATZHALTER):
+    """Text ohne Tags, URLs und unveränderte Texte; Platzhalter werden zu «X», bei printf «%%» zu «%»."""
     text = BR.sub("\n", text)
     text = TAG.sub("", text)
     text = URL.sub("X", text)
     for u in sorted(unveraendert, key=len, reverse=True):
         text = text.replace(u, "X")
-    text = text.replace("%%", "\0")
-    text = PLATZHALTER.sub("X", text)
+    if platzhalter is PLATZHALTER:
+        text = text.replace("%%", "\0")
+    text = platzhalter.sub("X", text)
     return text.replace("\0", "%")
 
 
@@ -254,20 +270,24 @@ def glossar_aktualisieren(url=GLOSSAR_URL, ordner=GLOSSAR_ORDNER):
 
 # --- Prüfung ----------------------------------------------------------------------------------------------------
 
-def pruefe(msgid, msgstr, ausnahmen=None, schluessel=None):
-    """Funde für eine Übersetzung; schluessel ist der msgid, gegen den Ausnahmen verglichen werden."""
+def pruefe(msgid, msgstr, ausnahmen=None, schluessel=None, platzhalter=PLATZHALTER, nur_typografie=False):
+    """Funde für eine Übersetzung; schluessel ist der msgid (das englische Original), gegen den Ausnahmen verglichen
+    werden; platzhalter ist das Muster der Platzhalter im jeweiligen Format. nur_typografie: ohne Original, also
+    ohne Glossar, Platzhalter und HTML."""
     ausnahmen = ausnahmen or Ausnahmen()
     schluessel = msgid if schluessel is None else schluessel
     funde = []
-    text = _ausblenden(msgstr, ausnahmen.unveraendert)
+    text = _ausblenden(msgstr, ausnahmen.unveraendert, platzhalter)
     for name, beschreibung, muster in REGELN:
         for m in muster.finditer(text):
             a, b = max(0, m.start() - 12), min(len(text), m.end() + 12)
             funde.append(Fund(name, beschreibung, text[a:b]))
-    funde += glossar().funde(_ausblenden(msgid, ausnahmen.unveraendert), text)
-    if sorted(PLATZHALTER.findall(msgid)) != sorted(PLATZHALTER.findall(msgstr)):
-        funde.append(Fund("platzhalter", "Platzhalter anders als im msgid: "
-                          f"{sorted(PLATZHALTER.findall(msgid))} → {sorted(PLATZHALTER.findall(msgstr))}"))
+    if nur_typografie:
+        return [f for f in funde if not ausnahmen.erlaubt(f.regel, schluessel)]
+    funde += glossar().funde(_ausblenden(msgid, ausnahmen.unveraendert, platzhalter), text)
+    if sorted(platzhalter.findall(msgid)) != sorted(platzhalter.findall(msgstr)):
+        funde.append(Fund("platzhalter", "Platzhalter anders als im Original: "
+                          f"{sorted(platzhalter.findall(msgid))} → {sorted(platzhalter.findall(msgstr))}"))
     if sorted(TAG.findall(msgid)) != sorted(TAG.findall(msgstr)):
         funde.append(Fund("html", "HTML-Tags anders als im msgid"))
     return [f for f in funde if not ausnahmen.erlaubt(f.regel, schluessel)]
@@ -317,6 +337,170 @@ def eintraege(pfad):
     return ergebnis
 
 
+# --- Weitere Formate: je französischer Text das englische Original ---------------------------------------------
+
+SHOPWARE_PLATZHALTER = regex.compile(r"%[A-Za-z_]+%")
+REDAXO_PLATZHALTER = regex.compile(r"\{\d+\}")
+LINK = regex.compile(r"^(?:https?|mailto):", regex.I)
+
+
+class FormatFehler(Exception):
+    pass
+
+
+@dataclass
+class Text:
+    zeile: int
+    original: str | None  # None: kein englisches Gegenstück
+    fr: str
+    schluessel: str       # gegen ihn werden Ausnahmen verglichen (msgid bzw. englisches Original)
+    stelle: str = ""      # Schlüssel im Format, nur zur Anzeige
+    platzhalter: object = PLATZHALTER
+    po: bool = False
+    nur_typografie: bool = False  # Textpaar ohne «en»: zusammengesetzte Zeile ohne englisches Gegenstück
+
+
+def _texte_po(pfad):
+    for e in eintraege(pfad):
+        for index, (msgstr, zeile) in sorted(e["msgstr"].items()):
+            if msgstr:
+                original = e["msgid"] if index == 0 or e["msgid_plural"] is None else e["msgid_plural"]
+                yield Text(zeile, original, msgstr, e["msgid"], po=True)
+
+
+def _partner(pfad, ersetzungen):
+    name = pfad.name
+    for alt, neu in ersetzungen:
+        name = name.replace(alt, neu)
+    partner = pfad.with_name(name)
+    if name == pfad.name or not partner.exists():
+        raise FormatFehler(f"{pfad}: englisches Gegenstück {partner.name} fehlt")
+    return partner
+
+
+def _blaetter(daten, praefix=""):
+    for k, v in daten.items():
+        if isinstance(v, dict):
+            yield from _blaetter(v, f"{praefix}{k}.")
+        else:
+            yield f"{praefix}{k}", str(v)
+
+
+def _zeilen_der_schluessel(roh, namen):
+    """Zeile je Schlüssel in Dokumentreihenfolge: nächste Zeile ab der letzten, die «"name":» enthält."""
+    zeilen, ab, ergebnis = roh.splitlines(), 0, []
+    for name in namen:
+        muster = regex.compile(rf'"{regex.escape(name)}"\s*:')
+        for i in range(ab, len(zeilen)):
+            if muster.search(zeilen[i]):
+                ab = i
+                break
+        ergebnis.append(ab + 1)
+    return ergebnis
+
+
+def _texte_snippet(pfad, daten, roh):
+    """Shopware-Snippet (name.fr.json oder name.fr-FR.json): Werte, nicht Schlüssel, gegen name.en(-GB).json."""
+    partner = _partner(pfad, [(".fr.json", ".en.json"), ("fr-FR", "en-GB"), ("fr_FR", "en_GB")])
+    englisch = dict(_blaetter(json.loads(partner.read_text(encoding="utf-8"))))
+    blaetter = list(_blaetter(daten))
+    zeilen = _zeilen_der_schluessel(roh, [k.rsplit(".", 1)[-1] for k, _ in blaetter])
+    for (k, wert), zeile in zip(blaetter, zeilen):
+        if wert:
+            original = englisch.get(k)
+            yield Text(zeile, original, wert, original or k, k, SHOPWARE_PLATZHALTER)
+
+
+def _texte_composer(pfad, daten, roh):
+    """composer.json eines Shopware-Plugins: unter «extra» jeder Wert «fr-FR» gegen «en-GB», ohne Links."""
+    funde = []
+
+    def suchen(o, weg):
+        if isinstance(o, dict):
+            if isinstance(o.get("fr-FR"), str):
+                funde.append((weg, o))
+            for k, v in o.items():
+                suchen(v, f"{weg}.{k}")
+
+    suchen(daten.get("extra", {}), "extra")
+    vorkommen = [i + 1 for i, z in enumerate(roh.splitlines()) if '"fr-FR"' in z]
+    for (weg, o), zeile in zip(funde, vorkommen):
+        wert = o["fr-FR"]
+        if wert and not LINK.match(wert):
+            original = next((o[s] for s in ("en-GB", "en-US", "en") if isinstance(o.get(s), str)), None)
+            yield Text(zeile, original, wert, original or weg, weg, SHOPWARE_PLATZHALTER)
+
+
+def _texte_config_xml(pfad):
+    """Shopware config.xml: jedes Element mit lang="fr-FR" gegen das gleichnamige Geschwister ohne lang (oder en-GB)."""
+    roh = pfad.read_text(encoding="utf-8")
+    wurzel = ElementTree.fromstring(roh.encode("utf-8"))
+    vorkommen = [roh.count("\n", 0, m.start()) + 1 for m in regex.finditer(r'''lang\s*=\s*["']fr-FR["']''', roh)]
+    fr_elemente = []
+    for eltern in wurzel.iter():
+        for kind in eltern:
+            if kind.get("lang") == "fr-FR":
+                fr_elemente.append((eltern, kind))
+    reihenfolge = {id(e): i for i, e in enumerate(wurzel.iter())}
+    fr_elemente.sort(key=lambda p: reihenfolge[id(p[1])])
+    for (eltern, kind), zeile in zip(fr_elemente, vorkommen):
+        wert = "".join(kind.itertext()).strip()
+        en = [g for g in eltern if g.tag == kind.tag and g.get("lang") in (None, "en-GB")]
+        original = "".join(en[0].itertext()).strip() if en else None
+        name = eltern.findtext("name") or ""
+        yield Text(zeile, original, wert, original or kind.tag, f"{eltern.tag} {name} {kind.tag}".replace("  ", " "))
+
+
+LANG_ZEILE = regex.compile(r"^([^=\s#]+)\h*=\h*(\S.*?)\s*$")
+
+
+def _lang_lesen(pfad):
+    return {m.group(1): (m.group(2), nr) for nr, z in enumerate(pfad.read_text(encoding="utf-8").splitlines(), 1)
+            if (m := LANG_ZEILE.match(z))}
+
+
+def _texte_lang(pfad):
+    """REDAXO lang/fr_fr.lang («schluessel = wert») gegen lang/en_gb.lang."""
+    englisch = _lang_lesen(_partner(pfad, [("fr_fr", "en_gb"), ("fr_FR", "en_GB")]))
+    for k, (wert, zeile) in _lang_lesen(pfad).items():
+        original = englisch.get(k, (None,))[0]
+        yield Text(zeile, original, wert, original or k, k, REDAXO_PLATZHALTER)
+
+
+def _texte_paare(pfad, daten):
+    """Textpaare, etwa aus PHP exportiert: [{"stelle": "…", "en": "…", "fr": "…"}]; Zeile = Nummer des Paars.
+    Ohne «en» (zusammengesetzte Zeile ohne englisches Gegenstück) gilt nur die Typografie."""
+    for nr, p in enumerate(daten, 1):
+        if not isinstance(p, dict) or not isinstance(p.get("fr"), str):
+            raise FormatFehler(f"{pfad}: Paar {nr} braucht «fr» (und «en», «stelle»)")
+        if p["fr"]:
+            stelle = p.get("stelle", "")
+            if "en" in p:
+                yield Text(nr, p["en"], p["fr"], p["en"] or stelle, stelle)
+            else:
+                yield Text(nr, "", p["fr"], stelle, stelle, nur_typografie=True)
+
+
+def texte(pfad):
+    """Alle französischen Texte einer Datei; das Format folgt aus Name und Inhalt."""
+    pfad = Path(pfad)
+    if pfad.suffix == ".po":
+        return list(_texte_po(pfad))
+    if pfad.suffix == ".lang":
+        return list(_texte_lang(pfad))
+    if pfad.suffix == ".xml":
+        return list(_texte_config_xml(pfad))
+    if pfad.suffix == ".json":
+        roh = pfad.read_text(encoding="utf-8")
+        daten = json.loads(roh)
+        if pfad.name == "composer.json":
+            return list(_texte_composer(pfad, daten, roh))
+        if isinstance(daten, list):
+            return list(_texte_paare(pfad, daten))
+        return list(_texte_snippet(pfad, daten, roh))
+    raise FormatFehler(f"{pfad}: unbekanntes Format (erwartet .po, .lang, config.xml, composer.json, .json)")
+
+
 def _sichtbar(s):
     return s.replace(NB, "<U+00A0>").replace(NNB, "<U+202F>").replace("\n", "\\n")
 
@@ -324,17 +508,25 @@ def _sichtbar(s):
 def pruefe_dateien(dateien, ausnahmen, aus=sys.stdout):
     anzahl_funde = anzahl_eintraege = 0
     for datei in dateien:
-        for e in eintraege(datei):
-            for index, (msgstr, zeile) in sorted(e["msgstr"].items()):
-                if not msgstr:
-                    continue
-                anzahl_eintraege += 1
-                original = e["msgid"] if index == 0 or e["msgid_plural"] is None else e["msgid_plural"]
-                for f in pruefe(original, msgstr, ausnahmen, schluessel=e["msgid"]):
-                    anzahl_funde += 1
-                    stelle = f" bei «{_sichtbar(f.stelle)}»" if f.stelle else ""
-                    print(f"{datei}:{zeile}: {f.regel}: {f.beschreibung}{stelle}\n"
-                          f"    msgid  «{_sichtbar(e['msgid'])}»\n    msgstr «{_sichtbar(msgstr)}»", file=aus)
+        try:
+            alle = texte(datei)
+        except (FormatFehler, ValueError, ElementTree.ParseError) as fehler:
+            print(f"fr-po-pruefen: {fehler}", file=aus)
+            return 1
+        for t in alle:
+            anzahl_eintraege += 1
+            if t.original is None:
+                funde = [Fund("original", f"kein englisches Gegenstück zu «{t.stelle}»")]
+            else:
+                funde = pruefe(t.original, t.fr, ausnahmen, schluessel=t.schluessel, platzhalter=t.platzhalter,
+                               nur_typografie=t.nur_typografie)
+            for f in funde:
+                anzahl_funde += 1
+                stelle = f" bei «{_sichtbar(f.stelle)}»" if f.stelle else ""
+                links, rechts = ("msgid ", "msgstr") if t.po else ("en", "fr")
+                ort = f" [{t.stelle}]" if t.stelle else ""
+                print(f"{datei}:{t.zeile}: {f.regel}: {f.beschreibung}{stelle}{ort}\n"
+                      f"    {links} «{_sichtbar(t.original or '')}»\n    {rechts} «{_sichtbar(t.fr)}»", file=aus)
     ungenutzt = ausnahmen.ungenutzt()
     for a in ungenutzt:
         print(f"ungenutzte Ausnahme (entfernen): regel={a['regel']!r} msgid={a.get('msgid', '*')!r}", file=aus)
@@ -347,7 +539,8 @@ def pruefe_dateien(dateien, ausnahmen, aus=sys.stdout):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="fr-po-pruefen", description=__doc__.split("\n\n")[0])
-    p.add_argument("dateien", nargs="*", help="fr_FR.po-Dateien")
+    p.add_argument("dateien", nargs="*", help="fr_FR.po, Shopware *.fr.json, config.xml, composer.json, "
+                   "REDAXO fr_fr.lang oder Textpaare-JSON")
     p.add_argument("--ausnahmen", help="TOML-Datei mit Ausnahmen (unveraendert, [[ausnahme]])")
     p.add_argument("--glossar-aktualisieren", action="store_true",
                    help=f"Glossar neu von {GLOSSAR_URL} nach {GLOSSAR_ORDNER} laden")
@@ -357,7 +550,7 @@ def main(argv=None):
         print(f"Glossar aktualisiert: {n} Einträge in {GLOSSAR_ORDNER / 'glossar-fr.csv'}")
         return 0
     if not args.dateien:
-        p.error("mindestens eine .po-Datei angeben")
+        p.error("mindestens eine Datei angeben")
     return pruefe_dateien(args.dateien, Ausnahmen.laden(args.ausnahmen))
 
 
