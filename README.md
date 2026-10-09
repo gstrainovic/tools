@@ -19,6 +19,7 @@ noch eigenständige Terminal-Scripts.
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
 | `gsc.py` | Google Search Console über die Search Console API: Properties, Sitemaps, URL-Prüfung, Suchanfragen; `add-domain DOMAIN` legt eine Domain-Property an (TXT-Token per Site Verification API, Eintrag per Infomaniak-API, bestätigen, Property und Sitemap hinzufügen) |
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
+| `fr_po_pruefen.py` | Französische `.po` nach den Regeln des französischen WordPress-Teams prüfen (SPTE-Typografie, Glossar, Platzhalter), gemeinsame Prüfung aller WordPress-Plugin-Repos |
 | `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
@@ -155,6 +156,21 @@ Neues Gerät:
    (Gerätekonto → «Zugriffstoken erstellen»); Widerrufen verlangt das Master-Passwort.
 4. `geheimnisse holen`
 
+### fr-po-pruefen
+
+```bash
+fr-po-pruefen plugin/*/languages/*-fr_FR.po --ausnahmen fr-ausnahmen.toml   # Exit 1 bei Fund
+fr-po-pruefen --glossar-aktualisieren   # Glossar-CSV von translate.wordpress.org neu laden
+```
+
+Läuft per `uv run --script` (Abhängigkeit `regex` für die Lookbehinds aus SPTE). Je Fund: Datei:Zeile des
+`msgstr`, Regel, msgid und msgstr (geschützte Leerzeichen sichtbar als `<U+00A0>`, `<U+202F>`). Geprüft werden
+Typografie und verbotene Wörter nach SPTE (Association-WPFR/SPTE 3.1.1, `utils/rules.js`, GPL-2.0-or-later,
+nachgebaut), das Glossar des französischen Teams wie GlotDict (`fr-po/glossar-fr.csv`, Abrufdatum in
+`fr-po/glossar-fr.quelle`) sowie Platzhalter und HTML-Tags wie im msgid. Regeln, Abweichungen von SPTE und das
+Format der Ausnahmedatei stehen im Kopf des Skripts; wann korrigiert und wann eine Ausnahme eingetragen wird, im
+Skill wp-plugin-ch. Die Plugin-Repos rufen es in `bin-test.sh` auf.
+
 ### Webseiten für Recherchen lesen
 
 Reihenfolge, vom billigsten zum teuersten Weg; die Ausgabe immer durch einen Filter (`rg`, kurzes
@@ -190,6 +206,7 @@ Voraussetzungen: `uv`, `cargo`, `python3`. Alles Weitere installiert das Script.
 
 ```bash
 bash tests/test-repo-consistency.sh
+uv run --with regex python3 -m unittest test_fr_po_pruefen.py
 ```
 
 ## Getestete Screenshot-Ansätze (und warum verworfen)

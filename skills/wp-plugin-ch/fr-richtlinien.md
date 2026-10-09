@@ -47,13 +47,16 @@ Quellen:
 
 ## 3. Typografie
 
-Quelle nennt «espace insécable» ohne Unicode-Angabe; hier daher U+00A0 (NBSP). Ein schmaler Zeichencode (z. B. U+202F) wird in den Quellen nicht verlangt.
+NBSP heisst U+00A0. Vor `;` `?` `!` gilt U+00A0 oder das schmale U+202F, verlangt wird mindestens eines davon
+(Gorans Entscheid 64b, wie SPTE standardmässig); vor `:` und `»` und nach `«` nur U+00A0. Geprüft wird das samt
+Glossar mit `fr-po-pruefen` (Skill wp-plugin-ch, Abschnitt Übersetzungen).
 
 | Zeichen | Regel |
 |---|---|
 | `.` `,` `…` `)` `]` | kein Leerzeichen davor, eines danach |
 | `(` `[` | eines davor, keines danach |
-| `:` `;` `?` `!` | **NBSP davor**, normales Leerzeichen danach |
+| `:` | **NBSP davor**, normales Leerzeichen danach |
+| `;` `?` `!` | **NBSP oder U+202F davor**, normales Leerzeichen danach |
 | `»` | NBSP davor, normales Leerzeichen danach |
 | `«` | normales Leerzeichen davor, **NBSP danach** |
 | `%`, Einheiten (25 km), Währung (25 €), mathematische Zeichen | NBSP davor |
@@ -151,7 +154,7 @@ Das Glossar enthält keinen Eintrag für invoice/Rechnung, tax/Steuer, cart/Ware
 ## 5. Häufige Ablehnungsgründe (aus SPTE, Empfehlungen und Validierungs-FAQ)
 
 1. Gerade Apostrophe `'` statt `’`.
-2. Fehlender NBSP vor `:` `;` `?` `!` `»` `%` (und nach `«`).
+2. Fehlender NBSP vor `:` `;` `?` `!` `»` `%` (und nach `«`; vor `;` `?` `!` auch U+202F).
 3. Glossarverstösse, vor allem «plugin» statt «extension», «Post» statt «publication», «Wordpress»/«wordpress» statt «WordPress».
 4. «tu» statt «vous», wörtliche Übersetzung, Passiv, überlange Sätze.
 5. Englische Grossschreibung übernommen (Title Case in Knöpfen, Menüs, Titeln).

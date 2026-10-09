@@ -30,6 +30,9 @@ auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` 
 | `mailbox-accounts.example.toml` | Vorlage für `~/.config/mail/accounts.toml` |
 | `thunderbird_konten.py` | Thunderbird (Flatpak ESR) um fehlende Konten aus `accounts.toml` ergänzen, als `~/.local/bin/thunderbird-konten` verknüpft |
 | `test_thunderbird_konten.py` | Unit-Tests gegen ein Test-Profil im tmp-Ordner, NSS echt (`python3 -m unittest test_thunderbird_konten.py`) |
+| `fr_po_pruefen.py` | Französische `.po` prüfen (SPTE-Typografie, Glossar, Platzhalter), als `~/.local/bin/fr-po-pruefen` verknüpft; Aufruf in den `bin-test.sh` der WordPress-Plugin-Repos |
+| `test_fr_po_pruefen.py` | Tests dazu, Fälle aus SPTEs `regex.test.js` (`uv run --with regex python3 -m unittest test_fr_po_pruefen.py`) |
+| `fr-po/` | Glossar des französischen Teams als CSV mit Quelle und Abrufdatum (`fr-po-pruefen --glossar-aktualisieren`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `link.sh` | Verknüpfungen für Scripts und Skills |

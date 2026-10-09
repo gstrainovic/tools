@@ -30,6 +30,7 @@ link "$SCRIPT_DIR"/img-proto-test    "$BIN_DIR/img-proto-test"
 link "$SCRIPT_DIR"/mailbox.py        "$BIN_DIR/mailbox"
 link "$SCRIPT_DIR"/geheimnisse.py    "$BIN_DIR/geheimnisse"
 link "$SCRIPT_DIR"/thunderbird_konten.py "$BIN_DIR/thunderbird-konten"
+link "$SCRIPT_DIR"/fr_po_pruefen.py  "$BIN_DIR/fr-po-pruefen"
 
 # Claude-Skills, dazu die aus dem privaten Repo skills-privat, falls es geklont ist
 for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do

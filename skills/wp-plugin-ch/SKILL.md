@@ -16,6 +16,7 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
 ## Tests
 
 - TDD mit PHPUnit 11 und Brain Monkey im Container `composer:2`: `./bin-test.sh [phpunit-Argumente]`. PHP ist lokal nicht installiert.
+  Davor läuft auf dem Host `fr-po-pruefen` (siehe Übersetzungen); das Repo tools muss daneben liegen (`../tools`).
 - E2E: `cd e2e && docker compose up -d && ./e2e.sh`. Echtes WordPress im Container, der externe Dienst ist durch eine Attrappe ersetzt (mu-Plugin unter `e2e/mu/`), die sich an die Beispielantworten und Regeln der offiziellen API-Doku hält.
 - Danach `docker compose exec -T cli wp plugin check <slug>` (offizieller Plugin Check von wordpress.org). Er muss ohne Fehler durchlaufen.
 
@@ -51,8 +52,16 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
   wordpressfr `fr-richtlinien.md` in diesem Ordner lesen (Stil, Typografie mit geschützten Leerzeichen, Glossar,
   PTE-Ablauf des französischen Teams); der Hook `skill-hinweis.sh` erinnert bei `.po`-Dateien,
   translate.wordpress.org, wordpress*.slack.com und Prompts zu Übersetzung, Polyglots und PTE an diesen Skill.
-  Jedes Plugin-Repo hat dafür im `UebersetzungenTest` den Test «Französisch nach den Regeln des französischen
-  Teams» (Apostroph ’, U+00A0 vor `: ; ? ! » %` und nach `«`, «extension», «clé de l’API»). Das Edit-Werkzeug
-  macht aus U+00A0 ein normales Leerzeichen: geschützte Leerzeichen per kleinem Skript setzen, das nur `msgstr`
-  ändert, und danach den Test laufen lassen.
+- **Prüfung Französisch an einem Ort:** `fr-po-pruefen <datei.po …> [--ausnahmen fr-ausnahmen.toml]`
+  (`~/projects/tools/fr_po_pruefen.py`, Python mit uv), Exit-Code ≠ 0 und je Fund Zeile, Regel, msgid. Prüft
+  Typografie und verbotene Wörter wie die Browser-Erweiterung SPTE, das Glossar des französischen Teams wie
+  GlotDict (`tools/fr-po/glossar-fr.csv`, neu laden mit `fr-po-pruefen --glossar-aktualisieren`) sowie
+  Platzhalter und HTML wie im msgid; Einzelheiten im Kopf des Skripts. Jedes Plugin-Repo ruft es in `bin-test.sh`
+  für alle `*-fr_FR.po` auf, keine eigene fr-Prüfung im PHP-Test.
+- Funde korrigieren, wenn sie eindeutig nach Regel sind (Typografie, Glossarwort); sonst in `fr-ausnahmen.toml`
+  im Repo: `unveraendert` für nie übersetzte Texte (Pluginnamen, Menüpfade fremder Systeme, Feldnamen), je
+  Ausnahme `[[ausnahme]]` mit `regel`, optional `msgid` und Pflichtfeld `grund`. Eine ungenutzte Ausnahme macht den
+  Test rot.
+- Das Edit-Werkzeug macht aus U+00A0 ein normales Leerzeichen: geschützte Leerzeichen per kleinem Skript setzen,
+  das nur `msgstr` ändert, danach `.mo` per `msgfmt -c` neu bauen und `./bin-test.sh` laufen lassen.
 - E2E installiert die WordPress-Sprachpakete und prüft die Oberfläche je Sprache (en_US, de_CH, fr_FR, it_IT).
