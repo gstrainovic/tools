@@ -38,6 +38,8 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
   `*.mo export-ignore`, das Build-Skript prüft das ZIP. Die Prüfer lehnen mitgelieferte `.po`/`.mo` ab; nach der
   Freigabe die `.po` auf translate.wordpress.org importieren.
 - Nach Textänderungen `./bin-uebersetzungen.sh`: `.pot` per `wp i18n make-pot` im Container `wordpress:cli`, `msgmerge` in jede `.po`, `.mo` per `msgfmt -c`. Neue Texte danach in allen `.po` übersetzen und das Skript noch einmal laufen lassen.
+- Pluginnamen nie übersetzen (Style Guide der Polyglots, gilt auch für die Kurzform ohne «Strainovic IT» in Menü,
+  Seitentitel und Sätzen; `UebersetzungenTest` prüft es).
 - `Sprache::datei()` bildet die Seitensprache ab: `de_CH*` → `de_CH`, übrige `de*` → `de_DE`, `fr*` → `fr_FR`, `it*` → `it_IT`, sonst Englisch.
 - Laden per `load_textdomain()` auf `init` und bei `change_locale`. `load_plugin_textdomain()` meldet Plugin Check als veraltet.
 - `UebersetzungenTest` schlägt fehl, wenn ein Text im Code nicht in der `.pot` steht, eine Übersetzung fehlt, Platzhalter abweichen oder eine `.mo` nicht zu ihrer `.po` passt.
