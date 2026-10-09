@@ -44,7 +44,9 @@ reicht:
    Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Ausfüllen, Hochladen, Einbauen und Senden
    mit dem fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über Auftrag und Ruf,
    die Mechanik nicht. Nennt Goran für einen solchen Text ein anderes Modell («Text soll Opus schreiben»), zuerst
-   zurückfragen, ob er Fable meint, statt es umzusetzen. Zur Freigabe Goran nur die deutsche Fassung zeigen; die anderen Sprachen prüft Claude
+   zurückfragen, ob er Fable meint, statt es umzusetzen. Französisch und Italienisch beurteilt Goran nicht: Fragen
+   zu Wortlaut, Aussprache oder Hörfehlern in diesen Sprachen klärt Claude selbst (Regeln, Whisper, zweites
+   Modell) und meldet nur das Ergebnis. Zur Freigabe Goran nur die deutsche Fassung zeigen; die anderen Sprachen prüft Claude
    (Anrede wie die jeweilige Oberfläche, Inhalt gleich wie Deutsch) und nennt nur Abweichungen.
 7. **Fable sonst sparen:** Die Sitzung selbst läuft auf Opus (`"model": "opus"` in `~/.claude/settings.json`,
    Gorans Entscheid), Fable nur über Agenten nach Punkt 6. Recherche auf Sonnet (Sammeln) bzw. Opus (Urteil), Code und Tests auf Opus, interne
