@@ -66,6 +66,10 @@ und die Rückgabe sonst mehr kosten als die Arbeit. Jeder Auftrag nennt Ziel, Qu
 einer bekannten Datei; die Fundstellen in den Auftrag schreiben und dort festhalten, dass eigene Erfahrungen (Anträge,
 Absagen, Sperren) vor Websuchen gelten. Grund: Die Marktplatz-Recherche vom 08.10.2026 übersah, dass Shopware keine
 neuen Partner aufnimmt und HubSpot drei Kunden verlangt, obwohl beides in den Produkt-Repos stand.
+Das gilt auch vor jeder Aussage «offen», «unklar» oder «nicht geklärt» und vor jeder Empfehlung: zuerst `rg` lokal
+(am 09.10.2026 standen WooCommerce-Partnerantrag, Händlervertrag und Shopify-Machbarkeit im Repo, wurden aber als
+offen bezeichnet). Der Hook `hooks/erst-lokal.sh` lehnt WebSearch, WebFetch, Jina und Recherche-Aufträge ab, solange
+seit der letzten Nutzernachricht keine lokale Suche lief; ein Auftrag mit «zuerst lokal» läuft durch.
 Ergebnisse eines Subagenten vor der Verwendung stichprobenweise prüfen. Mehrere unabhängige Aufträge gleichzeitig
 starten.
 

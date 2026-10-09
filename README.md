@@ -26,6 +26,7 @@ noch eigenständige Terminal-Scripts.
 | `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
 | `hooks/modellwahl.sh` | Claude-Code-Hook vor Agent und Workflow: legt die Modellwahl aus dem Skill arbeitsweise vor |
 | `hooks/agent-auftrag.sh` | Claude-Code-Hook vor Agent und Workflow: lehnt Aufträge zu Video/Film ohne die Regeln aus produktvideos ab («nie eingebrannt») |
+| `hooks/erst-lokal.sh` | Claude-Code-Hook vor WebSearch, WebFetch, Jina sowie Agent und Workflow mit Recherche-Auftrag: lehnt ab, solange seit der letzten Nutzernachricht keine lokale Suche (rg/grep, Grep, Glob) im Transkript steht; Aufträge mit «zuerst lokal» laufen durch |
 | `hooks/bash-bearbeiten.sh` | Claude-Code-Hook vor Bash: Hinweis «Edit/Write statt sed, Heredoc oder Umleitung», wenn ein Befehl eine Datei schreibt |
 | `hooks/skill-hinweis.sh` | Claude-Code-Hook vor Bash, Edit/Write, Claude in Chrome und bei jedem Prompt: Hinweis, welcher noch nicht geladene Skill zum Schritt gehört (Tabelle «Anlass → Skill» im Script) |
 
