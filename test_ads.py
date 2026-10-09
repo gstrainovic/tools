@@ -95,5 +95,34 @@ class KeywordLines(unittest.TestCase):
         self.assertEqual(ads.keyword_lines(["a", "A", "a"]), ["a"])
 
 
+def ergebnis(text, monate):
+    """Antwort des Keyword-Planers wie von der API: month ist der Enum-Wert (JANUARY = 2)."""
+    from types import SimpleNamespace as N
+    volumen = [N(year=j, month=m + 1, monthly_searches=s) for j, m, s in monate]
+    return N(text=text, keyword_metrics=N(monthly_search_volumes=volumen))
+
+
+class Verlauf(unittest.TestCase):
+    def test_zeitraum_endet_mit_dem_letzten_vollen_monat(self):
+        import datetime
+        self.assertEqual(ads.verlauf_zeitraum(datetime.date(2026, 10, 9), 24), ((2024, 10), (2026, 9)))
+        self.assertEqual(ads.verlauf_zeitraum(datetime.date(2026, 1, 15), 12), ((2025, 1), (2025, 12)))
+
+    def test_jahresvergleich_je_keyword_sortiert_nach_letzten_zwoelf_monaten(self):
+        alt = [(2024, m, 100) for m in range(10, 13)] + [(2025, m, 100) for m in range(1, 10)]
+        neu = [(2025, m, 80) for m in range(10, 13)] + [(2026, m, 80) for m in range(1, 10)]
+        steigt = [(j, m, 10) for j, m, _ in alt] + [(j, m, 20) for j, m, _ in neu]
+        text = ads.verlauf_text([ergebnis("klara login", alt + neu), ergebnis("abaninja", steigt)])
+        zeilen = text.splitlines()
+        self.assertEqual(zeilen[0], "Letzte 12 Mt\tVorjahr\tÄnderung\tKeyword\tMonate 2024-10 bis 2026-09")
+        self.assertTrue(zeilen[1].startswith("960\t1200\t-20 %\tklara login\t"))
+        self.assertTrue(zeilen[2].startswith("240\t120\t+100 %\tabaninja\t"))
+
+    def test_fehlende_monate_ergeben_keine_aenderung(self):
+        nur_neu = [(2025, m, 50) for m in range(10, 13)] + [(2026, m, 50) for m in range(1, 10)]
+        zeile = ads.verlauf_text([ergebnis("neu", [(2024, 10, None)] + nur_neu)]).splitlines()[1]
+        self.assertTrue(zeile.startswith("600\t–\t–\tneu\t"))
+
+
 if __name__ == "__main__":
     unittest.main()
