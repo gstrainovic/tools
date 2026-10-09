@@ -108,6 +108,14 @@ for w in Steuer MWST Bank Preis Vertrag Recht; do
 done
 meldet "Prompt mehrere Skills" "nachhalten schweiz screenshots" "" "$(prompt_ein 'Screenshot der Mail zum Vertrag')" UserPromptSubmit
 
+# Vor mailbox send/reply immer die Frage nach Fable, auch wenn alle Skills geladen sind
+t=$(transkript mailbox akquise-direkt nachhalten)
+aus=$(bash_ein 'mailbox reply strainovic 42 --body-file antwort.txt' "$t" | "$hook")
+if jq -e '.hookSpecificOutput.additionalContext | test("Fable")' <<<"$aus" >/dev/null 2>&1; then
+  echo "ok   meldet: Fable-Frage vor mailbox reply trotz geladener Skills"
+else echo "FAIL meldet: Fable-Frage vor mailbox reply trotz geladener Skills"; echo "     Ausgabe: $aus"; fehler=1; fi
+still "kein Fable-Hinweis bei mailbox list" "$(bash_ein 'mailbox list' "$(transkript nachhalten)")"
+
 # Transkript: geladen, fehlt, unlesbar
 t=$(transkript mailbox)
 meldet "nur fehlende Skills" "akquise-direkt nachhalten" "mailbox" "$(bash_ein 'mailbox send strainovic --body-file t.txt' "$t")"
