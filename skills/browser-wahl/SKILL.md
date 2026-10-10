@@ -18,6 +18,11 @@ Reihenfolge, das erste passende nehmen:
 4. **Claude in Chrome** nur, wo Gorans eigene Sitzung mit Bot-Schutz nötig ist (LinkedIn, Upwork, freelancermap,
    Google-Konten) oder Goran zusehen will. Nicht für Kundensysteme.
 
+**Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
+Objekt, anderer Ablauf) zuerst lokal (`rg` in `~/projects`), dann die API-Doku des Systems und fehlende Rechte des
+Tokens, bevor er weiterklickt. Nur was die Oberfläche selbst prüfen soll (Verhalten des Editors, Weg des Kunden),
+bleibt im Browser.
+
 Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwright-cli deckt alles ab. Nie
 `npx playwright install`: playwright-cli nutzt den installierten Chrome.
 
