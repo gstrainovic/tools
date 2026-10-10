@@ -5,7 +5,8 @@
 export LC_ALL=C.UTF-8
 ein=$(cat)
 prompt=$(jq -r '.tool_input.prompt // .tool_input.script // empty' <<<"$ein" 2>/dev/null)
-grep -qiE 'video|film|rendern|untertitel|vertonen|aufnahme' <<<"$prompt" || exit 0
+# «rendern» und «Aufnahme» allein sind keine Videoarbeit (PDF rendern, Aufnahme in eine Liste)
+grep -qiE 'video|film|untertitel|vertonen|screencast|bildschirmaufnahme|tonaufnahme|sprachaufnahme' <<<"$prompt" || exit 0
 grep -qi 'nie eingebrannt' <<<"$prompt" && exit 0
 # Aufträge, die Videos nur ausschliessen («Videos nicht ändern»), tragen diesen Vermerk
 grep -qi 'keine videoarbeit' <<<"$prompt" && exit 0
