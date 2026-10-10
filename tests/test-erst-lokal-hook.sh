@@ -41,7 +41,6 @@ kaputt=$(printf 'kein json\n{"type":"user"\n' | transkript)
 
 pruefe "WebSearch ohne lokale Suche wird abgelehnt" "$(web_ein WebSearch "$ohne_rg")" deny
 pruefe "WebFetch ohne lokale Suche wird abgelehnt" "$(web_ein WebFetch "$ohne_rg")" deny
-pruefe "Jina ohne lokale Suche wird abgelehnt" "$(web_ein mcp__jina-reader__jina_search "$ohne_rg")" deny
 pruefe "WebSearch nach Bash rg läuft durch" "$(web_ein WebSearch "$mit_rg")" keine
 pruefe "WebSearch nach Bash grep läuft durch" "$(web_ein WebSearch "$mit_grep")" keine
 pruefe "rg nur vor der letzten Nutzernachricht zählt nicht" "$(web_ein WebSearch "$rg_davor")" deny

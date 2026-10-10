@@ -23,19 +23,17 @@ Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwrig
 
 ## Recherche ohne Browser
 
-Nachschlagen (Preise, Produktvergleiche, Doku, Marktlücken) läuft über WebSearch, im Notfall über Jina
-(`https://r.jina.ai/<URL>` oder MCP `jina-reader`), nie über Playwright oder Claude in Chrome, weil das Tokens
+Nachschlagen (Preise, Produktvergleiche, Doku, Marktlücken) läuft über WebSearch, einzelne Seiten über Jina
+Reader (`curl https://r.jina.ai/<URL>`), nie über Playwright oder Claude in Chrome, weil das Tokens
 kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Recherche-Agenten laufen als Sonnet (Lesen und
 Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; Stufen im Skill `arbeitsweise`,
 Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
 markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
 
-Jina: Schlüssel in `~/.config/jina/key` (nie anzeigen), für curl
-`-H "Authorization: Bearer $(tr -d '\n' < ~/.config/jina/key)"`. Mit Schlüssel geht auch `jina_search`, eine
-Suche kostet rund 55'000 Tokens Guthaben. Meldet Jina HTTP 402 (`InsufficientBalanceError`), ohne Schlüssel
-aufrufen (20 Abrufe pro Minute); kein Guthaben nachkaufen. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht
-Jina nicht.
+Jina Reader läuft ohne Schlüssel und kostenlos, 20 Abrufe pro Minute je IP; es gibt weder Schlüssel noch
+MCP-Server, kein Guthaben kaufen. Die Jina-Suche (`s.jina.ai`) braucht einen Schlüssel und entfällt, gesucht wird
+mit WebSearch. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht Jina nicht.
 
 Listen (Zielfirmen, Impressen, Referenzseiten) laufen nie über Jina, sondern über Skripte mit curl
 (`akquise/firmensuche.py` und Einzelskripte); Jina nur für die einzelne Seite, die curl blockt oder per JavaScript

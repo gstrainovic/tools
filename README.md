@@ -135,14 +135,14 @@ Bricht ab, solange Thunderbird läuft. Ein zweiter Lauf ändert nichts.
 
 ```bash
 geheimnisse status                         # Tresor gegen lokale Dateien: gleich, abweichend, fehlt lokal
-geheimnisse hochladen dms/.env ~/.config/jina/key
+geheimnisse hochladen dms/.env ~/.config/elevenlabs/key
 geheimnisse holen                          # fehlende Dateien an ihren Platz, --ueberschreiben für abweichende
 ```
 
 Dateien mit Zugangsdaten (`.env`, Schlüssel, Tokens) liegen im Bitwarden Secrets Manager
 (vault.bitwarden.eu, Organisation «Strainovic IT», Projekt `strainovic`, Gratisplan mit 3 Projekten und
 3 Gerätekonten). Ein Geheimnis heisst wie der Pfad der Datei: relativ zu `~/projects` (`dms/apps/dms/.env`)
-oder mit `~/` relativ zum Home-Verzeichnis (`~/.config/jina/key`); der Wert ist der Dateiinhalt. Werte
+oder mit `~/` relativ zum Home-Verzeichnis (`~/.config/elevenlabs/key`); der Wert ist der Dateiinhalt. Werte
 werden nie ausgegeben, auch nicht der Fehlertext von `bws`, weil er Argumente wiederholt. Nach jeder
 Änderung einer solchen Datei wieder hochladen. Tests ohne Netz: `python3 -m unittest test_geheimnisse.py`.
 

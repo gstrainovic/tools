@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse-Hook für WebSearch, WebFetch, mcp__jina-reader__* sowie Agent und Workflow mit Recherche-Auftrag:
+# PreToolUse-Hook für WebSearch, WebFetch sowie Agent und Workflow mit Recherche-Auftrag:
 # lehnt ab, solange seit der letzten echten Nutzernachricht keine lokale Suche im Transkript steht (Bash mit rg
 # oder grep, Werkzeug Grep oder Glob). Grund: Am 09.10.2026 standen WooCommerce-Partnerantrag, Händlervertrag und
 # Shopify-Machbarkeit im Repo, wurden aber als offen bezeichnet (Skill arbeitsweise, «Erst lokal, dann Web»).
@@ -11,7 +11,7 @@ werkzeug=$(feld .tool_name)
 transkript=$(feld .transcript_path)
 
 case "$werkzeug" in
-WebSearch | WebFetch | mcp__jina-reader__*) ;;
+WebSearch | WebFetch) ;;
 Agent | Workflow)
   prompt=$(jq -r '.tool_input.prompt // .tool_input.script // empty' <<<"$ein" 2>/dev/null)
   grep -qiE 'recherch|websuche|websearch|webfetch|jina|im web|online suchen' <<<"$prompt" || exit 0
