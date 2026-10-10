@@ -43,8 +43,10 @@ reicht:
    das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
    Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Ausfüllen, Hochladen, Einbauen und Senden
    mit dem fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über Auftrag und Ruf,
-   die Mechanik nicht. Nennt Goran für einen solchen Text ein anderes Modell («Text soll Opus schreiben»), zuerst
-   zurückfragen, ob er Fable meint, statt es umzusetzen. Französisch und Italienisch beurteilt Goran nicht: Fragen
+   die Mechanik nicht. Ist das Fable-Limit aufgebraucht (Agent bricht mit «You've reached your Fable limit» ab,
+   HTTP 429), schreibt Opus (`model: opus`) den Text ohne Rückfrage; im Bericht an Goran in einem Satz vermerken,
+   welche Texte Opus statt Fable schrieb. Nennt Goran sonst für einen solchen Text ein anderes Modell («Text soll
+   Opus schreiben»), zuerst zurückfragen, ob er Fable meint, statt es umzusetzen. Französisch und Italienisch beurteilt Goran nicht: Fragen
    zu Wortlaut, Aussprache oder Hörfehlern in diesen Sprachen klärt Claude selbst (Regeln, Whisper, zweites
    Modell) und meldet nur das Ergebnis. Zur Freigabe Goran nur die deutsche Fassung zeigen; die anderen Sprachen prüft Claude
    (Anrede wie die jeweilige Oberfläche, Inhalt gleich wie Deutsch) und nennt nur Abweichungen.
