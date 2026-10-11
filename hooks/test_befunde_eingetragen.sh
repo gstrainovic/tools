@@ -12,11 +12,14 @@ ohne='{"type":"assistant","message":{"content":[{"type":"text","text":"Fertig, a
 todo_edit='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{"file_path":"/home/g/projects/x/todo.md"}}]}}'
 alt_edit='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{"file_path":"/home/g/projects/x/TODO.md"}}]}}'
 
+letzte=""  # last_assistant_message der Hook-Eingabe; leer = Feld fehlt
 fall() { # name, erwartet (block|frei), stop_hook_active, zeilen...
   local name=$1 erwartet=$2 aktiv=$3; shift 3
   printf '%s\n' "$@" >"$tmp/t.jsonl"
   local aus
-  aus=$(jq -n --arg t "$tmp/t.jsonl" --argjson a "$aktiv" '{transcript_path:$t, stop_hook_active:$a}' | "$hier/befunde-eingetragen.sh")
+  aus=$(jq -n --arg t "$tmp/t.jsonl" --argjson a "$aktiv" --arg l "$letzte" \
+    '{transcript_path:$t, stop_hook_active:$a} + (if $l == "" then {} else {last_assistant_message:$l} end)' |
+    "$hier/befunde-eingetragen.sh")
   local ist=frei
   grep -q '"decision": *"block"' <<<"$aus" && ist=block
   if [ "$ist" = "$erwartet" ]; then echo "ok   $name"; else echo "FAIL $name: erwartet $erwartet, ist $ist"; fehler=1; fi
@@ -28,4 +31,9 @@ fall "Änderung vor der letzten Nutzernachricht zählt nicht" block false "$alt_
 fall "Bericht ohne Befund läuft durch" frei false "$nutzer" "$ohne"
 fall "zweiter Stopp nach Hinweis läuft durch" frei true "$nutzer" "$bericht"
 fall "ohne Transkript läuft durch" frei false
+# Das Transkript hinkt beim Stopp nach; die letzte Antwort steht in last_assistant_message
+letzte="Alles erledigt, nichts offen."
+fall "älterer Zwischentext mit Befund, Schlussbericht ohne läuft durch" frei false "$nutzer" "$bericht"
+letzte="Fertig. **Befunde** - Export kaputt."
+fall "Schlussbericht mit Befund, noch nicht im Transkript, blockiert" block false "$nutzer" "$ohne"
 exit $fehler
