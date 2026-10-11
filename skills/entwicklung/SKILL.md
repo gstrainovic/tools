@@ -18,8 +18,8 @@ Gilt für jedes Modell (Fable neigt besonders dazu) und gehört in jeden Plan f�
 
 - **Knapp planen:** Reicht die Information zum Handeln, handeln. Geklärtes nicht neu herleiten, getroffene Entscheide nicht neu aufrollen, keine Optionen aufzählen, die nicht genommen werden; bei einer Wahl eine Empfehlung statt einer Übersicht. Ein langes Ergebnis nicht erst ganz im Kopf entwerfen und dann nochmals ausschreiben.
 - **Nur ändern, was die Aufgabe verlangt.** Gezielte Änderungen statt ganze Dateien neu zu schreiben; Prüfskripte nicht als feste Tests einchecken, Tests nur auf Verhalten (siehe «Tests»).
-- **Nebenbefunde melden, nicht nebenbei umsetzen:** veralteter Code oder Kommentar, Fehler, fehlende Tests, Aufräumbedarf kommen am Ende als Liste in den Bericht und als offener Punkt in die todo.md des betroffenen Repos (sonst gehen sie mit dem Chat verloren). Goran oder ein eigener Schritt entscheidet.
-- **Umgesetzt wird ein Nebenbefund nur in eigenen Produkten**, als eigener Commit mit eigenem Test, getrennt von der eigentlichen Änderung.
+- **Nebenbefunde in eigenen Produkten sofort beheben** (veralteter Code oder Kommentar, Fehler, fehlende Tests, Aufräumbedarf): als eigener Commit mit eigenem Test, getrennt von der eigentlichen Änderung. Vorher am laufenden System prüfen, ob der Befund stimmt.
+- **In die todo.md des Repos statt beheben** nur, was einen Entscheid von Goran braucht oder unter «Nie nebenbei» fällt; dann zusätzlich als Frage an den Schluss des Berichts.
 - **Nie nebenbei** in Kundencode, in Plugins, die bei wordpress.org in Prüfung liegen, und in den Läufen auf dem Server (find-jobs-lauf: Code-Lauf baut keine neuen Funktionen).
 
 ## Mehrsprachige Produkte
