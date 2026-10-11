@@ -13,10 +13,19 @@ transkript=$(feld .transcript_path)
 
 skills=()
 gruende=()
-# Geladen = Aufruf des Skill-Werkzeugs im Transkript, Form: "name":"Skill","input":{"skill":"<name>"
+# Im Subagenten zählt auch dessen eigenes Transkript: <sitzung>/subagents/agent-<agent_id>.jsonl neben <sitzung>.jsonl
+protokolle=("$transkript")
+agent=$(feld .agent_id)
+[ -n "$agent" ] && [[ $transkript == *.jsonl ]] && protokolle+=("${transkript%.jsonl}/subagents/agent-$agent.jsonl")
+# Geladen = Aufruf des Skill-Werkzeugs, Form: "name":"Skill","input":{"skill":"<name>", oder (Subagenten) Read der
+# Datei …/skills/<name>/SKILL.md
 geladen() {
-  [ -n "$transkript" ] && [ -r "$transkript" ] &&
-    grep -qF "\"name\":\"Skill\",\"input\":{\"skill\":\"$1\"" "$transkript" 2>/dev/null
+  local p
+  for p in "${protokolle[@]}"; do
+    [ -n "$p" ] && [ -r "$p" ] || continue
+    grep -qF -e "\"name\":\"Skill\",\"input\":{\"skill\":\"$1\"" -e "/skills/$1/SKILL.md\"" "$p" 2>/dev/null && return 0
+  done
+  return 1
 }
 hinzu() {
   local x
