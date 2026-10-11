@@ -31,7 +31,9 @@ spur=$(jq -R -r '
     else empty end' "$transkript" 2>/dev/null)
 
 nach=$(awk '/^U$/ {buf=""; next} {buf = buf $0 "\n"} END {printf "%s", buf}' <<<"$spur")
-letzter=$(grep '^B:' <<<"$nach" | tail -1)
+# Das Transkript kann beim Stopp der letzten Antwort hinterherhinken; massgeblich ist last_assistant_message
+letzter=$(jq -r '.last_assistant_message // empty' <<<"$ein" 2>/dev/null)
+[ -n "$letzter" ] || letzter=$(grep '^B:' <<<"$nach" | tail -1)
 grep -qiE 'befund|nebenbefund' <<<"$letzter" || exit 0
 grep -q '^T$' <<<"$nach" && exit 0
 
