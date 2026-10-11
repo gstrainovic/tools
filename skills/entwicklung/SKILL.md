@@ -1,6 +1,6 @@
 ---
 name: entwicklung
-description: Allgemeine Entwicklungsregeln für alle Repos: Tests prüfen Verhalten statt Hilfsfunktionen, TDD in Plänen für Subagenten, Umfang einer Änderung (Nebenbefunde melden statt nebenbei umsetzen), Python nur mit uv, GitHub-Inhalte per gh, lokale Modelle über Ollama (127.0.0.1, Tool-Calling kleiner Modelle), llama_index mit Nicht-OpenAI-Anbietern, Container-Fallen. Laden, bevor Code, Tests oder ein Umsetzungsplan geschrieben werden.
+description: Allgemeine Entwicklungsregeln für alle Repos: Tests prüfen Verhalten statt Hilfsfunktionen, TDD in Plänen für Subagenten, Umfang einer Änderung (Nebenbefunde in eigenen Produkten als eigenen Commit beheben), Python nur mit uv, GitHub-Inhalte per gh, lokale Modelle über Ollama (127.0.0.1, Tool-Calling kleiner Modelle), llama_index mit Nicht-OpenAI-Anbietern, Container-Fallen. Laden, bevor Code, Tests oder ein Umsetzungsplan geschrieben werden.
 ---
 
 # Entwicklung (alle Repos)
