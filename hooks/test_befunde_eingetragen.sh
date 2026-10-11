@@ -36,4 +36,12 @@ letzte="Alles erledigt, nichts offen."
 fall "älterer Zwischentext mit Befund, Schlussbericht ohne läuft durch" frei false "$nutzer" "$bericht"
 letzte="Fertig. **Befunde** - Export kaputt."
 fall "Schlussbericht mit Befund, noch nicht im Transkript, blockiert" block false "$nutzer" "$ohne"
+# Befunde ohne das Wort «Befund» (Entscheid 3a, 11.10.2026): Risiko, ungeklärt, unklar, fehlt, nicht aufgeht
+for wort in "Risiko: Token läuft ab." "Ungeklärt bleibt, woher 35 Connects kamen." "Unklar ist die Herkunft." \
+            "Es fehlt noch das Icon." "Was nicht aufgeht: 130 statt 100."; do
+  letzte="Fertig. $wort"
+  fall "Schlussbericht «$wort» ohne todo.md-Änderung blockiert" block false "$nutzer" "$ohne"
+done
+letzte="Fertig. Was nicht aufgeht: 130 statt 100."
+fall "Schlussbericht «nicht aufgeht» mit todo.md-Änderung läuft durch" frei false "$nutzer" "$todo_edit" "$ohne"
 exit $fehler
