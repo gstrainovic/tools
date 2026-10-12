@@ -38,7 +38,9 @@ markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
 
 Jina Reader läuft ohne Schlüssel und kostenlos, 20 Abrufe pro Minute je IP; es gibt weder Schlüssel noch
 MCP-Server, kein Guthaben kaufen. Die Jina-Suche (`s.jina.ai`) braucht einen Schlüssel und entfällt, gesucht wird
-mit WebSearch. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht Jina nicht.
+mit WebSearch. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht Jina nicht, und auch playwright-cli bleibt in
+der Cloudflare-Prüfung («Nur einen Moment…») hängen: Zeigt Jina diese Seite, gleich Claude in Chrome nehmen (Gorans
+Profil besteht die Prüfung, etwa bei codecanyon.net und codester.com), nur zum Lesen.
 
 Listen (Zielfirmen, Impressen, Referenzseiten) laufen nie über Jina, sondern über Skripte mit curl
 (`akquise/firmensuche.py` und Einzelskripte); Jina nur für die einzelne Seite, die curl blockt oder per JavaScript
