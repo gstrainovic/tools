@@ -38,4 +38,4 @@ letzter=$(jq -r '.last_assistant_message // empty' <<<"$ein" 2>/dev/null)
 grep -qiE 'befund|risiko|ungeklärt|unklar|fehlt|nicht aufgeht' <<<"$letzter" || exit 0
 grep -q '^T$' <<<"$nach" && exit 0
 
-jq -n '{decision: "block", reason: "Der Schlussbericht nennt Befunde, aber seit der letzten Nutzernachricht wurde keine todo.md geändert. Befunde und offene Fragen in die todo.md des betroffenen Repos eintragen, committen und hochladen (Regel «Knapp berichten», ~/.claude/CLAUDE.md), dann den Bericht wiederholen. Stehen sie dort schon, kurz so melden."}'
+jq -cn '{decision: "block", reason: "Der Schlussbericht nennt Befunde, aber seit der letzten Nutzernachricht wurde keine todo.md geändert. Befunde und offene Fragen in die todo.md des betroffenen Repos eintragen, committen und hochladen (Regel «Knapp berichten», ~/.claude/CLAUDE.md), dann den Bericht wiederholen. Stehen sie dort schon, kurz so melden."}'
