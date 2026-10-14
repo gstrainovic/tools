@@ -23,6 +23,10 @@ fall() { # name, erwartet (block|frei), stop_hook_active, zeilen...
   local ist=frei
   grep -q '"decision": *"block"' <<<"$aus" && ist=block
   if [ "$ist" = "$erwartet" ]; then echo "ok   $name"; else echo "FAIL $name: erwartet $erwartet, ist $ist"; fehler=1; fi
+  if [ -n "$aus" ] && { [ "$(wc -l <<<"$aus")" -ne 1 ] || ! jq -e '.decision == "block" and (.reason | type == "string")' <<<"$aus" >/dev/null; }; then
+    echo "FAIL $name: Hook-Ausgabe muss ein einzelnes gültiges JSON-Objekt sein"
+    fehler=1
+  fi
 }
 
 fall "Befund ohne todo.md-Änderung blockiert" block false "$nutzer" "$bericht"
