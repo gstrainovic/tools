@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Codex-apply_patch an die vorhandenen Edit/Write-Regeln von security-guidance weiterreichen.
 
-Die ursprünglichen Plugin-Hooks bleiben aktiv. Dieser Zusatz schliesst nur deren Lücke bei apply_patch;
-es werden weder Plugin-Quellen verändert noch Sicherheitsprüfungen abgeschaltet.
+Die ursprünglichen Plugin-Hooks bleiben aktiv. Dieser Zusatz schliesst deren Lücke bei apply_patch
+und führt die vorhandenen Sicherheitsregeln des Plugins aus.
 """
 import argparse
 import json

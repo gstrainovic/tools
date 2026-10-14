@@ -32,6 +32,7 @@ noch eigenständige Terminal-Scripts.
 | `hooks/befunde-eingetragen.sh` | Stop-Hook für beide Programme: verlangt bei Befunden eine TODO-Änderung seit der letzten Nutzernachricht, liefert auch bei Freigabe JSON |
 | `hooks/transkript-sichern.sh` | PreCompact-Hook für beide Programme: sichert `transcript_path` aus der JSON-Eingabe unter einem eindeutigen Namen |
 | `hooks/security-guidance-codex.py` | Zusätzlicher Codex-PostToolUse-Hook für `^apply_patch$`: reicht jede Patchdatei als Edit/Write an die Regeln des aktivierten Plugins security-guidance weiter |
+| `hooks/codex-hook-ausgabe.py` | Entfernt die in Codex unzulässigen Claude-Telemetriefelder `metrics` und `rewakeSummary`; richtet den Adapter in den Codex-Startskripten von security-guidance und claude-security ein |
 
 ### Hooks in Claude Code und Codex
 
@@ -48,8 +49,22 @@ Die Protokollauswertung versteht Claude-Nachrichten und Codex-`response_item`-Ei
 Das Codex-Protokollformat ist laut Dokumentation keine stabile Schnittstelle.
 
 Stop-Hooks geben bei Freigabe `{}` aus; Blockierungen verwenden `decision: "block"` und `reason`.
-Der Sicherheitsadapter ergänzt die Patchprüfung des installierten Plugins ohne dessen Dateien
-zu ändern. Er benötigt Python ab 3.11 und wird mit `uv run --no-project python` aufgerufen.
+Codex 0.162.1 lehnt darüber hinaus unbekannte JSON-Felder ab. Claude-Plugins liefern unter anderem
+`metrics` und `rewakeSummary`, die Codex nicht akzeptiert. Der Ausgabeadapter entfernt nur diese
+Telemetriefelder; Sicherheitskontext, Entscheidungen, Standardfehler und Fehlercodes bleiben erhalten.
+Beim SDK-Start wird Claudes vorgeschaltetes `async`-JSON in ein einzelnes Codex-Ergebnis übersetzt.
+Die vorhandenen Hook-Befehle rufen den Adapter über die angepassten Startskripte im Codex-Plugin-Cache
+auf. Unveränderte Sicherungen liegen jeweils als `*.vor-codex-adapter` daneben. Claudes Plugin-Cache
+bleibt getrennt. Ein globaler Codex-SessionStart-Hook richtet den Adapter bei Sitzungsbeginn auch
+für neu installierte Pluginversionen ein; diese Definition muss unter `/hooks` freigegeben sein.
+Die Einrichtung lässt sich auch direkt ausführen:
+
+```bash
+uv run --no-project python hooks/codex-hook-ausgabe.py --einrichten
+```
+
+Der separate Sicherheitsadapter ergänzt die Patchprüfung des installierten Plugins.
+Er benötigt Python ab 3.11 und wird mit `uv run --no-project python` aufgerufen.
 Er respektiert ein deaktiviertes Plugin und sucht die installierten Versionen unter `CODEX_HOME`.
 
 Die Programme bieten unterschiedliche Ereignisse: Codex' gehostete Websuche löst keine lokalen
@@ -63,8 +78,13 @@ Prüfung der gemeinsamen Skripte mit beiden Eingabeformaten:
 ```bash
 uv run --no-project python -m unittest discover -s tests -p 'test_hook_kompatibilitaet.py'
 uv run --no-project python -m unittest discover -s tests -p 'test_security_guidance_codex.py'
+uv run --no-project python -m unittest discover -s tests -p 'test_codex_hook_ausgabe.py'
 bash hooks/test_befunde_eingetragen.sh
 ```
+
+Die Prüfung des installierten Stop-Hooks verwendet den Ausgabevertrag der tatsächlich installierten
+Codex-Version 0.162.1 (`tests/fixtures/codex-0.162.1-stop.schema.json`), einschliesslich des Verbots
+zusätzlicher Felder. Syntaktisch gültiges JSON allein reicht als Prüfung nicht aus.
 
 Unter `skills/` liegen User-Skills für Claude Code, je Ordner eine `SKILL.md`.
 
