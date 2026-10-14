@@ -293,8 +293,10 @@ def build_message(
 
 
 def reply_recipients(original: email.message.Message, own: str, all_recipients: bool) -> tuple[list[str], list[str]]:
-    """An wen die Antwort geht: Reply-To oder From; bei --all zusätzlich To/Cc ohne die eigene Adresse."""
+    """Eigene Mail: ursprüngliche To; fremde Mail: Reply-To oder From; --all ergänzt Cc ohne uns."""
     to = addresses(original.get("Reply-To") or original.get("From"))
+    if own.lower() in [a.lower() for a in addresses(original.get("From"))]:
+        to = [a for a in addresses(original.get("To")) if a.lower() != own.lower()]
     cc: list[str] = []
     if all_recipients:
         others = addresses(original.get("To"), original.get("Cc"))
