@@ -70,7 +70,7 @@ JavaScript gratis.
 
 Nie als Befehlsparameter. Login als `run-code`-Datei mit Platzhalter, eine kleine Shell-Hülle setzt das Kennwort
 aus `.secrets/` ein und filtert es aus der Ausgabe (`run-code` kennt weder `require` noch `process`). Vorbild:
-`bexio-formular-connector/myfactory/cli_login.sh` mit `cli_login.js`.
+`myfactory-anbindung/myfactory/cli_login.sh` mit `cli_login.js`.
 
 Liegt kein Kennwort in einer Datei, keine Passwort-Datei von Goran verlangen: in Chrome per Autofill anmelden
 und die Sitzung für Playwright übernehmen (Cookies per Skript exportieren, Werte nie ausgeben, Kopien danach

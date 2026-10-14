@@ -64,7 +64,7 @@ Repo-Spezifisches (Slug, API, Attrappe, Ports, Sonderfälle) steht in der AGENTS
   PHP-Test. Texte aus PHP-Code schreibt `tests/fr-texte.php` (Klasse `FrTexte::paare()` unter `tests/`) im
   Container in eine temporäre Datei, die das Werkzeug danach prüft; ein PHPUnit-Test sichert, dass der Export
   jeden Text mit seinem englischen Original liefert (klara-shop-connector: Shopware-Zusatzfelder,
-  bexio-formular-connector: myfactory `Texte::TEXTE` und daraus zusammengesetzte Zeilen).
+  myfactory-anbindung: myfactory `Texte::TEXTE` und daraus zusammengesetzte Zeilen).
 - Funde korrigieren, wenn sie eindeutig nach Regel sind (Typografie, Glossarwort); sonst in `fr-ausnahmen.toml`
   im Repo: `unveraendert` für nie übersetzte Texte (Pluginnamen, Menüpfade fremder Systeme, Feldnamen), je
   Ausnahme `[[ausnahme]]` mit `regel`, optional `msgid` (in allen Formaten der englische Originaltext) und
