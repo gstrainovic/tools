@@ -24,11 +24,47 @@ noch eigenständige Terminal-Scripts.
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 | `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
-| `hooks/modellwahl.sh` | Claude-Code-Hook vor Agent und Workflow: legt die Modellwahl aus dem Skill arbeitsweise vor |
-| `hooks/agent-auftrag.sh` | Claude-Code-Hook vor Agent und Workflow: lehnt Aufträge zu Video/Film ohne die Regeln aus produktvideos ab («nie eingebrannt») |
-| `hooks/erst-lokal.sh` | Claude-Code-Hook vor WebSearch, WebFetch, Jina sowie Agent und Workflow mit Recherche-Auftrag: lehnt ab, solange seit der letzten Nutzernachricht keine lokale Suche (rg/grep, Grep, Glob) im Transkript steht; Aufträge mit «zuerst lokal» laufen durch |
-| `hooks/bash-bearbeiten.sh` | Claude-Code-Hook vor Bash: Hinweis «Edit/Write statt sed, Heredoc oder Umleitung», wenn ein Befehl eine Datei schreibt |
-| `hooks/skill-hinweis.sh` | Claude-Code-Hook vor Bash, Edit/Write, Claude in Chrome und bei jedem Prompt: Hinweis, welcher noch nicht geladene Skill zum Schritt gehört (Tabelle «Anlass → Skill» im Script) |
+| `hooks/modellwahl.sh` | Claude-/Codex-Hook vor Agent, Workflow und spawn_agent: Modellhinweis passend zum Programm |
+| `hooks/agent-auftrag.sh` | Claude-/Codex-Hook vor Agentenaufträgen: lehnt Video/Film ohne die Regeln aus produktvideos ab («nie eingebrannt») |
+| `hooks/erst-lokal.sh` | Claude-/Codex-Hook vor unterstützten Recherche-Werkzeugen und Agentenaufträgen: verlangt seit der letzten Nutzernachricht lokale Suche; Aufträge mit «zuerst lokal» laufen durch |
+| `hooks/bash-bearbeiten.sh` | Claude-/Codex-Hook vor Bash: Hinweis «Edit/Write statt sed, Heredoc oder Umleitung», wenn ein Befehl eine Datei schreibt |
+| `hooks/skill-hinweis.sh` | Claude-/Codex-Hook vor Shellbefehlen, Dateiänderungen, Browserarbeit und bei jedem Prompt: erinnert an passende, noch nicht gelesene Skills |
+| `hooks/befunde-eingetragen.sh` | Stop-Hook für beide Programme: verlangt bei Befunden eine TODO-Änderung seit der letzten Nutzernachricht, liefert auch bei Freigabe JSON |
+| `hooks/transkript-sichern.sh` | PreCompact-Hook für beide Programme: sichert `transcript_path` aus der JSON-Eingabe unter einem eindeutigen Namen |
+| `hooks/security-guidance-codex.py` | Zusätzlicher Codex-PostToolUse-Hook für `^apply_patch$`: reicht jede Patchdatei als Edit/Write an die Regeln des aktivierten Plugins security-guidance weiter |
+
+### Hooks in Claude Code und Codex
+
+Die gemeinsamen Skripte stehen unter `hooks/`. Eingerichtet sind sie in `~/.claude/settings.json`
+und `~/.codex/hooks.json`; projektspezifische Hooks kommen im jeweiligen Repo dazu. Globale
+Einstellungsdateien enthalten auch Zugangsdaten: nur den Schlüssel `hooks` lesen oder übertragen.
+Neue oder geänderte Codex-Hookdefinitionen unter `/hooks` prüfen und freigeben.
+
+Codex meldet Shellbefehle als `Bash` mit `tool_input.command` und Patches als `apply_patch`
+mit dem Patch in demselben Feld. Die Matcher `Edit|Write` treffen auch Codex-Patches;
+die Skripte behandeln trotzdem den tatsächlichen Namen `apply_patch`. Agenten verwenden
+`message` statt Claudes `prompt`; Browserarbeit kann über `mcp__cua_repl__js` laufen.
+Die Protokollauswertung versteht Claude-Nachrichten und Codex-`response_item`-Einträge.
+Das Codex-Protokollformat ist laut Dokumentation keine stabile Schnittstelle.
+
+Stop-Hooks geben bei Freigabe `{}` aus; Blockierungen verwenden `decision: "block"` und `reason`.
+Der Sicherheitsadapter ergänzt die Patchprüfung des installierten Plugins ohne dessen Dateien
+zu ändern. Er benötigt Python ab 3.11 und wird mit `uv run --no-project python` aufgerufen.
+Er respektiert ein deaktiviertes Plugin und sucht die installierten Versionen unter `CODEX_HOME`.
+
+Die Programme bieten unterschiedliche Ereignisse: Codex' gehostete Websuche löst keine lokalen
+Werkzeug-Hooks aus. Claude-spezifische Plugin-Ereignisse und Optionen wie `UserPromptExpansion`
+und `asyncRewake` haben dadurch nicht automatisch dieselbe Wirkung in Codex.
+Grundlagen: [Codex-Hooks](https://developers.openai.com/de-DE/docs/hooks),
+[Claude-Code-Hooks](https://code.claude.com/docs/en/hooks).
+
+Prüfung der gemeinsamen Skripte mit beiden Eingabeformaten:
+
+```bash
+uv run --no-project python -m unittest discover -s tests -p 'test_hook_kompatibilitaet.py'
+uv run --no-project python -m unittest discover -s tests -p 'test_security_guidance_codex.py'
+bash hooks/test_befunde_eingetragen.sh
+```
 
 Unter `skills/` liegen User-Skills für Claude Code, je Ordner eine `SKILL.md`.
 

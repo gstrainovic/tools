@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # PreToolUse-Hook für Agent und Workflow: legt Claude vor jedem Agentenstart die Modellwahl aus dem Skill
 # arbeitsweise vor, damit sie nicht davon abhängt, ob der Skill geladen wurde. Blockiert nie.
-modell=$(jq -r '.tool_input.model // empty' 2>/dev/null)
+ein=$(cat)
+modell=$(jq -r '.tool_input.model // empty' <<<"$ein" 2>/dev/null)
+if jq -e '.tool_name == "spawn_agent" or .turn_id != null' <<<"$ein" >/dev/null 2>&1; then
+  text="Modellwahl für Codex: Nur bei ausdrücklichem Auftrag oder geltender Skill-Anweisung delegieren. Ohne model-Angabe erbt der Agent das Hauptmodell; ein abweichendes Modell nur nach den geltenden Vorgaben und mit einem für Codex verfügbaren Modellnamen wählen. Ein Skript vorziehen, wenn die Aufgabe ohne Sprachmodell lösbar ist. Code-Aufträge verlangen RED → GREEN → REFACTOR."
+  [ -z "$modell" ] || text+=" Gewählt: model=$modell."
+  jq -cn --arg t "$text" '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$t}}'
+  exit 0
+fi
 if [ -n "$modell" ]; then
   gewaehlt="Gewählt: model=$modell."
 else

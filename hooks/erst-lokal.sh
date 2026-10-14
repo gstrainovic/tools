@@ -12,8 +12,8 @@ transkript=$(feld .transcript_path)
 
 case "$werkzeug" in
 WebSearch | WebFetch) ;;
-Agent | Workflow)
-  prompt=$(jq -r '.tool_input.prompt // .tool_input.script // empty' <<<"$ein" 2>/dev/null)
+Agent | Workflow | spawn_agent)
+  prompt=$(jq -r '.tool_input.prompt // .tool_input.script // .tool_input.message // empty' <<<"$ein" 2>/dev/null)
   grep -qiE 'recherch|websuche|websearch|webfetch|jina|im web|online suchen' <<<"$prompt" || exit 0
   grep -qiE 'zuerst lokal|lokal lesen|(^|[^[:alnum:]_-])rg ' <<<"$prompt" && exit 0
   ;;
@@ -39,6 +39,14 @@ spur=$(jq -R -r '
         | select(.name == "Grep" or .name == "Glob"
                  or (.name == "Bash" and ((.input.command // "") | test("(^|[;&|(`\\s])(rg|grep)\\s"))))]
        | if length > 0 then "L" else "X" end)
+    elif $e.type == "response_item" then
+      ($e.payload // {}) as $p
+      | if $p.type == "message" and $p.role == "user" then "U"
+        elif $p.type == "function_call" or $p.type == "custom_tool_call" then
+          (($p.arguments // $p.input // "") | if type == "string" then . as $s | (fromjson? // {command:$s}) else . end) as $i
+          | if ($p.name | split(".") | last | IN("exec_command", "Bash", "shell", "shell_command", "exec"))
+             and (($i.command // $i.cmd // "") | test("(^|[;&|(\\s\"])(rg|grep)\\s")) then "L" else "X" end
+        else "X" end
     else "X" end
 ' "$transkript" 2>/dev/null)
 

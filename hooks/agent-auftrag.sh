@@ -4,7 +4,7 @@
 # übernehmen sie die Montage der Social-Kurzfassungen (so am 09.10.2026 beim Tutorial-Film).
 export LC_ALL=C.UTF-8
 ein=$(cat)
-prompt=$(jq -r '.tool_input.prompt // .tool_input.script // empty' <<<"$ein" 2>/dev/null)
+prompt=$(jq -r '.tool_input.prompt // .tool_input.script // .tool_input.message // empty' <<<"$ein" 2>/dev/null)
 # «rendern» und «Aufnahme» allein sind keine Videoarbeit (PDF rendern, Aufnahme in eine Liste)
 grep -qiE 'video|film|untertitel|vertonen|screencast|bildschirmaufnahme|tonaufnahme|sprachaufnahme' <<<"$prompt" || exit 0
 grep -qi 'nie eingebrannt' <<<"$prompt" && exit 0
