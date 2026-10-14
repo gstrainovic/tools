@@ -1,3 +1,3 @@
 # Offene Aufgaben
 
-- [ ] **Stop-Hook: kompakte JSON-Ausgabe im laufenden Codex bestätigen.** Codex meldete «invalid stop hook JSON output», obwohl die Entscheidung gültig war. `jq -n` gab das JSON mehrzeilig aus; der Hook gibt es nun mit `jq -cn` kompakt in einer Zeile aus. Der Test prüft das Format. Beim nächsten echten Stop-Hook-Lauf bestätigen, dass Codex die Sperre akzeptiert und keine Fehlermeldung zeigt.
+- [ ] **Stop-Hook im laufenden Codex bestätigen.** Codex meldete «invalid stop hook JSON output»; `jq -n` gab die gültige Entscheidung mehrzeilig aus. Ausgabe ist nun mit `jq -cn` kompakt einzeilig. Ausserdem erkennt der Parser Codex-Transkriptzeilen (`response_item` mit Nutzernachricht, Assistententext und TODO-bezogenen Werkzeugaufrufen), damit TODO-Änderungen seit dem letzten Prompt nicht fälschlich übersehen werden. Regressionstests prüfen beide Fälle; beim nächsten echten Stop-Hook-Lauf bestätigen, dass JSON-Fehler und falsche Blockierung ausbleiben.

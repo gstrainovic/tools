@@ -11,6 +11,9 @@ bericht='{"type":"assistant","message":{"content":[{"type":"text","text":"Fertig
 ohne='{"type":"assistant","message":{"content":[{"type":"text","text":"Fertig, alles hochgeladen."}]}}'
 todo_edit='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{"file_path":"/home/g/projects/x/todo.md"}}]}}'
 alt_edit='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{"file_path":"/home/g/projects/x/TODO.md"}}]}}'
+codex_nutzer='{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"mach X"}]}}'
+codex_todo_edit='{"type":"response_item","payload":{"type":"custom_tool_call","name":"exec","input":"tools.apply_patch /home/g/projects/x/TODO.md"}}'
+codex_bericht='{"type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Fertig. **Befunde** - Der Export ist kaputt."}]}}'
 
 letzte=""  # last_assistant_message der Hook-Eingabe; leer = Feld fehlt
 fall() { # name, erwartet (block|frei), stop_hook_active, zeilen...
@@ -48,4 +51,6 @@ for wort in "Risiko: Token läuft ab." "Ungeklärt bleibt, woher 35 Connects kam
 done
 letzte="Fertig. Was nicht aufgeht: 130 statt 100."
 fall "Schlussbericht «nicht aufgeht» mit todo.md-Änderung läuft durch" frei false "$nutzer" "$todo_edit" "$ohne"
+letzte="Fertig. **Befunde** - Der Export ist kaputt."
+fall "Codex-Protokoll erkennt TODO-Änderung seit Nutzernachricht" frei false "$codex_nutzer" "$codex_todo_edit" "$codex_bericht"
 exit $fehler

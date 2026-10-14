@@ -28,6 +28,16 @@ spur=$(jq -R -r '
                   or (.name == "Bash" and ((.input.command // "") | test("(?i)todo\\.md")))) then "T"
           elif .type? == "text" then "B:" + (.text | gsub("\n"; " "))
           else empty end)
+    elif $e.type == "response_item" then
+      ($e.payload // {}) as $p
+      | if $p.type == "message" and $p.role == "user" then "U"
+        elif $p.type == "message" and $p.role == "assistant" then
+          ($p.content[]?
+            | select((.type == "output_text" or .type == "text") and (.text | type == "string"))
+            | "B:" + (.text | gsub("\\n"; " ")))
+        elif ($p.type == "custom_tool_call" or $p.type == "function_call")
+             and ((($p.input // $p.arguments // "") | tostring) | test("(?i)todo\\.md")) then "T"
+        else empty end
     else empty end' "$transkript" 2>/dev/null)
 
 nach=$(awk '/^U$/ {buf=""; next} {buf = buf $0 "\n"} END {printf "%s", buf}' <<<"$spur")
