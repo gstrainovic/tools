@@ -144,6 +144,37 @@ SIGNATUR = ("Guten Tag\n\nText mit <Tag> & Co.\n\nFreundliche Grüsse\nGoran Str
             "Bahnstrasse 9b\n9323 Steinach\ninfo@strainovic-it.ch\nwww.strainovic-it.ch\n")
 
 
+class AntwortVorschau(unittest.TestCase):
+    def test_eigene_gesendete_mail_antwortet_den_urspruenglichen_empfaengern(self):
+        import contextlib
+        import io
+        from unittest import mock
+        original = email.message_from_string(
+            "From: Info <INFO@wartungsheft.ch>\nReply-To: info@wartungsheft.ch\n"
+            "To: kunde@example.ch, partner@example.ch, info@wartungsheft.ch\n"
+            "Cc: chef@example.ch, INFO@wartungsheft.ch, kunde@example.ch\n"
+            "Message-ID: <original@example.ch>\nSubject: Offerte\n\nHallo",
+            policy=email.policy.default)
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "antwort.txt"
+            body.write_text("Nachfrage\n", encoding="utf-8")
+            for alle in (False, True):
+                with self.subTest(alle=alle):
+                    args = type("A", (), {"account": "x", "folder": "Sent", "uid": "42",
+                                         "all": alle, "body_file": str(body), "attach": [],
+                                         "dry_run": True})()
+                    out = io.StringIO()
+                    with mock.patch.object(mb, "imap_connect"), \
+                            mock.patch.object(mb, "fetch", return_value=(original, False)), \
+                            mock.patch.object(mb, "smtp_send") as senden, contextlib.redirect_stdout(out):
+                        mb.cmd_reply({"x": account()}, args)
+                    msg = email.message_from_string(out.getvalue(), policy=email.policy.default)
+                    self.assertEqual(mb.addresses(msg["To"]), ["kunde@example.ch", "partner@example.ch"])
+                    self.assertEqual(mb.addresses(msg["Cc"]), ["chef@example.ch"] if alle else [])
+                    self.assertEqual(msg["In-Reply-To"], "<original@example.ch>")
+                    senden.assert_not_called()
+
+
 class HtmlFassung(unittest.TestCase):
     def test_alternative_mit_text_und_html(self):
         msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR)
