@@ -14,6 +14,9 @@ transkript=$(jq -r '.transcript_path // empty' <<<"$ein" 2>/dev/null)
 
 # Je Zeile: U = echte Nutzernachricht, T = Änderung an einer todo.md, B:<text> = Text von Claude
 spur=$(jq -R -r '
+  def aendert_todo:
+    (tostring | test("(?i)todo\\.md"))
+    and (tostring | test("(?i)apply_patch|git[ \\t]+rm|sed[ \\t]+-i|tee[ \\t]+[^;&|]*todo\\.md|>>?[ \\t]*[^;&|>]*todo\\.md"));
   (fromjson? // empty) as $e
   | if ($e | type) != "object" then empty
     elif $e.type == "user" and ($e.isMeta | not) then
@@ -26,8 +29,9 @@ spur=$(jq -R -r '
     elif $e.type == "assistant" then
       ($e.message.content[]?
         | if .type? == "tool_use"
-             and (((.input.file_path // "") | test("(?i)todo\\.md$"))
-                  or (.name == "Bash" and ((.input.command // "") | test("(?i)todo\\.md")))) then "T"
+             and (((.name | IN("Edit", "Write", "MultiEdit"))
+                   and ((.input.file_path // "") | test("(?i)todo\\.md$")))
+                  or (.name == "Bash" and ((.input.command // "") | aendert_todo))) then "T"
           elif .type? == "text" then "B:" + (.text | gsub("\n"; " "))
           else empty end)
     elif $e.type == "response_item" then
@@ -38,7 +42,9 @@ spur=$(jq -R -r '
             | select((.type == "output_text" or .type == "text") and (.text | type == "string"))
             | "B:" + (.text | gsub("\\n"; " ")))
         elif ($p.type == "custom_tool_call" or $p.type == "function_call")
-             and ((($p.input // $p.arguments // "") | tostring) | test("(?i)todo\\.md")) then "T"
+             and ((($p.input // $p.arguments // "") | tostring) | test("(?i)todo\\.md"))
+             and (($p.name // "" | split(".") | last) == "apply_patch"
+                  or (($p.input // $p.arguments // "") | aendert_todo)) then "T"
         else empty end
     else empty end' "$transkript" 2>/dev/null)
 

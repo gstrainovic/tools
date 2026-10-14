@@ -23,7 +23,20 @@ geladen() {
   local p
   for p in "${protokolle[@]}"; do
     [ -n "$p" ] && [ -r "$p" ] || continue
-    grep -qF -e "\"name\":\"Skill\",\"input\":{\"skill\":\"$1\"" -e "/skills/$1/SKILL.md\"" "$p" 2>/dev/null && return 0
+    jq -Rse --arg s "$1" '
+      any(split("\n")[] | fromjson?
+          | if .type == "assistant" then .message.content[]? | select(.type? == "tool_use")
+            elif .type == "response_item" then .payload | select(.type == "function_call" or .type == "custom_tool_call")
+            else empty end;
+        (.name | split(".") | last) as $n
+        | (.input // .arguments // {}) as $raw
+        | ($raw | if type == "string" then . as $x | (fromjson? // {command:$x}) else . end) as $i
+        | ($n == "Skill" and $i.skill == $s)
+          or ($n == "Read" and (($i.file_path // "") | endswith("/skills/" + $s + "/SKILL.md")))
+          or (($n | IN("Bash", "exec_command", "shell", "shell_command", "exec"))
+              and (($i.command // $i.cmd // "") | test("(^|[;&|(\\s\"])(cat|head|tail|bat|sed)\\s"))
+              and (($i.command // $i.cmd // "") | contains("/skills/" + $s + "/SKILL.md"))))
+    ' "$p" >/dev/null 2>&1 && return 0
   done
   return 1
 }
@@ -38,7 +51,7 @@ hinzu() {
 case "$werkzeug" in
 Bash)
   bevor="dieser Befehl läuft"
-  cmd=$(feld .tool_input.command)
+  cmd=$(jq -r '.tool_input.command // .tool_input.cmd // empty' <<<"$ein")
   # Wie bash-bearbeiten.sh: Heredoc-Inhalt und Text in Anführungszeichen (Commit-Nachrichten, Mailtexte) fallen weg.
   cmd=$(awk '{print} /<</{exit}' <<<"$cmd" | sed -E "s/\"([^\"\\\\]|\\\\.)*\"//g; s/'[^']*'//g")
   hat() { grep -qE "$1" <<<"$cmd"; }
@@ -71,9 +84,15 @@ Bash)
   hat "${a}pgrep[[:space:]]+-[a-zA-Z]*f" &&
     hinzu arbeitsweise "pgrep -f findet auch den eigenen Befehl, Warte-Schleifen anders bauen"
   ;;
-Edit | Write | MultiEdit)
+Edit | Write | MultiEdit | apply_patch)
   bevor="diese Datei geändert wird"
-  pfad=$(feld .tool_input.file_path)
+  if [ "$werkzeug" = apply_patch ]; then
+    pfade=$(jq -r '.tool_input | if type == "string" then . else .command // .input // "" end' <<<"$ein" |
+      awk '/^\*\*\* (Add File|Update File|Delete File|Move to): / {sub(/^\*\*\* [^:]+: /, ""); print}')
+  else
+    pfade=$(feld .tool_input.file_path)
+  fi
+  while IFS= read -r pfad; do
   name=${pfad##*/}
   case "$name" in
   TODO.md | todo.md | AGENTS.md | CLAUDE.md | README.md | SKILL.md)
@@ -87,11 +106,16 @@ Edit | Write | MultiEdit)
   case "$pfad" in */languages/*.po) hinzu wp-plugin-ch "Übersetzungen de_DE, de_CH, fr_FR, it_IT der WordPress-Plugins" ;; esac
   case "$pfad" in */find-jobs/akquise/*) hinzu akquise-direkt "Kundenfakten, Preise und «Rechte am Code»" ;; esac
   [ "$name" = versand.md ] && hinzu akquise-direkt "Kundenfakten, Preise und «Rechte am Code»"
+  done <<<"$pfade"
   ;;
-mcp__claude-in-chrome__*)
+mcp__claude-in-chrome__* | mcp__cua_repl__*)
   bevor="im Browser weitergearbeitet wird"
   hinzu browser-wahl "API oder playwright-cli vor Claude in Chrome, Login und Tab-Regeln"
-  url=$(feld .tool_input.url)
+  urls=$(feld .tool_input.url)
+  if [[ $werkzeug == mcp__cua_repl__* ]]; then
+    urls=$(feld .tool_input.code | grep -oE 'https?://[^" '\''<>)]+' || true)
+  fi
+  for url in $urls; do
   host=$url
   [[ $host == *://* ]] && host=${host#*://}
   host=${host%%[/?#]*}
@@ -110,6 +134,7 @@ mcp__claude-in-chrome__*)
   am 'myfactory' && hinzu myfactory "SOAP-Zugang, Oberfläche und Testdaten bei myfactory-Kunden"
   am '(^|\.)wordpress\.org$' && hinzu wp-plugin-ch "Plugin-Verzeichnis, Prüfung und Übersetzungen auf wordpress.org"
   am '^wordpress[a-z]*\.slack\.com$' && hinzu wp-plugin-ch "Übersetzungsregeln der WordPress-Teams (fr-richtlinien.md) vor jeder Nachricht dort"
+  done
   ;;
 esac
 
@@ -130,9 +155,14 @@ fi
 
 [ ${#skills[@]} -gt 0 ] || [ -n "${zusatz:-}" ] || exit 0
 text=""
+[ -z "$(feld .turn_id)" ] || zusatz="${zusatz:+Text und Freigaberegeln aus dem Skill arbeitsweise vor dem Versand prüfen.}"
 [ -n "${zusatz:-}" ] && text+="$zusatz"$'\n'
 for i in "${!skills[@]}"; do
-  text+="Skill ${skills[$i]} laden (Skill-Tool), bevor $bevor: ${gruende[$i]}"$'\n'
+  if [ -n "$(feld .turn_id)" ] || [ "$werkzeug" = apply_patch ]; then
+    text+="Skill ${skills[$i]} laden (SKILL.md lesen), bevor $bevor: ${gruende[$i]}"$'\n'
+  else
+    text+="Skill ${skills[$i]} laden (Skill-Tool), bevor $bevor: ${gruende[$i]}"$'\n'
+  fi
 done
 jq -n --arg e "${ereignis:-PreToolUse}" --arg t "${text%$'\n'}" \
   '{hookSpecificOutput: {hookEventName: $e, additionalContext: $t}}'
