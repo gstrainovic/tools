@@ -5,10 +5,12 @@
 # Gesprächsverlauf und gingen mit /clear verloren. Beim zweiten Stopp (stop_hook_active) und ohne lesbares
 # Transkript nie blockieren.
 export LC_ALL=C.UTF-8
+# Codex verlangt auch bei einer Freigabe ein JSON-Objekt auf stdout.
+freigeben() { printf '{}\n'; exit 0; }
 ein=$(cat)
-[ "$(jq -r '.stop_hook_active // false' <<<"$ein" 2>/dev/null)" = "true" ] && exit 0
+[ "$(jq -r '.stop_hook_active // false' <<<"$ein" 2>/dev/null)" = "true" ] && freigeben
 transkript=$(jq -r '.transcript_path // empty' <<<"$ein" 2>/dev/null)
-[ -n "$transkript" ] && [ -r "$transkript" ] || exit 0
+[ -n "$transkript" ] && [ -r "$transkript" ] || freigeben
 
 # Je Zeile: U = echte Nutzernachricht, T = Änderung an einer todo.md, B:<text> = Text von Claude
 spur=$(jq -R -r '
@@ -45,7 +47,7 @@ nach=$(awk '/^U$/ {buf=""; next} {buf = buf $0 "\n"} END {printf "%s", buf}' <<<
 letzter=$(jq -r '.last_assistant_message // empty' <<<"$ein" 2>/dev/null)
 [ -n "$letzter" ] || letzter=$(grep '^B:' <<<"$nach" | tail -1)
 # Befunde heissen nicht immer so (Entscheid 3a, 11.10.2026): auch Risiken, Ungeklärtes, Fehlendes, Widersprüche
-grep -qiE 'befund|risiko|ungeklärt|unklar|fehlt|nicht aufgeht' <<<"$letzter" || exit 0
-grep -q '^T$' <<<"$nach" && exit 0
+grep -qiE 'befund|risiko|ungeklärt|unklar|fehlt|nicht aufgeht' <<<"$letzter" || freigeben
+grep -q '^T$' <<<"$nach" && freigeben
 
 jq -cn '{decision: "block", reason: "Der Schlussbericht nennt Befunde, aber seit der letzten Nutzernachricht wurde keine todo.md geändert. Befunde und offene Fragen in die todo.md des betroffenen Repos eintragen, committen und hochladen (Regel «Knapp berichten», ~/.claude/CLAUDE.md), dann den Bericht wiederholen. Stehen sie dort schon, kurz so melden."}'
