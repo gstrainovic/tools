@@ -65,6 +65,9 @@ JavaScript gratis.
   Fenster und Tabs nach der eingeloggten Seite absuchen und dort weiterarbeiten statt einen neuen Tab zu öffnen.
 - **Lesen verweigert:** Lehnt die Extension das Lesen einer Seite ab, trotzdem Screenshot und Klick versuchen,
   bevor gemeldet wird.
+- **Datei-Uploads:** `file_upload` auf das `input[type=file]`, je Datei ein Aufruf. Viele Formulare (etwa Codester)
+  laden sofort beim Auswählen hoch, ohne weiteren Knopf. Scheitert ein Upload (Status-Platzhalter, 5xx), erst mit
+  einer Datei in einem frisch geladenen Formular wiederholen, bevor eine Störung beim Anbieter gemeldet wird.
 
 ## Kennwörter
 
