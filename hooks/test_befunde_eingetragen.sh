@@ -26,8 +26,9 @@ fall() { # name, erwartet (block|frei), stop_hook_active, zeilen...
   local ist=frei
   grep -q '"decision": *"block"' <<<"$aus" && ist=block
   if [ "$ist" = "$erwartet" ]; then echo "ok   $name"; else echo "FAIL $name: erwartet $erwartet, ist $ist"; fehler=1; fi
-  if [ -n "$aus" ] && { [ "$(wc -l <<<"$aus")" -ne 1 ] || ! jq -e '.decision == "block" and (.reason | type == "string")' <<<"$aus" >/dev/null; }; then
-    echo "FAIL $name: Hook-Ausgabe muss ein einzelnes gültiges JSON-Objekt sein"
+  if ! jq -e -s 'length == 1 and (.[0] | type == "object") and
+      (.[0] == {} or (.[0].decision == "block" and (.[0].reason | type == "string")))' <<<"$aus" >/dev/null; then
+    echo "FAIL $name: Stop-Hook muss auch bei Freigabe ein gültiges JSON-Objekt ausgeben"
     fehler=1
   fi
 }
@@ -53,4 +54,12 @@ letzte="Fertig. Was nicht aufgeht: 130 statt 100."
 fall "Schlussbericht «nicht aufgeht» mit todo.md-Änderung läuft durch" frei false "$nutzer" "$todo_edit" "$ohne"
 letzte="Fertig. **Befunde** - Der Export ist kaputt."
 fall "Codex-Protokoll erkennt TODO-Änderung seit Nutzernachricht" frei false "$codex_nutzer" "$codex_todo_edit" "$codex_bericht"
+
+for eingabe in '{}' "{\"transcript_path\":\"$tmp/fehlt.jsonl\"}"; do
+  aus=$(printf '%s' "$eingabe" | "$hier/befunde-eingetragen.sh")
+  if ! jq -e -s 'length == 1 and .[0] == {}' <<<"$aus" >/dev/null; then
+    echo "FAIL Fehlendes oder unlesbares Transkript muss gültiges Freigabe-JSON liefern"
+    fehler=1
+  fi
+done
 exit $fehler
