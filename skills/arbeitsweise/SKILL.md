@@ -12,6 +12,9 @@ description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und 
   ihrer Befehlszeile, findet sich und endet nie. Wenn `pgrep -f` unvermeidbar ist, das Muster mit Klammer
   brechen (`pgrep -f "[r]endern.sh de"`).
 - Dieselbe Vorgabe gehört in jeden Agenten-Auftrag mit Hintergrundprozessen.
+- In jeden Agenten-Auftrag: kein `rm` mit Platzhaltern und kein `cd …;` vor Befehlen, Zwischendateien je
+  Durchgang in einen neuen Ordner mit absolutem Pfad im Scratchpad, nichts löschen. Grund: Die Rechteprüfung
+  kann `cd x; rm -f q/*` nicht auflösen und fragt Goran bei jedem Aufruf.
 - Vor der Meldung «nichts läuft mehr»: laufende Agenten, hängende Shells (`ps` nach `sleep` mit bash-Eltern)
   und Test-Container (`docker ps`) prüfen und Verwaistes beenden, weil hängende Shells sonst der Meldung
   widersprechen.
