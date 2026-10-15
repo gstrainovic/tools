@@ -1,6 +1,6 @@
 ---
 name: browser-wahl
-description: Welches Werkzeug für Browserarbeit (API, playwright-cli, Skript oder Claude in Chrome), Recherche ohne Browser (WebSearch, Jina), Chrome-Extension und Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird, bevor recherchiert oder ein Recherche-Agent gestartet wird, und wenn ein Login oder die Chrome-Extension hakt.
+description: Welches Werkzeug für Browserarbeit (API, playwright-cli, Skript oder Claude in Chrome), Recherche ohne Browser (WebSearch, Jina, Exa, Codex), Chrome-Extension und Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird, bevor recherchiert oder ein Recherche-Agent gestartet wird, und wenn ein Login oder die Chrome-Extension hakt.
 ---
 
 # Browser-Werkzeug wählen
@@ -35,6 +35,20 @@ Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; 
 Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
 markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
+
+**«Gibt es X irgendwo?»** (Anbieter, Angebot, Produkt, das es vielleicht nicht gibt): Nie aus WebSearch allein
+«gibt es nicht» schliessen. Zusätzlich parallel:
+- Exa: `curl -s https://api.exa.ai/search -H "x-api-key: $(cat ~/.config/exa/key)" -H "Content-Type: application/json"
+  -d '{"query":"…","type":"auto","numResults":15,"contents":{"highlights":{"numSentences":3}}}'`, mehrere
+  Formulierungen und Sprachen.
+- Codex mit Websuche im Hintergrund: `codex --search exec --skip-git-repo-check -s read-only "<Frage, Quelle je
+  Aussage, Ungeprüftes markieren>" -o <scratchpad>/codex.md`.
+Funde der Hauptaussage selbst an der Anbieterseite prüfen (curl, Jina), bevor sie gemeldet werden. Grund: Bei der
+Suche nach einer virtuellen Schweizer Mobilnummer mit Sprache fanden WebSearch und Exa nichts, Codex das Angebot.
+
+**Ganze Website durchsuchen:** zuerst `/llms-full.txt` bzw. `/llms.txt`, sonst `/sitemap.xml` holen und die URLs per
+`rg` filtern; nur echte URLs lesen, keine Unterseiten raten (geratene Pfade liefern meist 404). Preise und AGB oft als
+PDF.
 
 Jina Reader läuft ohne Schlüssel und kostenlos, 20 Abrufe pro Minute je IP; es gibt weder Schlüssel noch
 MCP-Server, kein Guthaben kaufen. Die Jina-Suche (`s.jina.ai`) braucht einen Schlüssel und entfällt, gesucht wird
