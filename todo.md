@@ -1,9 +1,10 @@
 # Offene Aufgaben
 
-- [ ] **Frage an Goran: Recherche-Skript bauen?** Die Regel «Recherche zuerst per Skript» im Skill `browser-wahl`
-      (ddgs und Exa suchen, Seiten per curl holen, nur Ort, Preise und Stichwortstellen ausgeben) läuft bisher als
-      Einzelbefehle je Recherche. Vorschlag: `recherche.py` in diesem Repo, das Suchbegriffe und ein Muster nimmt
-      und eine kurze Tabelle ausgibt; Grundlage `vesna/research_notes/recherche-werkzeuge.md`.
+- [ ] **Recherche-Skript `recherche.py` bauen, beim Punkt Spray-Tanning in `vesna/todo.md`:** Die Regel «Recherche
+      zuerst per Skript» im Skill `browser-wahl` (ddgs und Exa suchen, Seiten per curl holen, nur Ort, Preise und
+      Stichwortstellen ausgeben) läuft bisher als Einzelbefehle. Das Skript nimmt Suchbegriffe und ein Muster und
+      gibt eine kurze Tabelle aus; an der Spray-Tanning-Recherche entwickeln und gleich dort einsetzen (Gorans
+      Entscheid). Grundlage `vesna/research_notes/recherche-werkzeuge.md`.
 
 - [ ] **Codex-Hooks freigeben:** Die geänderten Definitionen in `~/.codex/hooks.json` unter `/hooks`
       prüfen und freigeben: Agenten-/Browser-Matcher, Transkriptsicherung vor der Kontextkürzung,
