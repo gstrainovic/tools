@@ -1,11 +1,14 @@
 """Tests für die reinen Bausteine von mailbox.py (ohne Netz): python3 -m unittest ~/.local/share/mailbox/test_mailbox.py"""
+import contextlib
 import email
 import email.policy
 import importlib.util
+import io
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 # Eigener Modulname, weil «mailbox» in der Standardbibliothek existiert; vor exec registrieren (dataclasses braucht das)
 HERE = Path(__file__).parent
@@ -161,7 +164,7 @@ class AntwortVorschau(unittest.TestCase):
             for alle in (False, True):
                 with self.subTest(alle=alle):
                     args = type("A", (), {"account": "x", "folder": "Sent", "uid": "42",
-                                         "all": alle, "body_file": str(body), "attach": [],
+                                         "all": alle, "body_file": str(body), "attach": [], "cc": [],
                                          "dry_run": True})()
                     out = io.StringIO()
                     with mock.patch.object(mb, "imap_connect"), \
@@ -465,6 +468,27 @@ class Entwuerfe(unittest.TestCase):
                 _ap.ArgumentParser.parse_args = orig_parse
                 mb.load_accounts = original
             self.assertTrue(aufgerufen["draft"], argv[0])
+
+    def test_reply_mit_cc_setzt_weitere_empfaenger_in_kopie(self):
+        # Kunde antwortet nur an uns, die Antwort soll aber auch an die bisherigen Beteiligten gehen
+        original = email.message_from_string(
+            "From: Juliane <juliane@kunde.de>\nTo: info@wartungsheft.ch\nSubject: AW: Rechnung\n"
+            "Message-ID: <m1@kunde.de>\n\nText\n")
+        acc = mb.Account(key="x", address="info@wartungsheft.ch", name="Goran", imap="i", smtp="s",
+                         password_file="p")
+        with tempfile.TemporaryDirectory() as d:
+            body = Path(d) / "b.txt"
+            body.write_text("Hallo", encoding="utf-8")
+            out = io.StringIO()
+            with mock.patch.object(mb, "load_accounts", return_value={"x": acc}), \
+                 mock.patch.object(mb, "imap_connect"), \
+                 mock.patch.object(mb, "fetch", return_value=(original, None)), \
+                 contextlib.redirect_stdout(out):
+                mb.main(["reply", "x", "7", "--body-file", str(body), "--dry-run",
+                         "--cc", "thomas@kunde.de", "rechnung@kunde.de"])
+        msg = email.message_from_string(out.getvalue())
+        self.assertEqual(msg["To"], "juliane@kunde.de")
+        self.assertEqual(msg["Cc"], "thomas@kunde.de, rechnung@kunde.de")
 
     def test_mehrfaches_attach_behaelt_alle_dateien(self):
         # Früher galt bei «--attach a --attach b» still nur b; der Empfänger bekam Anhänge nicht
