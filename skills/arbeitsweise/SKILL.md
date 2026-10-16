@@ -33,8 +33,10 @@ reicht:
    Kontaktdaten, Tabellenwerte aus vielen Seiten).
 3. **Sonnet 5.5, Denkstufe medium:** Lesen und Vorsortieren nach klaren Kriterien (Stellenanzeigen, Forenbeiträge,
    Suchtreffer, Doku-Recherche mit WebSearch und Jina), Übersetzungen, Tests nach Plan schreiben, Zusammenfassungen
-   langer Fäden. Sortieraufträge höchstens rund 50 Einträge je Agent (mehr Einträge auf parallele Agenten
-   verteilen), keine Standardklasse erlauben, je Zeile eine eigene Begründung verlangen, das Ergebnis danach per
+   langer Fäden. Sortieraufträge zuerst als Probepaket (rund 25 Einträge, darunter einige mit bekannter richtiger
+   Einordnung), Ergebnis selbst prüfen und Auftrag oder Eingabe anpassen, erst dann den Rest; Eingabe mit genug
+   Text je Eintrag (ganzer Seitenauszug statt Regex-Schnipsel). Danach höchstens rund 50 Einträge je Agent (mehr
+   auf parallele Agenten verteilen), keine Standardklasse erlauben, je Zeile eine eigene Begründung verlangen, das Ergebnis danach per
    Skript prüfen (gleiche Begründung in vielen Zeilen, Anteil «nicht geprüft») und auffällige Teile nachprüfen
    lassen. Grund: Bei 529 Partnerseiten in einem Auftrag legte Sonnet 270 ohne Einzelprüfung mit derselben
    Pauschalbegründung ab.
