@@ -14,7 +14,8 @@ Nachschlagen (Anbieter, Preise, Produktvergleiche, Marktlücken) sucht per Skrip
 ganze Seiten im Modell:
 
 1. **`~/projects/tools/recherche.py`** sucht mit 2 bis 3 Formulierungen in **ddgs** (gratis, ohne Schlüssel) und
-   **Exa** (`type: auto`, rund 0,007 USD je Anfrage aus 10 USD Gratisguthaben pro Monat; nicht aufladen), holt die
+   **Exa** (`type: auto`, rund 0,007 USD je Anfrage; 10 USD Gratisguthaben pro Monat plus aufgeladenes Guthaben,
+   Gorans Entscheid: lieber Exa-Dollar als Claude-Tokens, also bei Bedarf `deep` nehmen und nicht sparen), holt die
    Trefferseiten per curl und gibt je Seite nur Titel, PLZ mit Ort, Preise und Stichwortstellen (50 Zeichen Umfeld)
    als Tabelle aus: `recherche.py -q "…" -q "…" --muster "regex" -m 8` (`--json` für Rohdaten, `--ohne-exa`).
    Ausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen.
