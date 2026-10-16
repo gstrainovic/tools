@@ -1,6 +1,6 @@
 ---
 name: browser-wahl
-description: Welches Werkzeug für Browserarbeit (API, playwright-cli, Skript oder Claude in Chrome), Recherche ohne Browser (WebSearch, Jina, Exa, Codex), Chrome-Extension und Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird, bevor recherchiert oder ein Recherche-Agent gestartet wird, und wenn ein Login oder die Chrome-Extension hakt.
+description: Welches Werkzeug für Browserarbeit (API, playwright-cli, Skript oder Claude in Chrome), Formularfelder lesen, Chrome-Extension und Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird und wenn ein Login oder die Chrome-Extension hakt. Recherche ohne Browser steht im Skill recherche.
 ---
 
 # Browser-Werkzeug wählen
@@ -31,57 +31,12 @@ bleibt im Browser.
 Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwright-cli deckt alles ab. Nie
 `npx playwright install`: playwright-cli nutzt den installierten Chrome.
 
-## Recherche ohne Browser
+## Recherche
 
+Nachschlagen, Websuche, Jina, Exa, Codex-Websuche und Recherche-Agenten: Skill `recherche`. Hier gilt nur:
 Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwright-cli im Browser, nicht Jina oder
 curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
 Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
-
-**Recherche zuerst per Skript, nicht per Agent:** Nachschlagen (Anbieter, Preise, Produktvergleiche, Marktlücken)
-sucht per Skript und liest nur dessen Auszüge, nie ganze Seiten im Modell:
-1. Suchen mit 2 bis 3 Formulierungen in **ddgs** (`uvx ddgs text -q "…" -r ch-de -m 10`, gratis, ohne Schlüssel)
-   und **Exa** (Befehl unten, rund 0,007 USD je Anfrage aus 10 USD Gratisguthaben pro Monat; nicht aufladen).
-2. Trefferseiten per curl holen und per Skript nur das Gesuchte ausgeben (PLZ und Ort, Preise, Stichwortstellen
-   mit 50 Zeichen Umfeld); das Modell liest nur diese Zeilen.
-3. Codex mit Websuche (unten) parallel im Hintergrund: läuft über Gorans ChatGPT-Abo, kostet keine Claude-Tokens
-   und findet kleine Anbieter über Verzeichnisse (local.ch, search.ch), die ddgs und Exa nicht liefern.
-Grund: Im Vergleichstest (`vesna/research_notes/recherche-werkzeuge.md`) belegten Exa und ddgs mit Skript vier
-Preise für rund 8000 Tokens, ein Sonnet-Agent mit WebSearch und Jina einen Preis für 81'000 Tokens.
-
-Einzelne Seiten, die curl blockt oder die per JavaScript entstehen, über Jina Reader
-(`curl https://r.jina.ai/<URL>`), nie über Playwright oder Claude in Chrome, weil das Tokens
-kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Ein Recherche-Agent (Sonnet mit WebSearch und Jina)
-nur, wo Seiten wirklich gelesen und beurteilt werden müssen (Vorschriften, Doku, Bewertungen); er bekommt die
-Funde aus Schritt 1 bis 3 mit. Recherche-Agenten laufen als Sonnet (Lesen und
-Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; Stufen im Skill `arbeitsweise`,
-Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
-«Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
-markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
-
-**«Gibt es X irgendwo?»** (Anbieter, Angebot, Produkt, das es vielleicht nicht gibt): Nie aus WebSearch allein
-«gibt es nicht» schliessen. Immer alle drei Quellen aus «Recherche zuerst per Skript», dazu:
-- Exa: `curl -s https://api.exa.ai/search -H "x-api-key: $(cat ~/.config/exa/key)" -H "Content-Type: application/json"
-  -d '{"query":"…","type":"auto","numResults":15,"contents":{"highlights":{"numSentences":3}}}'`, mehrere
-  Formulierungen und Sprachen.
-- Codex mit Websuche im Hintergrund: `codex --search exec --skip-git-repo-check -s read-only "<Frage, Quelle je
-  Aussage, Ungeprüftes markieren>" -o <scratchpad>/codex.md`.
-Funde der Hauptaussage selbst an der Anbieterseite prüfen (curl, Jina), bevor sie gemeldet werden. Grund: Bei der
-Suche nach einer virtuellen Schweizer Mobilnummer mit Sprache fanden WebSearch und Exa nichts, Codex das Angebot.
-
-**Ganze Website durchsuchen:** zuerst `/llms-full.txt` bzw. `/llms.txt`, sonst `/sitemap.xml` holen und die URLs per
-`rg` filtern; nur echte URLs lesen, keine Unterseiten raten (geratene Pfade liefern meist 404). Preise und AGB oft als
-PDF.
-
-Jina Reader läuft ohne Schlüssel und kostenlos, 20 Abrufe pro Minute je IP; es gibt weder Schlüssel noch
-MCP-Server, kein Guthaben kaufen. Die Jina-Suche (`s.jina.ai`) braucht einen Schlüssel und entfällt, gesucht wird
-mit WebSearch. Bot-Schutz (Cloudflare, eBay, DATEV-Community) umgeht Jina nicht, und auch playwright-cli bleibt in
-der Cloudflare-Prüfung («Nur einen Moment…») hängen: Zeigt Jina diese Seite, gleich Claude in Chrome nehmen (Gorans
-Profil besteht die Prüfung, etwa bei codecanyon.net und codester.com), nur zum Lesen.
-
-Listen (Zielfirmen, Impressen, Referenzseiten) laufen nie über Jina, sondern über Skripte mit curl
-(`akquise/firmensuche.py` und Einzelskripte); Jina nur für die einzelne Seite, die curl blockt oder per JavaScript
-entsteht. Sind es viele solche Seiten, ein Playwright-Skript mit dem lokalen Chrome (Stufe 3 oben), das rendert
-JavaScript gratis.
 
 ## Claude in Chrome
 
