@@ -75,6 +75,9 @@ still  "Codex ohne Websuche" "$(bash_ein 'codex exec "Frage"')"
 still  "mehrzeilige Commit-Nachricht nennt ddgs und Codex" "$(bash_ein 'git commit -m "Titel
 
 Hook meldet ddgs und Codex mit --search"')"
+still  "mehrzeilige Nachricht mit Befehlen im Titel" "$(bash_ein 'git commit -m "skill-hinweis: codex --search und mailbox send strainovic
+
+Text"')"
 
 # B) Edit|Write
 for f in TODO.md todo.md AGENTS.md CLAUDE.md README.md SKILL.md; do
