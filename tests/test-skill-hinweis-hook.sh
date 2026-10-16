@@ -72,6 +72,9 @@ meldet "Exa per curl"        "recherche" "" "$(bash_ein 'curl -s https://api.exa
 meldet "ddgs per uvx"        "recherche" "" "$(bash_ein 'uvx ddgs text -q "Spray Tanning" -r ch-de -m 10')"
 meldet "Codex mit Websuche"  "recherche" "" "$(bash_ein 'codex --search exec --skip-git-repo-check -s read-only "Frage" -o c.md')"
 still  "Codex ohne Websuche" "$(bash_ein 'codex exec "Frage"')"
+still  "mehrzeilige Commit-Nachricht nennt ddgs und Codex" "$(bash_ein 'git commit -m "Titel
+
+Hook meldet ddgs und Codex mit --search"')"
 
 # B) Edit|Write
 for f in TODO.md todo.md AGENTS.md CLAUDE.md README.md SKILL.md; do
