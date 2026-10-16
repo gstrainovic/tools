@@ -67,6 +67,11 @@ meldet "postmaster.py"       "mail-versand" "" "$(bash_ein 'uv run postmaster.py
 meldet "yt.py"               "produktvideos" "" "$(bash_ein 'uv run videos/yt.py upload a.mp4')"
 meldet "heimarbeit.py"       "heimarbeit" "" "$(bash_ein 'uv run suche/heimarbeit.py')"
 meldet "pgrep -f"            "arbeitsweise" "" "$(bash_ein 'pgrep -f jobs')"
+meldet "Jina Reader"         "recherche" "browser-wahl" "$(bash_ein 'curl -s https://r.jina.ai/https://example.ch/preise')"
+meldet "Exa per curl"        "recherche" "" "$(bash_ein 'curl -s https://api.exa.ai/search -H "x-api-key: k" -d "{}"')"
+meldet "ddgs per uvx"        "recherche" "" "$(bash_ein 'uvx ddgs text -q "Spray Tanning" -r ch-de -m 10')"
+meldet "Codex mit Websuche"  "recherche" "" "$(bash_ein 'codex --search exec --skip-git-repo-check -s read-only "Frage" -o c.md')"
+still  "Codex ohne Websuche" "$(bash_ein 'codex exec "Frage"')"
 
 # B) Edit|Write
 for f in TODO.md todo.md AGENTS.md CLAUDE.md README.md SKILL.md; do
@@ -97,6 +102,12 @@ meldet "myfactory"           "myfactory" "" "$(chrome_ein navigate 'https://kund
 meldet "wordpress.org"       "wp-plugin-ch" "" "$(chrome_ein navigate 'https://wordpress.org/plugins/developers/')"
 meldet "translate.wordpress.org" "wp-plugin-ch" "" "$(chrome_ein navigate 'https://translate.wordpress.org/projects/wp-plugins/x/')"
 meldet "Slack wordpressfr"   "wp-plugin-ch" "" "$(chrome_ein navigate 'https://wordpressfr.slack.com/archives/C0123')"
+
+# C2) WebSearch und WebFetch
+web_ein() { jq -n --arg n "$1" --arg t "${2:-$leer}" '{hook_event_name:"PreToolUse",tool_name:$n,tool_input:{query:"x",url:"https://x.ch"},transcript_path:$t}'; }
+meldet "WebSearch"           "recherche" "browser-wahl" "$(web_ein WebSearch)"
+meldet "WebFetch"            "recherche" "" "$(web_ein WebFetch)"
+still  "recherche geladen"   "$(web_ein WebSearch "$(transkript recherche)")"
 
 # D) UserPromptSubmit
 for w in Mail mails E-Mail Eingänge antworten Postfach; do

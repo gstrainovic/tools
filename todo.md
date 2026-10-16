@@ -1,10 +1,10 @@
 # Offene Aufgaben
 
-- [ ] **Recherche-Skript `recherche.py` bauen, beim Punkt Spray-Tanning in `vesna/todo.md`:** Die Regel «Recherche
-      zuerst per Skript» im Skill `browser-wahl` (ddgs und Exa suchen, Seiten per curl holen, nur Ort, Preise und
+- [ ] **Recherche-Skript `recherche.py` bauen, bei der nächsten Recherche mit Preisvergleich:** Die Regel «Zuerst
+      per Skript» im Skill `recherche` (ddgs und Exa suchen, Seiten per curl holen, nur Ort, Preise und
       Stichwortstellen ausgeben) läuft bisher als Einzelbefehle. Das Skript nimmt Suchbegriffe und ein Muster und
-      gibt eine kurze Tabelle aus; an der Spray-Tanning-Recherche entwickeln und gleich dort einsetzen (Gorans
-      Entscheid). Grundlage `vesna/research_notes/recherche-werkzeuge.md`.
+      gibt eine kurze Tabelle aus; an dieser Recherche entwickeln und gleich dort einsetzen (Gorans Entscheid).
+      Grundlage `skills/recherche/vergleich-2026-10.md`.
 
 - [ ] **Codex-Hooks freigeben:** Die geänderten Definitionen in `~/.codex/hooks.json` unter `/hooks`
       prüfen und freigeben: Agenten-/Browser-Matcher, Transkriptsicherung vor der Kontextkürzung,
