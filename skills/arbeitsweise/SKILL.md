@@ -19,6 +19,17 @@ description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und 
   und Test-Container (`docker ps`) prüfen und Verwaistes beenden, weil hängende Shells sonst der Meldung
   widersprechen.
 
+## Vor jedem Agentenauftrag
+
+Der Tokenverbrauch eines Agenten hängt vor allem am Auftrag. Vor dem Start vier Punkte prüfen:
+
+1. **Eine Aufgabe je Agent:** Recherche, Text und Ausfüllen getrennt (Sonnet sammelt, Fable schreibt, Sonnet füllt aus).
+2. **Werkzeuge passend zur Aufgabe:** Formulare und JavaScript-Seiten mit playwright-cli; nur Claude in Chrome
+   verbieten, nie den Browser an sich.
+3. **Eingabe vollständig:** genug Text je Eintrag, Fakten und Feste Werte im Auftrag, damit der Agent nicht selbst
+   im Repo sucht.
+4. **Erst klein testen:** bei Listen ein Probepaket, Ergebnis selbst prüfen, dann der Rest.
+
 ## Modellwahl beim Delegieren
 
 Das Hauptmodell (Fable oder Opus in der Sitzung) ist das teuerste; sein Wochenlimit teilen sich Server und Laptop.
