@@ -43,6 +43,7 @@ import smtplib
 import sys
 import tomllib
 from dataclasses import dataclass
+from datetime import date
 from email.header import decode_header, make_header
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate, make_msgid, parsedate_to_datetime
@@ -475,6 +476,67 @@ def save_draft(acc: Account, msg: EmailMessage) -> None:
     conn.logout()
 
 
+def imap_date(day: date) -> str:
+    """Datum für IMAP SINCE (01-Oct-2026), unabhängig von der Sprachvariante des Systems."""
+    monate = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    return f"{day.day:02d}-{monate[day.month - 1]}-{day.year}"
+
+
+def sent_today(acc: Account, recipients: list[str]) -> list[email.message.Message]:
+    """Heute gesendete Mails an einen der Empfänger (To, Cc, Bcc), auch aus Thunderbird. Ohne sent_folder
+    (Gmail) zählt der Ordner, den der Server mit \\Sent kennzeichnet."""
+    wanted = {a.lower() for a in recipients}
+    conn = imap_connect(acc)
+    folder = acc.sent_folder
+    if not folder:
+        status, lines = conn.list()
+        for line in lines if status == "OK" else []:
+            m = re.match(rb'\((?P<flags>[^)]*)\)\s+"[^"]*"\s+(?P<name>"(?:[^"\\]|\\.)*"|\S+)', line)
+            if m and rb"\Sent" in m.group("flags"):
+                folder = m.group("name").decode("utf-7" if b"&" in m.group("name") else "ascii").strip('"')
+                break
+    if not folder:
+        conn.logout()
+        return []
+    conn.select(imap_folder(folder), readonly=True)
+    status, data = conn.uid("search", f"SINCE {imap_date(date.today())}")
+    found = []
+    for uid in (data[0].split() if status == "OK" and data and data[0] else []):
+        msg, _ = fetch(conn, uid.decode(), "(BODY.PEEK[])")
+        sent_to = {a.lower() for a in addresses(raw_header(msg, "To"), raw_header(msg, "Cc"), raw_header(msg, "Bcc"))}
+        if sent_to & wanted:
+            found.append(msg)
+    conn.logout()
+    return found
+
+
+def guard_double(acc: Account, msg: EmailMessage, checked: str | None) -> None:
+    """Sperre gegen Doppelversand: Ging heute schon eine Mail an einen der Empfänger, zeigt sie alle diese Mails
+    und die neue und bricht ab. Der Aufrufer (Agent) vergleicht sie und sendet nur eine neue Nachricht erneut,
+    mit --doppel-geprueft und dem Grund."""
+    if checked:
+        print(f"Doppelversand geprüft: {checked}", file=sys.stderr)
+        return
+    recipients = addresses(msg.get("To"), msg.get("Cc"), msg.get("Bcc"))
+    earlier = sent_today(acc, recipients)
+    if not earlier:
+        return
+    out = [f"NICHT GESENDET: heute ging schon {len(earlier)} Mail an {', '.join(recipients)}.", ""]
+    for old in earlier:
+        out += [f"--- früher gesendet: {decode(raw_header(old, 'Date'))} an {decode(raw_header(old, 'To'))}",
+                f"Betreff: {decode(raw_header(old, 'Subject'))}", "", body_text(old).strip(), ""]
+    out += [f"--- neue Mail, Betreff: {decode(msg['Subject'])}", "", msg.get_body(("plain",)).get_content().strip(), "",
+            "Vergleichen: Ist die neue Mail dieselbe Nachricht (auch umformuliert, gekürzt oder aus einem Entwurf schon "
+            "gesendet), nicht senden. Ist sie eine neue Nachricht (Antwort, Angebot, Nachtrag), erneut aufrufen mit "
+            '--doppel-geprueft "<Grund>".']
+    print("\n".join(out), file=sys.stderr)
+    raise SystemExit(3)
+
+
+DOPPEL_HILFE = ("nur nach Vergleich mit den heute schon an dieselben Empfänger gesendeten Mails: Grund, warum die "
+                "neue Mail keine Doppelung ist")
+
+
 def read_body(path: str) -> str:
     return Path(path).read_text(encoding="utf-8").rstrip("\n") + "\n"
 
@@ -492,6 +554,7 @@ def cmd_send(accounts: dict[str, Account], args) -> None:
         save_draft(acc, msg)
         print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {args.subject}")
         return
+    guard_double(acc, msg, args.doppel_geprueft)
     smtp_send(acc, msg)
     print(f"gesendet als {acc.address} an {', '.join(args.to)}: {args.subject}")
 
@@ -516,6 +579,7 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
         save_draft(acc, msg)
         print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {msg['Subject']}")
         return
+    guard_double(acc, msg, args.doppel_geprueft)
     smtp_send(acc, msg)
     mark(acc, args.folder, args.uid, seen=True)
     print(f"geantwortet als {acc.address} an {', '.join(to)}: {msg['Subject']}")
@@ -618,6 +682,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--list-unsubscribe", action="store_true",
                    help="Akquise-Mail: Kopfzeile List-Unsubscribe mit mailto an das eigene Postfach (Betreff «Abmelden»)")
     p.add_argument("--unsubscribe-url", help="https-Adresse für One-Click-Abmeldung (List-Unsubscribe-Post), nur mit --list-unsubscribe")
+    p.add_argument("--doppel-geprueft", metavar="GRUND", help=DOPPEL_HILFE)
     p.set_defaults(fn=cmd_send)
 
     p = sub.add_parser("reply")
@@ -630,6 +695,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
+    p.add_argument("--doppel-geprueft", metavar="GRUND", help=DOPPEL_HILFE)
     p.set_defaults(fn=cmd_reply)
 
     for name, fn in (("seen", cmd_seen), ("unseen", cmd_unseen)):
