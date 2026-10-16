@@ -178,6 +178,23 @@ class AntwortVorschau(unittest.TestCase):
                     senden.assert_not_called()
 
 
+class Lesen(unittest.TestCase):
+    def test_kopf_mit_zeilenumbruch_im_namen_bricht_nicht_ab(self):
+        # Outlook kodiert gelegentlich einen Zeilenumbruch in den Anzeigenamen (=0A), policy.default wirft dann
+        msg = email.message_from_bytes(
+            b"From: Sakshi <sakshi@example.com>\r\nTo: info@example.ch\r\n"
+            b"Cc: =?utf-8?Q?Hritavash=0A_Saha?= <growth@example.com>, Subhajit\r\n\t<subhajit@example.com>\r\n"
+            b"Subject: Partner\r\n\r\nHallo", policy=email.policy.default)
+        args = type("A", (), {"account": "x", "folder": "INBOX", "uid": "7", "html": False})()
+        out = io.StringIO()
+        with mock.patch.object(mb, "imap_connect"), \
+                mock.patch.object(mb, "fetch", return_value=(msg, True)), contextlib.redirect_stdout(out):
+            mb.cmd_read({"x": account()}, args)
+        self.assertIn("growth@example.com", out.getvalue())
+        self.assertIn("subhajit@example.com", out.getvalue())
+        self.assertIn("Hallo", out.getvalue())
+
+
 class HtmlFassung(unittest.TestCase):
     def test_alternative_mit_text_und_html(self):
         msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR)
