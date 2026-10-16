@@ -37,16 +37,29 @@ Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwrig
 curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
 Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
 
-Nachschlagen (Preise, Produktvergleiche, Doku, Marktlücken) läuft über WebSearch, einzelne Seiten über Jina
-Reader (`curl https://r.jina.ai/<URL>`), nie über Playwright oder Claude in Chrome, weil das Tokens
-kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Recherche-Agenten laufen als Sonnet (Lesen und
+**Recherche zuerst per Skript, nicht per Agent:** Nachschlagen (Anbieter, Preise, Produktvergleiche, Marktlücken)
+sucht per Skript und liest nur dessen Auszüge, nie ganze Seiten im Modell:
+1. Suchen mit 2 bis 3 Formulierungen in **ddgs** (`uvx ddgs text -q "…" -r ch-de -m 10`, gratis, ohne Schlüssel)
+   und **Exa** (Befehl unten, rund 0,007 USD je Anfrage aus 10 USD Gratisguthaben pro Monat; nicht aufladen).
+2. Trefferseiten per curl holen und per Skript nur das Gesuchte ausgeben (PLZ und Ort, Preise, Stichwortstellen
+   mit 50 Zeichen Umfeld); das Modell liest nur diese Zeilen.
+3. Codex mit Websuche (unten) parallel im Hintergrund: läuft über Gorans ChatGPT-Abo, kostet keine Claude-Tokens
+   und findet kleine Anbieter über Verzeichnisse (local.ch, search.ch), die ddgs und Exa nicht liefern.
+Grund: Im Vergleichstest (`vesna/research_notes/recherche-werkzeuge.md`) belegten Exa und ddgs mit Skript vier
+Preise für rund 8000 Tokens, ein Sonnet-Agent mit WebSearch und Jina einen Preis für 81'000 Tokens.
+
+Einzelne Seiten, die curl blockt oder die per JavaScript entstehen, über Jina Reader
+(`curl https://r.jina.ai/<URL>`), nie über Playwright oder Claude in Chrome, weil das Tokens
+kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Ein Recherche-Agent (Sonnet mit WebSearch und Jina)
+nur, wo Seiten wirklich gelesen und beurteilt werden müssen (Vorschriften, Doku, Bewertungen); er bekommt die
+Funde aus Schritt 1 bis 3 mit. Recherche-Agenten laufen als Sonnet (Lesen und
 Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; Stufen im Skill `arbeitsweise`,
 Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
 markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
 
 **«Gibt es X irgendwo?»** (Anbieter, Angebot, Produkt, das es vielleicht nicht gibt): Nie aus WebSearch allein
-«gibt es nicht» schliessen. Zusätzlich parallel:
+«gibt es nicht» schliessen. Immer alle drei Quellen aus «Recherche zuerst per Skript», dazu:
 - Exa: `curl -s https://api.exa.ai/search -H "x-api-key: $(cat ~/.config/exa/key)" -H "Content-Type: application/json"
   -d '{"query":"…","type":"auto","numResults":15,"contents":{"highlights":{"numSentences":3}}}'`, mehrere
   Formulierungen und Sprachen.
