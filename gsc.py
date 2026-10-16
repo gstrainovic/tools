@@ -20,6 +20,7 @@ Befehle:
     gsc inspect URL [URL ...] [--site ...] [--json]   URL-Prüfung: Urteil, Abdeckung, Kanonisch, letzter Crawl
     gsc coverage [--sitemap URL] [--site ...]      alle URLs der Sitemap prüfen, eine Zeile pro URL
     gsc queries [--days 28] [--site ...]           Suchanfragen mit Klicks und Impressionen
+          [--pages] [--page TEXT]                  dazu die Seite je Anfrage, mit --page nur URLs mit TEXT
     gsc add-domain DOMAIN [--sitemap URL]          Domain-Property anlegen: TXT-Token holen, DNS-Eintrag bei
                                                    Infomaniak setzen, bestätigen, Property und Sitemap hinzufügen
 Property: --site wartungsheft.ch (Domain-Property) oder Umgebungsvariable GSC_SITE.
@@ -153,12 +154,16 @@ def cmd_coverage(args) -> None:
 
 def cmd_queries(args) -> None:
     end = date.today() - timedelta(days=2)
+    pages = args.pages or args.page is not None
     body = {"startDate": str(end - timedelta(days=args.days)), "endDate": str(end),
-            "dimensions": ["query"], "rowLimit": 100}
+            "dimensions": ["query", "page"] if pages else ["query"], "rowLimit": 100}
+    if args.page is not None:
+        body["dimensionFilterGroups"] = [
+            {"filters": [{"dimension": "page", "operator": "contains", "expression": args.page}]}]
     rows = service().searchanalytics().query(siteUrl=site_url(args.site), body=body).execute().get("rows", [])
-    print("Klicks\tImpressionen\tPosition\tAnfrage")
+    print("Klicks\tImpressionen\tPosition\tAnfrage" + ("\tSeite" if pages else ""))
     for r in rows:
-        print(f"{r['clicks']:.0f}\t{r['impressions']:.0f}\t{r['position']:.1f}\t{r['keys'][0]}")
+        print(f"{r['clicks']:.0f}\t{r['impressions']:.0f}\t{r['position']:.1f}\t" + "\t".join(r["keys"]))
 
 
 class Infomaniak:
@@ -258,6 +263,8 @@ def main(argv: list[str] | None = None) -> None:
     s.set_defaults(fn=cmd_coverage)
     s = sub.add_parser("queries")
     s.add_argument("--days", type=int, default=28)
+    s.add_argument("--pages", action="store_true", help="Seite je Anfrage als eigene Spalte")
+    s.add_argument("--page", metavar="TEXT", help="nur Seiten, deren URL TEXT enthält (zeigt die Seite)")
     s.set_defaults(fn=cmd_queries)
     s = sub.add_parser("add-domain")
     s.add_argument("domain")

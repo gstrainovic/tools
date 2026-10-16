@@ -62,6 +62,49 @@ class SiteUrl(unittest.TestCase):
         self.assertEqual(gsc.site_url("https://x.ch/"), "https://x.ch/")
 
 
+class FakeAnalytics:
+    def __init__(self, rows):
+        self.rows, self.bodies = rows, []
+
+    def searchanalytics(self):
+        return self
+
+    def query(self, siteUrl, body):
+        self.bodies.append(body)
+        return types.SimpleNamespace(execute=lambda: {"rows": self.rows})
+
+
+class Queries(unittest.TestCase):
+    def aufrufen(self, argv, rows):
+        fake = FakeAnalytics(rows)
+        with mock.patch.object(gsc, "service", return_value=fake), \
+                mock.patch("sys.stdout", new_callable=lambda: __import__("io").StringIO()) as out:
+            gsc.main(["--site", "strainovic-it.ch", "queries", *argv])
+        return fake.bodies[0], out.getvalue().splitlines()
+
+    def test_ohne_option_nur_anfragen(self):
+        body, zeilen = self.aufrufen([], [{"keys": ["zefix uid"], "clicks": 0, "impressions": 3, "position": 8.3}])
+        self.assertEqual(body["dimensions"], ["query"])
+        self.assertEqual(zeilen, ["Klicks\tImpressionen\tPosition\tAnfrage", "0\t3\t8.3\tzefix uid"])
+
+    def test_pages_zeigt_die_seite_je_anfrage(self):
+        rows = [{"keys": ["zefix uid", "https://strainovic-it.ch/ratgeber/zefix-uid/"],
+                 "clicks": 0, "impressions": 3, "position": 8.3}]
+        body, zeilen = self.aufrufen(["--pages"], rows)
+        self.assertEqual(body["dimensions"], ["query", "page"])
+        self.assertEqual(zeilen, ["Klicks\tImpressionen\tPosition\tAnfrage\tSeite",
+                                  "0\t3\t8.3\tzefix uid\thttps://strainovic-it.ch/ratgeber/zefix-uid/"])
+
+    def test_page_filtert_auf_seiten_mit_teiltext(self):
+        rows = [{"keys": ["qr facture", "https://strainovic-it.ch/fr/ratgeber/qr-rechnung-shop/"],
+                 "clicks": 1, "impressions": 4, "position": 12.0}]
+        body, zeilen = self.aufrufen(["--page", "/ratgeber/"], rows)
+        self.assertEqual(body["dimensions"], ["query", "page"])
+        self.assertEqual(body["dimensionFilterGroups"],
+                         [{"filters": [{"dimension": "page", "operator": "contains", "expression": "/ratgeber/"}]}])
+        self.assertEqual(zeilen[1], "1\t4\t12.0\tqr facture\thttps://strainovic-it.ch/fr/ratgeber/qr-rechnung-shop/")
+
+
 class Aufruf:
     def __init__(self, log, name, result):
         self.log, self.name, self.result = log, name, result
