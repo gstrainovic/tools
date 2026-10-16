@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hook für PreToolUse (Bash, Edit|Write, mcp__claude-in-chrome__.*) und UserPromptSubmit: erkennt anhand einer
+# Hook für PreToolUse (Bash, Edit|Write, WebSearch|WebFetch, mcp__claude-in-chrome__.*) und UserPromptSubmit: erkennt anhand einer
 # festen Tabelle «Anlass → Skill», welcher Skill für den Schritt gilt, und erinnert per additionalContext daran,
 # ihn zu laden. Gemeldet werden nur Skills, die laut Transkript (transcript_path, JSONL) in dieser Sitzung noch
 # nicht per Skill-Werkzeug geladen wurden; fehlt das Transkript oder ist es unlesbar, kommt der Hinweis immer.
@@ -83,6 +83,12 @@ Bash)
     hinzu heimarbeit "Ausschlusskriterien gegen Vorkasse-Maschen und heimarbeit/geprueft.md"
   hat "${a}pgrep[[:space:]]+-[a-zA-Z]*f" &&
     hinzu arbeitsweise "pgrep -f findet auch den eigenen Befehl, Warte-Schleifen anders bauen"
+  { hat 'r\.jina\.ai|api\.exa\.ai' || hat "${a}ddgs[[:space:]]" || hat "${a}codex[[:space:]](.*[[:space:]])?--search"; } &&
+    hinzu recherche "Suche per Skript (ddgs, Exa, Codex) statt Seiten im Modell lesen"
+  ;;
+WebSearch | WebFetch)
+  bevor="gesucht oder eine Seite gelesen wird"
+  hinzu recherche "Suche per Skript (ddgs, Exa, Codex) statt Seiten im Modell lesen"
   ;;
 Edit | Write | MultiEdit | apply_patch)
   bevor="diese Datei geändert wird"
