@@ -34,5 +34,8 @@ EOF"
 still "dev null"           "git log > /dev/null"
 still "gewöhnlicher Befehl" "git status --short"
 still "Text in Anführungszeichen" "git commit -q -m \"Hinweis statt sed -i, python3 - und > AGENTS.md\" && echo 'a > b'"
+still "mehrzeiliger Text in Anführungszeichen" "git commit -q -m \"Titel mit echo x > datei.txt
+
+Text\""
 
 exit $fehler
