@@ -9,6 +9,8 @@ Reihenfolge, das erste passende nehmen:
 
 1. **API oder CLI des Systems.** Kein Browser, wenn es eine Schnittstelle gibt. Fehlt ein Token: Abschnitt
    «API-Token statt Durchklicken» in `~/.claude/CLAUDE.md` (Token anlegen lassen, Übergabe per Zwischenablage).
+   Manche Systeme geben einen Token auch gegen Benutzername und Kennwort aus (Flarum `POST /api/token`); welche
+   Portale das können und welche verbieten, steht in `find-jobs/akquise/recherche/token-statt-browser-2026-10.md`.
 2. **playwright-cli** (Skill `playwright-cli`) für alles Interaktive: unbekannte Masken erkunden, einrichten,
    prüfen (myfactory, bexio, REDAXO, WordPress, Portale ohne Bot-Schutz). Kein Tool-Schema im Kontext, Snapshots
    landen als Datei, `find "Text"` sucht darin. Eine benannte Session je Kunde oder System (`-s=<name>`), Login
