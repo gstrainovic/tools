@@ -22,7 +22,7 @@ Befehle:
     mailbox read KONTO UID [--folder INBOX] [--html]
     mailbox search KONTO 'FROM "x"' | 'SUBJECT "y"' | 'SINCE 01-Sep-2026' [--folder INBOX]
     mailbox send KONTO --to a@b.ch [--cc ...] [--bcc ...] --subject "…" --body-file text.txt [--reply-to ...] [--attach cv.pdf ...] [--list-unsubscribe [--unsubscribe-url https://…]] [--dry-run]
-    mailbox reply KONTO UID --body-file text.txt [--all] [--attach ...] [--folder INBOX] [--dry-run]
+    mailbox reply KONTO UID --body-file text.txt [--all] [--cc ...] [--attach ...] [--folder INBOX] [--dry-run]
     mailbox seen KONTO UID | mailbox unseen KONTO UID
     mailbox move KONTO UID ZIELORDNER
     mailbox folders KONTO
@@ -491,6 +491,7 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
     original, _ = fetch(conn, args.uid)
     conn.logout()
     to, cc = reply_recipients(original, acc.address, args.all)
+    cc += [a for a in args.cc if a not in cc and a not in to]
     msg = build_message(
         acc, to, reply_subject(decode(original.get("Subject", ""))), read_body(args.body_file), cc=cc,
         in_reply_to=original.get("Message-ID"), references=original.get("References"),
@@ -612,6 +613,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("uid")
     p.add_argument("--body-file", required=True)
     p.add_argument("--all", action="store_true", help="Antwort an alle Empfänger")
+    p.add_argument("--cc", nargs="+", action="extend", default=[], help="weitere Empfänger in Kopie")
     p.add_argument("--attach", nargs="+", action="extend", default=[])
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--dry-run", action="store_true")
