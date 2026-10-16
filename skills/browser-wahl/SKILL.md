@@ -28,6 +28,10 @@ Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwrig
 
 ## Recherche ohne Browser
 
+Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwright-cli im Browser, nicht Jina oder
+curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
+Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
+
 Nachschlagen (Preise, Produktvergleiche, Doku, Marktlücken) läuft über WebSearch, einzelne Seiten über Jina
 Reader (`curl https://r.jina.ai/<URL>`), nie über Playwright oder Claude in Chrome, weil das Tokens
 kostet und Chrome Gorans eingeloggter Sitzung vorbehalten ist. Recherche-Agenten laufen als Sonnet (Lesen und
