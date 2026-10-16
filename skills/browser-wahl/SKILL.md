@@ -16,7 +16,10 @@ Reihenfolge, das erste passende nehmen:
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Entscheidungen: E2E-Tests, Screenshots, Login-Vorstufe.
 4. **Claude in Chrome** nur, wo Gorans eigene Sitzung mit Bot-Schutz nötig ist (LinkedIn, Upwork, freelancermap,
-   Google-Konten) oder Goran zusehen will. Nicht für Kundensysteme.
+   Google-Konten) oder Goran zusehen will. Nicht für Kundensysteme und nicht für Formulare ohne Anmeldung
+   (Partnerprogramme, Registrierungen, Kontakt- und Bewerbungsformulare ohne Konto): die laufen über playwright-cli,
+   das kostet weit weniger Tokens. Ein Captcha oder den letzten Klick macht Goran dann im Dashboard
+   (`playwright-cli show`).
 
 **Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
 Objekt, anderer Ablauf) zuerst lokal (`rg` in `~/projects`), dann die API-Doku des Systems und fehlende Rechte des
