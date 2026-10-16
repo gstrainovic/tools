@@ -6,7 +6,7 @@ cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null)
 [ -n "$cmd" ] || exit 0
 # Nur den Befehl selbst prüfen: Heredoc-Inhalt (alles nach der ersten Zeile mit <<) und Text in Anführungszeichen
 # (Commit-Nachrichten, Mailtexte) fallen weg, sonst meldet schon «sed -i» in einer Commit-Nachricht.
-cmd=$(awk '{print} /<</{exit}' <<<"$cmd" | sed -E "s/\"([^\"\\\\]|\\\\.)*\"//g; s/'[^']*'//g")
+cmd=$(awk '{print} /<</{exit}' <<<"$cmd" | sed -zE "s/\"([^\"\\\\]|\\\\.)*\"//g; s/'[^']*'//g" | tr -d '\0')
 
 grund=""
 if grep -qE '(^|[;&|[:space:]])sed[[:space:]]+(-[a-zA-Z]*i|--in-place)' <<<"$cmd"; then
