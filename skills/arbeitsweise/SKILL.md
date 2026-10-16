@@ -50,7 +50,10 @@ reicht:
    Forenbeiträge, Ratgeber und Blogartikel, Produkt- und Landingpages, Marktplatz-, Verzeichnis- und Profiltexte,
    readme-Beschreibungen von Plugins, Sprechertexte von Videos, auch deren Übersetzungen in andere Sprachen. Fable (`model: fable`) schreibt sie immer, auch wenn
    das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
-   Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Ausfüllen, Hochladen, Einbauen und Senden
+   Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Formularfelder, Bedingungen, Belege aus
+   dem Repo und von der Anbieterseite sammelt vorher Sonnet oder ein Skript in einer kurzen Vorlage je Empfänger;
+   Fable liest nur diese Vorlage und schreibt. Grund: Fable-Agenten, die selbst Formulare und Repo durchsuchten,
+   brauchten je fünf Partnerbewerbungen rund 180'000 Tokens. Ausfüllen, Hochladen, Einbauen und Senden
    mit dem fertigen Text übernimmt das Hauptmodell oder Sonnet; Grund: diese Texte entscheiden über Auftrag und Ruf,
    die Mechanik nicht. Ist das Fable-Limit aufgebraucht (Agent bricht mit «You've reached your Fable limit» ab,
    HTTP 429), schreibt Opus (`model: opus`) den Text ohne Rückfrage und ohne Vermerk im Bericht an Goran (er kennt die
