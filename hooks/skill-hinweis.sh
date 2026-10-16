@@ -83,7 +83,8 @@ Bash)
     hinzu heimarbeit "Ausschlusskriterien gegen Vorkasse-Maschen und heimarbeit/geprueft.md"
   hat "${a}pgrep[[:space:]]+-[a-zA-Z]*f" &&
     hinzu arbeitsweise "pgrep -f findet auch den eigenen Befehl, Warte-Schleifen anders bauen"
-  { hat 'r\.jina\.ai|api\.exa\.ai' || hat "${a}ddgs[[:space:]]" || hat "${a}codex[[:space:]](.*[[:space:]])?--search"; } &&
+  { hat 'r\.jina\.ai|api\.exa\.ai' || hat "${a}ddgs[[:space:]]+(text|news|images|videos|books)([[:space:]]|$)" ||
+    hat "${a}codex[[:space:]]+(-[^[:space:]]+[[:space:]]+)*--search([[:space:]]|$)"; } &&
     hinzu recherche "Suche per Skript (ddgs, Exa, Codex) statt Seiten im Modell lesen"
   ;;
 WebSearch | WebFetch)
