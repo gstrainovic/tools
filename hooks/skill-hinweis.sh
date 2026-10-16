@@ -53,7 +53,8 @@ Bash)
   bevor="dieser Befehl läuft"
   cmd=$(jq -r '.tool_input.command // .tool_input.cmd // empty' <<<"$ein")
   # Wie bash-bearbeiten.sh: Heredoc-Inhalt und Text in Anführungszeichen (Commit-Nachrichten, Mailtexte) fallen weg.
-  cmd=$(awk '{print} /<</{exit}' <<<"$cmd" | sed -E "s/\"([^\"\\\\]|\\\\.)*\"//g; s/'[^']*'//g")
+  # -z: Text in Anführungszeichen über mehrere Zeilen (Commit-Nachricht mit Leerzeile) fällt ebenfalls weg.
+  cmd=$(awk '{print} /<</{exit}' <<<"$cmd" | sed -zE "s/\"([^\"\\\\]|\\\\.)*\"//g; s/'[^']*'//g" | tr -d '\0')
   hat() { grep -qE "$1" <<<"$cmd"; }
   a='(^|[;&|(`[:space:]])'   # Anfang eines Befehls
   p='(^|[;&|(`[:space:]/])'  # Anfang eines Befehls oder Dateinamens nach einem Pfad
