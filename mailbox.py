@@ -292,14 +292,23 @@ def build_message(
     return msg
 
 
+def raw_header(msg: email.message.Message, name: str) -> str | None:
+    """Kopfzeile als Rohtext ohne Faltung; msg.get wirft bei kodierten Zeilenumbrüchen im Anzeigenamen (Outlook)."""
+    for key, value in msg.raw_items():
+        if key.lower() == name.lower():
+            return " ".join(str(value).split())
+    return None
+
+
 def reply_recipients(original: email.message.Message, own: str, all_recipients: bool) -> tuple[list[str], list[str]]:
     """Eigene Mail: ursprüngliche To; fremde Mail: Reply-To oder From; --all ergänzt Cc ohne uns."""
-    to = addresses(original.get("Reply-To") or original.get("From"))
-    if own.lower() in [a.lower() for a in addresses(original.get("From"))]:
-        to = [a for a in addresses(original.get("To")) if a.lower() != own.lower()]
+    get = lambda name: raw_header(original, name)  # noqa: E731
+    to = addresses(get("Reply-To") or get("From"))
+    if own.lower() in [a.lower() for a in addresses(get("From"))]:
+        to = [a for a in addresses(get("To")) if a.lower() != own.lower()]
     cc: list[str] = []
     if all_recipients:
-        others = addresses(original.get("To"), original.get("Cc"))
+        others = addresses(get("To"), get("Cc"))
         cc = [a for a in others if a.lower() != own.lower() and a not in to]
     return to, cc
 
@@ -496,8 +505,8 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
     to, cc = reply_recipients(original, acc.address, args.all)
     cc += [a for a in args.cc if a not in cc and a not in to]
     msg = build_message(
-        acc, to, reply_subject(decode(original.get("Subject", ""))), read_body(args.body_file), cc=cc,
-        in_reply_to=original.get("Message-ID"), references=original.get("References"),
+        acc, to, reply_subject(decode(raw_header(original, "Subject") or "")), read_body(args.body_file), cc=cc,
+        in_reply_to=raw_header(original, "Message-ID"), references=raw_header(original, "References"),
         attachments=[Path(a) for a in args.attach],
     )
     if args.dry_run:
