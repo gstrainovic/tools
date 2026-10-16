@@ -554,5 +554,111 @@ class Entwuerfe(unittest.TestCase):
             self.assertEqual(aufgerufen["attach"], ["a.pdf", "b.pdf", "c.pdf"], argv[0])
 
 
+class Doppelversand(unittest.TestCase):
+    """Am 16.10.2026 ging dieselbe Bewerbung zweimal an info@einradshop.ch: einmal als Entwurf aus Thunderbird,
+    zwölf Minuten später per mailbox send aus einer zweiten Sitzung. Ging heute schon eine Mail an einen der
+    Empfänger, sendet mailbox erst, wenn der Aufrufer beide Mails verglichen und den Grund angegeben hat."""
+
+    FRUEHER = (b"From: Goran <info@strainovic-it.ch>\r\nTo: Info <INFO@einradshop.ch>\r\n"
+               b"Subject: Nachfolgemodul universalpay\r\nDate: Fri, 16 Oct 2026 08:56:12 +0200\r\n"
+               b"User-Agent: Mozilla Thunderbird\r\n\r\nZwei Wege sehe ich: universalpay anpassen.\r\n")
+
+    def conn(self, gesendet: dict[str, bytes], ordner=b'(\\HasNoChildren \\Sent) "/" "Sent"'):
+        aufrufe = self.aufrufe = []
+
+        class Conn:
+            def list(self):
+                return "OK", [b'(\\HasNoChildren) "/" "INBOX"', ordner]
+
+            def select(self, folder, readonly=False):
+                aufrufe.append(("select", folder))
+                return "OK", [b"1"]
+
+            def uid(self, cmd, *args):
+                aufrufe.append(("uid", cmd, *args))
+                if cmd == "search":
+                    return "OK", [" ".join(gesendet).encode()]
+                return "OK", [(b"1 (UID " + args[0].encode() + b" BODY[] {1}", gesendet[args[0]]), b")"]
+
+            def logout(self):
+                pass
+
+        return Conn()
+
+    def senden(self, argv, gesendet, acc=None, ordner=None):
+        acc = acc or account(address="info@strainovic-it.ch")
+        conn = self.conn(gesendet, **({"ordner": ordner} if ordner else {}))
+        with tempfile.TemporaryDirectory() as d:
+            body = Path(d) / "b.txt"
+            body.write_text("Neuer Entwurf: Zwei Wege sehe ich.", encoding="utf-8")
+            argv = [a if a != "BODY" else str(body) for a in argv]
+            out = io.StringIO()
+            original = email.message_from_string("From: Stefan <info@einradshop.ch>\nTo: info@strainovic-it.ch\n"
+                                                 "Subject: Antwort\nMessage-ID: <m@einradshop.ch>\n\nText\n")
+            echt = mb.fetch
+            holen = lambda c, uid, *a: (original, False) if uid == "7" else echt(c, uid, *a)  # noqa: E731
+            with mock.patch.object(mb, "load_accounts", return_value={"x": acc}), \
+                    mock.patch.object(mb, "imap_connect", return_value=conn), \
+                    mock.patch.object(mb, "fetch", side_effect=holen), \
+                    mock.patch.object(mb, "smtp_send") as smtp, mock.patch.object(mb, "mark"), \
+                    mock.patch.object(mb, "save_draft"), \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                code = 0
+                try:
+                    mb.main(argv)
+                except SystemExit as e:
+                    code = e.code
+        return code, smtp, out.getvalue()
+
+    SEND = ["send", "x", "--to", "info@einradshop.ch", "--subject", "Nachfolgemodul", "--body-file", "BODY"]
+
+    def test_heute_schon_an_dieselbe_adresse_gesendet_sperrt_und_zeigt_beide_mails(self):
+        code, smtp, out = self.senden(self.SEND, {"1367": self.FRUEHER})
+        smtp.assert_not_called()
+        self.assertNotEqual(code, 0)
+        self.assertIn("Nachfolgemodul universalpay", out)  # Betreff der früheren Mail
+        self.assertIn("Zwei Wege sehe ich: universalpay anpassen.", out)  # Text der früheren Mail
+        self.assertIn("Neuer Entwurf: Zwei Wege sehe ich.", out)  # Text der neuen Mail
+        self.assertIn("--doppel-geprueft", out)
+        self.assertIn(("uid", "search", "SINCE " + mb.imap_date(mb.date.today())), self.aufrufe)
+
+    def test_nach_pruefung_mit_grund_wird_gesendet(self):
+        code, smtp, out = self.senden(self.SEND + ["--doppel-geprueft", "Angebot auf seine Antwort"],
+                                      {"1367": self.FRUEHER})
+        self.assertEqual(code, 0)
+        smtp.assert_called_once()
+
+    def test_frueheres_an_andere_adresse_sperrt_nicht(self):
+        anders = self.FRUEHER.replace(b"INFO@einradshop.ch", b"info@schwimmboje.ch")
+        code, smtp, _ = self.senden(self.SEND, {"1367": anders})
+        self.assertEqual(code, 0)
+        smtp.assert_called_once()
+
+    def test_kopie_an_dieselbe_adresse_zaehlt_auch(self):
+        cc = self.FRUEHER.replace(b"To: Info <INFO@einradshop.ch>", b"To: a@b.ch\r\nCc: info@einradshop.ch")
+        code, smtp, _ = self.senden(self.SEND, {"1367": cc})
+        self.assertNotEqual(code, 0)
+        smtp.assert_not_called()
+
+    def test_antwort_wird_ebenso_gesperrt(self):
+        code, smtp, out = self.senden(["reply", "x", "7", "--body-file", "BODY"], {"1367": self.FRUEHER})
+        self.assertNotEqual(code, 0)
+        smtp.assert_not_called()
+        self.assertIn("Zwei Wege sehe ich: universalpay anpassen.", out)
+
+    def test_gmail_sucht_im_gekennzeichneten_gesendet_ordner(self):
+        # Gmail legt Gesendetes selbst ab (sent_folder = ""), der Ordner heisst je Sprache anders
+        gmail = account(address="g@gmail.com", sent_folder="")
+        code, smtp, _ = self.senden(self.SEND, {"5": self.FRUEHER}, acc=gmail,
+                                    ordner=b'(\\HasNoChildren \\Sent) "/" "[Gmail]/Gesendet"')
+        self.assertNotEqual(code, 0)
+        self.assertIn(("select", mb.imap_folder("[Gmail]/Gesendet")), self.aufrufe)
+
+    def test_entwurf_und_vorschau_pruefen_nicht(self):
+        for extra in (["--draft"], ["--dry-run"]):
+            code, smtp, _ = self.senden(self.SEND + extra, {"1367": self.FRUEHER})
+            self.assertEqual(code, 0, extra)
+
+
 if __name__ == "__main__":
     unittest.main()
