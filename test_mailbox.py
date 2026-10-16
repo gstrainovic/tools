@@ -178,6 +178,28 @@ class AntwortVorschau(unittest.TestCase):
                     senden.assert_not_called()
 
 
+class AntwortAufOutlookKopf(unittest.TestCase):
+    def test_antwort_an_alle_trotz_zeilenumbruch_im_namen(self):
+        # Gleiche Kopfzeile wie bei «Lesen»: reply --all brach mit «address parts cannot contain CR or LF» ab
+        original = email.message_from_bytes(
+            b"From: Sakshi <sakshi@example.com>\r\nTo: Info <info@wartungsheft.ch>\r\n"
+            b"Cc: =?utf-8?Q?Hritavash=0A_Saha?= <growth@example.com>, Subhajit\r\n\t<subhajit@example.com>\r\n"
+            b"Message-ID: <o@example.com>\r\nSubject: Partner\r\n\r\nHallo", policy=email.policy.default)
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "antwort.txt"
+            body.write_text("Danke\n", encoding="utf-8")
+            args = type("A", (), {"account": "x", "folder": "INBOX", "uid": "7", "all": True,
+                                 "body_file": str(body), "attach": [], "cc": [], "dry_run": True})()
+            out = io.StringIO()
+            with mock.patch.object(mb, "imap_connect"), \
+                    mock.patch.object(mb, "fetch", return_value=(original, False)), contextlib.redirect_stdout(out):
+                mb.cmd_reply({"x": account()}, args)
+        msg = email.message_from_string(out.getvalue(), policy=email.policy.default)
+        self.assertEqual(mb.addresses(msg["To"]), ["sakshi@example.com"])
+        self.assertEqual(mb.addresses(msg["Cc"]), ["growth@example.com", "subhajit@example.com"])
+        self.assertEqual(msg["In-Reply-To"], "<o@example.com>")
+
+
 class Lesen(unittest.TestCase):
     def test_kopf_mit_zeilenumbruch_im_namen_bricht_nicht_ab(self):
         # Outlook kodiert gelegentlich einen Zeilenumbruch in den Anzeigenamen (=0A), policy.default wirft dann
