@@ -422,9 +422,12 @@ def cmd_read(accounts: dict[str, Account], args) -> None:
     conn.select(imap_folder(args.folder), readonly=True)
     msg, unread = fetch(conn, args.uid)
     conn.logout()
+    # Rohwerte statt msg.get: policy.default wirft bei kodierten Zeilenumbrüchen im Anzeigenamen (Outlook)
+    raw = {k.lower(): v for k, v in reversed(list(msg.raw_items()))}
     for field in ("From", "To", "Cc", "Reply-To", "Date", "Subject", "Message-ID"):
-        if msg.get(field):
-            print(f"{field}: {decode(msg.get(field))}")
+        value = raw.get(field.lower())
+        if value:
+            print(f"{field}: {' '.join(decode(value).split())}")
     names = attachments(msg)
     if names:
         print(f"Anhänge: {', '.join(names)}")
