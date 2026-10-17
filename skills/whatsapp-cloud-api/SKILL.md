@@ -82,9 +82,22 @@ auf die Ansage zurückstellen. Der Dialog hat sechs Einzelfelder: erstes Feld an
 
 Ohne Unternehmensverifizierung 2 Nummern je Portfolio und 250 vom Unternehmen gestartete Nachrichten pro Tag;
 Antworten innerhalb von 24 Stunden auf Kundennachrichten bis 1'000 im Monat gratis (Region Rest of Western Europe,
-Stand Recherche in `ki-tel/recherche/ki-telefonassistent-inbound.md`). Die App darf im Entwicklungsmodus bleiben,
-eingehende Nachrichten fremder Nummern kamen so an. Ob Meta ein Einzelunternehmen ohne Handelsregister verifiziert,
-ist nicht geprüft.
+Stand Recherche in `ki-tel/recherche/ki-telefonassistent-inbound.md`). Das Limit zählt nur Nachrichten, die das
+Unternehmen ausserhalb des 24-Stunden-Fensters beginnt (Doku «Messaging limits»); ein Bot, der nur antwortet,
+braucht weder Verifizierung noch Veröffentlichung der App.
+
+Die App bleibt im Entwicklungsmodus: Webhooks fremder Nummern kommen so an (Metas eigene Hinweisnachricht von
++1 646… ohne Rolle in der App löste den Webhook aus und wurde beantwortet). App Review verlangt die Webhook-Doku
+nur von Partnern, die fremde WhatsApp-Konten bedienen; direkte Entwickler geben dem Systemnutzer-Token die
+Berechtigungen selbst. Der Dashboard-Hinweis «Webhooks nur zum Testen, bis die App veröffentlicht ist» meint
+diesen Partnerfall. Metas Seite «Business Verification» sagt ausdrücklich, dass eine App, die nur von
+Rollennutzern benutzt wird, keine Verifizierung braucht.
+
+Falls doch verifiziert werden soll (Limit 2'000, scaling path): Meta verifiziert auch Einzelunternehmen ohne
+Handelsregister mit Pass und Adressnachweis (Stromrechnung, Bankauszug oder Kreditkartenabrechnung, höchstens
+6 Monate alt, mit der im Portfolio hinterlegten Adresse); registrierte Firmen reichen Handelsregisterauszug oder
+Steuerdokument ein. Quelle: Wiedergabe der Meta-Hilfeseite 2058515294227817 bei Drittanbietern (Alendei, Telnyx);
+Metas Original liegt hinter der Login-Wand und ist nicht selbst gelesen.
 
 ## Beim Kunden
 
