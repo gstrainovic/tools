@@ -50,7 +50,11 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   `playwright-cli state-load`; Werte gibt es nie aus. Gorans Chrome darf dabei laufen oder nicht.
 - Dann `playwright-cli -s=<name> open about:blank --browser=chrome --headed`, `playwright-cli -s=<name> state-load
   <stand.json>`, `goto <URL>`; Login je Portal am Indikator prüfen (find-jobs: Skill `portal-login`), nicht am
-  Cookie-Namen. Meldet `chrome-sitzung` eine Domain «FEHLT» oder fehlt der Indikator: Seite in Gorans Chrome
+  Cookie-Namen. **Alle Domains in einem `chrome-sitzung`-Aufruf:** `state-load` ersetzt den ganzen Zustand, ein
+  zweiter Stand mit einer weiteren Domain loggt alle anderen Portale aus.
+- Mehrere Seiten in einem `run-code`: `goto` mit `waitUntil: 'load'`, nach einem Fehler erst
+  `waitForLoadState` und ein paar Sekunden warten, sonst reisst eine noch laufende Weiterleitung alle folgenden
+  Aufrufe mit («interrupted by another navigation»). Meldet `chrome-sitzung` eine Domain «FEHLT» oder fehlt der Indikator: Seite in Gorans Chrome
   öffnen, per Autofill anmelden, Speicherstand neu erzeugen und laden.
 - Den Speicherstand am Schluss löschen (`rm <stand.json>`), die Session schliessen (`close`). Headed, weil Portale
   mit Bot-Schutz (LinkedIn, Upwork, Cloudflare) kopflose Browser eher sperren.
