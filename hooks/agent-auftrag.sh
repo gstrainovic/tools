@@ -54,7 +54,7 @@ spur=$(jq -R -r '
     elif $e.type == "assistant" then
       ([$e.message.content[]? | select(.type? == "tool_use")
         | select(.name == "Bash" and ((.input.command // "")
-            | test("recherche\\.py|api\\.exa\\.ai|(^|[;&|(\\s\"])ddgs\\s|(^|[;&|(\\s\"])codex\\s.*--search")))]
+            | test("recherche\\.py\\s+-|curl[^;|&]*api\\.exa\\.ai|(^|[;&|(\\s\"])ddgs\\s+(text|news)\\s|(^|[;&|(\\s\"])codex\\s+--search\\s")))]
        | if length > 0 then "S" else "X" end)
     elif $e.type == "response_item" then
       ($e.payload // {}) as $p
@@ -62,7 +62,7 @@ spur=$(jq -R -r '
         elif $p.type == "function_call" or $p.type == "custom_tool_call" then
           (($p.arguments // $p.input // "") | if type == "string" then . as $s | (fromjson? // {command:$s}) else . end) as $i
           | if ($p.name | split(".") | last | IN("exec_command", "Bash", "shell", "shell_command", "exec"))
-             and (($i.command // $i.cmd // "") | test("recherche\\.py|api\\.exa\\.ai|(^|[;&|(\\s\"])ddgs\\s|(^|[;&|(\\s\"])codex\\s.*--search")) then "S" else "X" end
+             and (($i.command // $i.cmd // "") | test("recherche\\.py\\s+-|curl[^;|&]*api\\.exa\\.ai|(^|[;&|(\\s\"])ddgs\\s+(text|news)\\s|(^|[;&|(\\s\"])codex\\s+--search\\s")) then "S" else "X" end
         else "X" end
     else "X" end
 ' "$transkript" 2>/dev/null)
