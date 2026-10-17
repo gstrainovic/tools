@@ -47,6 +47,9 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
 - Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
   nicht alte Refs wiederverwenden.
+- In Popups (OAuth, Facebook-Einrichtung) nie Escape drücken: Es schliesst das ganze Fenster, alle Schritte samt
+  Bestätigungscode sind verloren, und Meta sperrt einen neuen Anruf für 60 Minuten. Offene Listen per Klick auf
+  eine Option schliessen.
 - Eigene Auswahllisten (Facebook, Meta) reagieren nicht auf `click <ref>`: per `run-code` die `boundingBox()` der
   Option holen und `page.mouse.click()` auf die Mitte setzen.
 
