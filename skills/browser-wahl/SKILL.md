@@ -66,7 +66,15 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
 
 - `playwright-cli attach --cdp=chrome --session=gchrome` hängt sich an den laufenden Chrome mit Gorans Profil;
   danach `playwright-cli -s=gchrome …`. Voraussetzung: in `chrome://inspect/#remote-debugging` ist «Allow remote
-  debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten.
+  debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten. Chrome 155 antwortet
+  auf `/json/version` mit 404 und `--cdp=chrome` scheitert: dann die WebSocket-Adresse aus
+  `~/.config/google-chrome/DevToolsActivePort` nehmen, `attach --cdp="ws://127.0.0.1:9222$(sed -n 2p
+  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Läuft Gorans Chrome nicht (nur ein
+  Playwright-Chromium mit `--user-data-dir=/tmp/playwright…`), `google-chrome --restore-last-session &` starten
+  und 25 s warten.
+- Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
+  App-Geheimcodes) kann weder playwright-cli noch die Extension ausfüllen: in einem Satz melden, Goran tippt es
+  im offenen Dialog, danach weiterarbeiten.
 - Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
   schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
 - Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
