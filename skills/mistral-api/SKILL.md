@@ -34,6 +34,20 @@ Grenzen und Preise vor Entscheidungen in der offiziellen Doku (docs.mistral.ai) 
 - Scale (bezahlt): 2 Mio. Tokens und 360 Anfragen je Minute, kein eigenes Vision-Limit; für Produktion.
 - Das Dashboard zeigt auch im Experiment-Tarif die Scale-Limits an. Ein Ausgabenlimit ist kein Tarifwechsel, auf Scale muss ausdrücklich gewechselt werden.
 
+## Konsole (admin.mistral.ai)
+
+- Keine Verwaltungs-API ausser im Enterprise-Plan: Arbeitsbereiche, Limits und Schlüssel nur in der Konsole
+  (playwright-cli mit `chrome-sitzung … mistral.ai`, Skill `browser-wahl`).
+- **Arbeitsbereich je öffentlicher App:** Arbeitsbereiche → «Neuer Arbeitsbereich» (gratis); eigenes Monatslimit
+  unter Limits, Mindestwert USD 10. Der Schalter neben «Monatliches Ausgabenlimit» reagiert nur auf einen echten
+  Mausklick (`page.mouse.click` auf seine Mitte), danach Wert eintippen und «Limit aktualisieren».
+- **Schlüssel** im Reiter API-Schlüssel des Arbeitsbereichs; der Wert erscheint nur einmal und nur über «Schlüssel
+  kopieren» in der Zwischenablage des Playwright-Browsers (nicht im System). Ohne Anzeige in eine Datei bringen:
+  Rechte `clipboard-read` gewähren, `navigator.clipboard.readText()`, in einer neuen Seite per Formular-POST an
+  einen lokalen Einmal-Empfänger (127.0.0.1) schicken, der mit chmod 600 schreibt; `fetch` dorthin blockt Chrome.
+- Der Minutenzähler `x-ratelimit-remaining-req-minute` gilt für die ganze Organisation, nicht je Arbeitsbereich;
+  welchem Arbeitsbereich ein Schlüssel gehört, zeigt nur die Konsole.
+
 ## Bewährt
 
 - Zwei Stufen (OCR, dann Chat) statt Document Annotation in einem Schritt; die einstufige Variante halluziniert.
