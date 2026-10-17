@@ -12,9 +12,3 @@
       bereits eingerichtet; seine automatische Einrichtung bei Sitzungsbeginn braucht diese Freigabe.
       Neue oder geänderte Definitionen werden bis zur Freigabe übersprungen; Vertrauenshashes nicht von
       Hand ändern.
-
-- [ ] **(134) WebFetch ebenfalls sperren?** `WebSearch` steht seit 18.10.2026 in `permissions.deny` von
-      `~/.claude/settings.json` (nackter Werkzeugname entfernt das Werkzeug ganz aus dem Kontext, Doku
-      code.claude.com/docs/en/permissions). `WebFetch` bleibt vorerst, weil `~/.claude/CLAUDE.md` («WebFetch –
-      immer über Jina Reader») es noch vorsieht; der Skill recherche holt Einzelseiten aber per `curl` an Jina.
-      Entscheid Goran: sperren und den CLAUDE.md-Abschnitt auf curl umschreiben, oder behalten.
