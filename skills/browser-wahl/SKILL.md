@@ -17,11 +17,11 @@ Reihenfolge, das erste passende nehmen:
    einmal, die Session bleibt zwischen Aufrufen offen (`playwright-cli list`).
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Entscheidungen: E2E-Tests, Screenshots, Login-Vorstufe.
-4. **Claude in Chrome** nur, wo Gorans eigene Sitzung mit Bot-Schutz nötig ist (LinkedIn, Upwork, freelancermap,
-   Google-Konten) oder Goran zusehen will. Nicht für Kundensysteme und nicht für Formulare ohne Anmeldung
-   (Partnerprogramme, Registrierungen, Kontakt- und Bewerbungsformulare ohne Konto): die laufen über playwright-cli,
-   das kostet weit weniger Tokens. Ein Captcha oder den letzten Klick macht Goran dann im Dashboard
-   (`playwright-cli show`).
+4. **Gorans eigener Chrome über playwright-cli** (`attach --cdp=chrome`, Abschnitt unten), wo seine Sitzung mit
+   Logins nötig ist (LinkedIn, Upwork, freelancermap, Google-Konten, Facebook, Konsolen mit OAuth-Popups) oder Goran
+   zusehen will. Erste Wahl vor Claude in Chrome (Gorans Entscheid): gleiche Logins, aber weniger Tokens, und
+   Popups (etwa Facebook-Login) erscheinen als eigener Tab, den Claude in Chrome nicht sieht.
+5. **Claude in Chrome** nur noch als Rückfall, wenn das Anhängen nicht geht.
 
 **Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
 Objekt, anderer Ablauf) zuerst lokal (`rg` in `~/projects`), dann die API-Doku des Systems und fehlende Rechte des
@@ -38,7 +38,19 @@ Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwrig
 curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
 Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
 
-## Claude in Chrome
+## Gorans Chrome anhängen
+
+- `playwright-cli attach --cdp=chrome --session=gchrome` hängt sich an den laufenden Chrome mit Gorans Profil;
+  danach `playwright-cli -s=gchrome …`. Voraussetzung: in `chrome://inspect/#remote-debugging` ist «Allow remote
+  debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten.
+- Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
+  schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
+- Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
+  nicht alte Refs wiederverwenden.
+- Eigene Auswahllisten (Facebook, Meta) reagieren nicht auf `click <ref>`: per `run-code` die `boundingBox()` der
+  Option holen und `page.mouse.click()` auf die Mitte setzen.
+
+## Claude in Chrome (Rückfall)
 
 - **Extension «not connected»:** Chrome selbst starten bzw. den Tab öffnen (`google-chrome "<URL>" &`, auch
   bei laufendem Chrome) und erneut verbinden; hilft das nicht, Chrome per `kill -TERM` beenden, warten, bis
