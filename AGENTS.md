@@ -33,6 +33,8 @@ auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` 
 | `fr_po_pruefen.py` | Französische `.po` prüfen (SPTE-Typografie, Glossar, Platzhalter), als `~/.local/bin/fr-po-pruefen` verknüpft; Aufruf in den `bin-test.sh` der WordPress-Plugin-Repos |
 | `test_fr_po_pruefen.py` | Tests dazu, Fälle aus SPTEs `regex.test.js` (`uv run --with regex python3 -m unittest test_fr_po_pruefen.py`) |
 | `fr-po/` | Glossar des französischen Teams als CSV mit Quelle und Abrufdatum (`fr-po-pruefen --glossar-aktualisieren`) |
+| `chrome_sitzung.py` | Cookies gewählter Domains aus Gorans Chrome entschlüsseln und als Speicherstand für `playwright-cli state-load` schreiben, als `~/.local/bin/chrome-sitzung` verknüpft (Skill browser-wahl, «Sitzung aus Gorans Chrome übernehmen») |
+| `test_chrome_sitzung.py` | Tests gegen eine Cookie-Datenbank im tmp-Ordner (`uv run --with cryptography python -m unittest test_chrome_sitzung.py`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `link.sh` | Verknüpfungen für Scripts und Skills |
