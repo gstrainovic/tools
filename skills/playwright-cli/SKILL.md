@@ -11,6 +11,10 @@ allowed-tools: Bash(playwright-cli:*) Bash(npx playwright:*) Bash(npx --no-insta
 dann `playwright-cli -s=gchrome tab-new <URL>`. Der Hook `~/projects/tools/hooks/browser-profil.sh` sperrt den Rest.
 Details im Skill `browser-wahl`.
 
+Quelle: `skills/playwright-cli/` aus dem npm-Paket `@playwright/cli` 0.1.22 (github.com/microsoft/playwright-cli,
+Apache-2.0), unverändert bis auf den Absatz oben. Aktualisieren: `npm i -g @playwright/cli@latest`, dann Text und
+`references/` aus `$(npm root -g)/@playwright/cli/skills/playwright-cli/` übernehmen und den Absatz oben behalten.
+
 ## Quick start
 
 ```bash
