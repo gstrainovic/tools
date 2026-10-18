@@ -68,6 +68,14 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
 - Läuft Gorans Chrome nicht (nur ein
   Playwright-Chromium mit `--user-data-dir=/tmp/playwright…`), `google-chrome --restore-last-session &` starten
   und 25 s warten.
+- **Selbst einloggen mit gespeichertem Kennwort (Chrome-Passwortmanager):** im Login-Tab `click` ins Benutzer- oder
+  E-Mail-Feld, dann `press ArrowDown` und `press Enter`: Chrome füllt Benutzer und Kennwort aus seinem Vorschlag.
+  Mit `eval` nur die Länge der Feldwerte prüfen (nie den Wert), dann anmelden (Enter oder Absenden-Knopf). So am
+  18.10.2026 bei login.wordpress.org und login.klara.ch geklappt. Erst wenn danach ein Feld leer bleibt (kein
+  gespeichertes Kennwort), 2FA oder ein Captcha kommt: Goran in einem Satz um den Login bitten.
+- Klicks per Ref hängen in einem Tab im Hintergrund («waiting for element to be visible, enabled and stable»):
+  `run-code` mit `await page.bringToFront()`, Formulare dann per `el.form.requestSubmit(el)` absenden; Dateifelder
+  per `page.setInputFiles('<selector>', '<pfad>')` statt Dateidialog.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
   App-Geheimcodes) kann weder playwright-cli noch die Extension ausfüllen: in einem Satz melden, Goran tippt es
   im offenen Dialog, danach weiterarbeiten.
