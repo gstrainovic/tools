@@ -93,11 +93,20 @@ Berechtigungen selbst. Der Dashboard-Hinweis «Webhooks nur zum Testen, bis die 
 diesen Partnerfall. Metas Seite «Business Verification» sagt ausdrücklich, dass eine App, die nur von
 Rollennutzern benutzt wird, keine Verifizierung braucht.
 
-Falls doch verifiziert werden soll (Limit 2'000, scaling path): Meta verifiziert auch Einzelunternehmen ohne
-Handelsregister mit Pass und Adressnachweis (Stromrechnung, Bankauszug oder Kreditkartenabrechnung, höchstens
-6 Monate alt, mit der im Portfolio hinterlegten Adresse); registrierte Firmen reichen Handelsregisterauszug oder
-Steuerdokument ein. Quelle: Wiedergabe der Meta-Hilfeseite 2058515294227817 bei Drittanbietern (Alendei, Telnyx);
-Metas Original liegt hinter der Login-Wand und ist nicht selbst gelesen.
+WhatsApp-Anrufe (Calling API) verlangen dagegen ein Limit von mindestens 2'000 (Doku «Calling», «Call
+settings»); auf `TIER_250` lehnt `POST /<PHONE_ID>/settings` `{"calling":{"status":"ENABLED"}}` mit Fehler
+138015 ab. Der Weg ohne Massenversand ist die Unternehmensverifizierung.
+
+**Unternehmensverifizierung (Einzelunternehmen ohne Handelsregister, so eingereicht für Strainovic IT):**
+`business.facebook.com/latest/settings/security_center?business_id=…` → «Verifizierung starten» → Land →
+Unternehmensart «Einzelunternehmen» → «Noch nicht registriert» → Name genau wie auf den Dokumenten (Personenname,
+Firmenname als alternativer Name) → Adresse wie auf den Dokumenten → Telefon und Website → reCAPTCHA (kommt im
+Playwright-Chrome mit kopierten Cookies; im eigenen Chrome per Anhängen vermutlich nicht) → Bestätigung per Mail an
+eine Adresse der Website-Domain (Code kommt sofort, `mailbox`) → zwei Uploads: Name (Auswahl Bankauszug,
+Gewerbeanmeldung, Steuerdokument, Gründungsurkunde) und Adresse (dieselben ohne Bankauszug, dazu
+Betriebskostenabrechnung). Einen Ausweis verlangt der Ablauf nicht. Für Strainovic IT gingen Seite 1 eines
+Kontoauszugs (Name) und Seite 1 der Zins- und Kapitalbescheinigung der Bank (Steuerdokument, Adresse). Meta prüft
+laut Abschlussdialog in etwa 2 Werktagen; die Freigabe kommt per Mail und Webhook `business_capability_update`.
 
 ## Beim Kunden
 

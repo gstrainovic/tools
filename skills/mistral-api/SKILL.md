@@ -37,7 +37,7 @@ Grenzen und Preise vor Entscheidungen in der offiziellen Doku (docs.mistral.ai) 
 ## Konsole (admin.mistral.ai)
 
 - Keine Verwaltungs-API ausser im Enterprise-Plan: Arbeitsbereiche, Limits und Schlüssel nur in der Konsole
-  (playwright-cli mit `chrome-sitzung … mistral.ai`, Skill `browser-wahl`).
+  (playwright-cli angehängt an Gorans Chrome, Skill `browser-wahl`).
 - **Arbeitsbereich je öffentlicher App:** Arbeitsbereiche → «Neuer Arbeitsbereich» (gratis); eigenes Monatslimit
   unter Limits, Mindestwert USD 10. Der Schalter neben «Monatliches Ausgabenlimit» reagiert nur auf einen echten
   Mausklick (`page.mouse.click` auf seine Mitte), danach Wert eintippen und «Limit aktualisieren».
