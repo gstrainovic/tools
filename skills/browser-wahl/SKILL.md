@@ -11,20 +11,15 @@ Reihenfolge, das erste passende nehmen:
    «API-Token statt Durchklicken» in `~/.claude/CLAUDE.md` (Token anlegen lassen, Übergabe per Zwischenablage).
    Manche Systeme geben einen Token auch gegen Benutzername und Kennwort aus (Flarum `POST /api/token`); welche
    Portale das können und welche verbieten, steht in `find-jobs/akquise/recherche/token-statt-browser-2026-10.md`.
-2. **playwright-cli** (Skill `playwright-cli`) für alles Interaktive: unbekannte Masken erkunden, einrichten,
-   prüfen (myfactory, bexio, REDAXO, WordPress, Portale ohne Bot-Schutz). Kein Tool-Schema im Kontext, Snapshots
-   landen als Datei, `find "Text"` sucht darin. Eine benannte Session je Kunde oder System (`-s=<name>`), Login
-   einmal, die Session bleibt zwischen Aufrufen offen (`playwright-cli list`).
+2. **playwright-cli angehängt an Gorans laufenden Chrome** (Skill `playwright-cli`, Abschnitt «Gorans Chrome
+   anhängen») für alles Interaktive: Masken erkunden, einrichten, prüfen, Formulare, Portale mit Login. Gorans
+   Cookies, Logins und Captcha-Vertrauen gelten so überall. Kein Tool-Schema im Kontext, Snapshots landen als Datei.
+   **Verboten: frische oder kopierte Profile** (Gorans Regel): kein `playwright-cli … open`, kein `state-load`, kein
+   `chrome-sitzung`. Ohne Gorans Cookies erscheinen Captchas (hCaptcha bei Zendesk) und Logins fehlen. Der Hook
+   `~/projects/tools/hooks/browser-profil.sh` sperrt diese Befehle.
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
-   Entscheidungen: E2E-Tests, Screenshots, Login-Vorstufe.
-4. **Gorans Sitzung in playwright-cli** (Abschnitt «Sitzung aus Gorans Chrome übernehmen»), wo seine Logins nötig
-   sind (LinkedIn, Upwork, freelancermap, freelance.de, Freelancer.com, Wellfound, Google-Konten, Facebook, Konsolen
-   mit OAuth-Popups): `chrome-sitzung` schreibt die Cookies der genannten Domains aus seinem Chrome als
-   Speicherstand, `state-load` lädt ihn in eine eigene Session. Erste Wahl vor Claude in Chrome (Gorans Entscheid):
-   gleiche Logins, weniger Tokens, Popups erscheinen als eigener Tab. Soll Goran zusehen, stattdessen an seinen
-   laufenden Chrome anhängen (`attach --cdp=chrome`, Abschnitt unten).
-5. **Claude in Chrome** nur als Rückfall, wenn ein Portal die übernommene Sitzung ablehnt (Login-Indikator fehlt
-   trotz Cookies, Captcha, Gerätefrage) oder weder Übernahme noch Anhängen geht. Den Grund in den Skill des Portals
+   Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
+4. **Claude in Chrome** nur als Rückfall, wenn das Anhängen per CDP nicht geht. Den Grund in den Skill des Portals
    schreiben, damit der Rückfall dort gilt und nicht überall.
 
 **Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
@@ -42,22 +37,14 @@ Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwrig
 curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
 Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
 
-## Sitzung aus Gorans Chrome übernehmen
+## Mehrere Seiten nacheinander
 
-- `chrome-sitzung <scratchpad>/stand.json linkedin.com upwork.com …` (`~/projects/tools/chrome_sitzung.py`, per
-  `link.sh` verknüpft) kopiert `~/.config/google-chrome/Default/Cookies`, entschlüsselt die Cookies der Domains samt
-  Subdomains mit dem Schlüssel aus dem GNOME-Schlüsselbund und schreibt sie mit chmod 600 im Format von
-  `playwright-cli state-load`; Werte gibt es nie aus. Gorans Chrome darf dabei laufen oder nicht.
-- Dann `playwright-cli -s=<name> open about:blank --browser=chrome --headed`, `playwright-cli -s=<name> state-load
-  <stand.json>`, `goto <URL>`; Login je Portal am Indikator prüfen (find-jobs: Skill `portal-login`), nicht am
-  Cookie-Namen. **Alle Domains in einem `chrome-sitzung`-Aufruf:** `state-load` ersetzt den ganzen Zustand, ein
-  zweiter Stand mit einer weiteren Domain loggt alle anderen Portale aus.
 - Mehrere Seiten in einem `run-code`: `goto` mit `waitUntil: 'load'`, nach einem Fehler erst
   `waitForLoadState` und ein paar Sekunden warten, sonst reisst eine noch laufende Weiterleitung alle folgenden
-  Aufrufe mit («interrupted by another navigation»). Meldet `chrome-sitzung` eine Domain «FEHLT» oder fehlt der Indikator: Seite in Gorans Chrome
-  öffnen, per Autofill anmelden, Speicherstand neu erzeugen und laden.
-- Den Speicherstand am Schluss löschen (`rm <stand.json>`), die Session schliessen (`close`). Headed, weil Portale
-  mit Bot-Schutz (LinkedIn, Upwork, Cloudflare) kopflose Browser eher sperren.
+  Aufrufe mit («interrupted by another navigation»). Fehlt ein Login-Indikator (find-jobs: Skill `portal-login`):
+  Seite in Gorans Chrome per Autofill anmelden, dann weiter.
+- Für jede Aufgabe einen eigenen Tab (`tab-new`) und ihn bis zum Ende nicht für anderes benutzen; ein Formular, auf
+  das Goran wartet (Captcha, Freigabe), bleibt in seinem Tab stehen.
 - Cookies reichen für die Logins aller find-jobs-Portale (Stand der Prüfung: LinkedIn, Upwork, freelancermap,
   freelance.de, Freelancer.com, Wellfound). Local Storage wird nicht übernommen; braucht eine Seite ihn, die
   Werte per `localstorage-set` nachtragen oder anhängen (unten).
@@ -113,9 +100,8 @@ Nie als Befehlsparameter. Login als `run-code`-Datei mit Platzhalter, eine klein
 aus `.secrets/` ein und filtert es aus der Ausgabe (`run-code` kennt weder `require` noch `process`). Vorbild:
 `myfactory-anbindung/myfactory/cli_login.sh` mit `cli_login.js`.
 
-Liegt kein Kennwort in einer Datei, keine Passwort-Datei von Goran verlangen: in Chrome per Autofill anmelden
-und die Sitzung für Playwright übernehmen (`chrome-sitzung`, Abschnitt oben; in Skripten das Modul
-`~/projects/tools/chrome_sitzung.py` importieren statt kopieren).
+Liegt kein Kennwort in einer Datei, keine Passwort-Datei von Goran verlangen: in Gorans Chrome per Autofill
+anmelden und angehängt per CDP weiterarbeiten.
 
 ## Arbeiten mit playwright-cli
 

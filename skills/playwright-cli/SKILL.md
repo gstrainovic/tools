@@ -6,6 +6,11 @@ allowed-tools: Bash(playwright-cli:*) Bash(npx playwright:*) Bash(npx --no-insta
 
 # Browser Automation with playwright-cli
 
+**Gorans Regel, geht allen Beispielen unten vor:** Nie ein frisches oder kopiertes Profil (`open`, `state-load`,
+`chrome-sitzung`); immer an Gorans laufenden Chrome anhängen: `playwright-cli attach --cdp=chrome --session=gchrome`,
+dann `playwright-cli -s=gchrome tab-new <URL>`. Der Hook `~/projects/tools/hooks/browser-profil.sh` sperrt den Rest.
+Details im Skill `browser-wahl`.
+
 ## Quick start
 
 ```bash
