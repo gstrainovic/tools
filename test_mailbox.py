@@ -394,6 +394,63 @@ class Ordnernamen(unittest.TestCase):
         self.assertIn(("select", '"[Gmail]/Alle Nachrichten"'), aufrufe)
         self.assertIn(("uid", "move", "7", '"[Gmail]/Alle Nachrichten"'), aufrufe)
 
+    def test_umlaute_als_modified_utf7(self):
+        # RFC 3501, 5.1.3; Beispiel «~peter/mail/台北/日本語» aus dem RFC
+        self.assertEqual(mb.imap_folder("[Gmail]/Entwürfe"), "[Gmail]/Entw&APw-rfe")
+        self.assertEqual(mb.imap_folder("~peter/mail/台北/日本語"), "~peter/mail/&U,BTFw-/&ZeVnLIqe-")
+        self.assertEqual(mb.imap_folder("A&B"), "A&-B")
+        self.assertEqual(mb.imap_folder("Gelöschte Elemente"), '"Gel&APY-schte Elemente"')
+
+    def test_schon_kodierter_name_bleibt(self):
+        self.assertEqual(mb.imap_folder("[Gmail]/Entw&APw-rfe"), "[Gmail]/Entw&APw-rfe")
+        self.assertEqual(mb.imap_folder("A&-B"), "A&-B")
+
+    def test_folders_zeigt_umlaute(self):
+        class Conn:
+            def list(self):
+                return "OK", [b'(\\Drafts \\HasNoChildren) "/" "[Gmail]/Entw&APw-rfe"', b'(\\HasNoChildren) "/" INBOX']
+
+            def logout(self):
+                pass
+
+        out = io.StringIO()
+        with mock.patch.object(mb, "imap_connect", return_value=Conn()), contextlib.redirect_stdout(out):
+            mb.cmd_folders({"x": None}, type("A", (), {"account": "x"})())
+        self.assertIn("[Gmail]/Entwürfe", out.getvalue())
+        self.assertIn("\\Drafts", out.getvalue())
+        self.assertIn("INBOX", out.getvalue())
+
+    def test_list_und_move_mit_umlaut_ordner(self):
+        aufrufe = []
+
+        class Conn:
+            def list(self):
+                return "OK", [b'(\\Drafts \\HasNoChildren) "/" "[Gmail]/Entw&APw-rfe"']
+
+            def select(self, folder, readonly=False):
+                folder.encode("ascii")  # imaplib kodiert Argumente als ASCII
+                aufrufe.append(("select", folder))
+                return "OK", [b"1"]
+
+            def uid(self, *args):
+                for a in args:
+                    a.encode("ascii")
+                aufrufe.append(("uid", *args))
+                return "OK", [b""]
+
+            def logout(self):
+                pass
+
+        with mock.patch.object(mb, "imap_connect", return_value=Conn()):
+            mb.list_account(account(), "[Gmail]/Entwürfe", False, 3)
+            for quelle, ziel in (("INBOX", "[Gmail]/Entwürfe"), ("[Gmail]/Entw&APw-rfe", "INBOX"),
+                                 ("INBOX", "[Gmail]/Entw&APw-rfe")):
+                args = type("A", (), {"account": "x", "folder": quelle, "uid": "7", "target": ziel})()
+                with contextlib.redirect_stdout(io.StringIO()):
+                    mb.cmd_move({"x": None}, args)
+        self.assertEqual(aufrufe.count(("select", "[Gmail]/Entw&APw-rfe")), 2)
+        self.assertEqual(aufrufe.count(("uid", "move", "7", "[Gmail]/Entw&APw-rfe")), 2)
+
     def test_trash_und_spam_werden_auf_die_gekennzeichneten_ordner_des_kontos_aufgeloest(self):
         # Gmail nennt den Papierkorb «[Gmail]/Papierkorb», Infomaniak «Trash»; die Kennzeichen \Trash und \Junk
         # aus LIST sagen, welcher Ordner gemeint ist
@@ -404,6 +461,7 @@ class Ordnernamen(unittest.TestCase):
         self.assertEqual(mb.resolve_folder(liste, "Spam"), "[Gmail]/Spam")
         self.assertEqual(mb.resolve_folder(liste, "Strainovic IT"), "Strainovic IT")
         self.assertEqual(mb.resolve_folder([b'(\\HasNoChildren \\Trash) "/" Trash'], "Trash"), "Trash")
+        self.assertEqual(mb.resolve_folder([b'(\\Trash) "/" "Gel&APY-schte Elemente"'], "Trash"), "Gelöschte Elemente")
 
     def test_move_loescht_nichts_wenn_der_zielordner_fehlt(self):
         # Bisher: MOVE scheitert, COPY scheitert still, dann \Deleted plus EXPUNGE, und bei Gmail ist die Mail
@@ -482,8 +540,67 @@ class Entwuerfe(unittest.TestCase):
                          '[g]\naddress="g@b.ch"\nimap="i"\npassword_file="x"\ndrafts_folder="[Gmail]/Entwürfe"\n',
                          encoding="utf-8")
             konten = mb.load_accounts(p)
-        self.assertEqual(konten["a"].drafts_folder, "Drafts")
+        self.assertEqual(konten["a"].drafts_folder, "", "ohne Angabe: Ordner mit \\Drafts vom Server")
         self.assertEqual(konten["g"].drafts_folder, "[Gmail]/Entwürfe")
+
+    GMAIL_LISTE = [b'(\\HasNoChildren) "/" "INBOX"', b'(\\HasNoChildren) "/" "Drafts"',
+                   b'(\\Drafts \\HasNoChildren) "/" "[Gmail]/Entw&APw-rfe"',
+                   b'(\\HasNoChildren \\Sent) "/" "[Gmail]/Gesendet"']
+
+    def entwurf_speichern(self, liste, **konto):
+        aufrufe = []
+
+        class Conn:
+            def list(self):
+                return "OK", liste
+
+            def create(self, folder):
+                aufrufe.append(("create", folder))
+
+            def append(self, folder, flags, date, data):
+                aufrufe.append(("append", folder))
+                return "OK", [None]
+
+            def logout(self):
+                pass
+
+        acc = mb.Account(key="x", address="g@gmail.com", name="G", imap="i", smtp="s",
+                         password_file=Path("/nicht/da"), **konto)
+        msg = mb.build_message(acc, ["kunde@example.ch"], "Betreff", "Text\n")
+        with mock.patch.object(mb, "imap_connect", return_value=Conn()), \
+                mock.patch.object(mb.smtplib, "SMTP_SSL", side_effect=AssertionError("kein SMTP")):
+            ordner = mb.save_draft(acc, msg)
+        return ordner, aufrufe
+
+    def test_gmail_entwurf_landet_im_ordner_mit_drafts_kennzeichen(self):
+        # Bisher landete er im Label «Drafts», das Gmail und Thunderbird nicht als Entwürfe zeigen
+        ordner, aufrufe = self.entwurf_speichern(self.GMAIL_LISTE)
+        self.assertEqual([a for a in aufrufe if a[0] == "append"], [("append", "[Gmail]/Entw&APw-rfe")])
+        self.assertNotIn(("create", "Drafts"), aufrufe)
+        self.assertEqual(ordner, "[Gmail]/Entwürfe")
+
+    def test_ohne_kennzeichen_bleibt_drafts(self):
+        ordner, aufrufe = self.entwurf_speichern([b'(\\HasNoChildren) "/" "INBOX"'])
+        self.assertIn(("append", "Drafts"), aufrufe)
+        self.assertEqual(ordner, "Drafts")
+
+    def test_entwurfsordner_aus_konfiguration_hat_vorrang(self):
+        ordner, aufrufe = self.entwurf_speichern(self.GMAIL_LISTE, drafts_folder="Vorlagen")
+        self.assertIn(("append", "Vorlagen"), aufrufe)
+        self.assertEqual(ordner, "Vorlagen")
+
+    def test_send_draft_meldet_den_tatsaechlichen_ordner(self):
+        acc = account(drafts_folder="")
+        with tempfile.TemporaryDirectory() as d:
+            body = Path(d) / "b.txt"
+            body.write_text("Text\n", encoding="utf-8")
+            args = type("A", (), {"account": "test", "to": ["a@b.ch"], "subject": "S", "body_file": str(body),
+                                  "cc": [], "bcc": [], "reply_to": None, "attach": [], "dry_run": False,
+                                  "draft": True, "doppel_geprueft": None})()
+            out = io.StringIO()
+            with mock.patch.object(mb, "save_draft", return_value="[Gmail]/Entwürfe"), contextlib.redirect_stdout(out):
+                mb.cmd_send({"test": acc}, args)
+        self.assertIn("Entwurf gespeichert in [Gmail]/Entwürfe", out.getvalue())
 
     def test_send_und_reply_kennen_draft(self):
         for argv in (["send", "x", "--to", "a@b.ch", "--subject", "s", "--body-file", "f", "--draft"],

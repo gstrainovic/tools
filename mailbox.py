@@ -33,6 +33,7 @@ Ohne KONTO bei list: alle Konten. Ausgabe ist Text, eine Zeile pro Mail, UID ist
 from __future__ import annotations
 
 import argparse
+import base64
 import email
 import email.policy
 import imaplib
@@ -62,7 +63,7 @@ class Account:
     smtp: str
     password_file: Path
     sent_folder: str = "Sent"
-    drafts_folder: str = "Drafts"
+    drafts_folder: str = ""  # leer: der Ordner, den der Server mit \Drafts kennzeichnet, sonst «Drafts»
     imap_port: int = 993
     smtp_port: int = 465
     login_name: str = ""  # Anmeldung, wenn sie vom Absender abweicht (Domain-Alias)
@@ -102,7 +103,7 @@ def load_accounts(path: Path = CONFIG) -> dict[str, Account]:
             smtp=cfg.get("smtp", cfg["imap"]),
             password_file=Path(cfg["password_file"]),
             sent_folder=cfg.get("sent_folder", "Sent"),
-            drafts_folder=cfg.get("drafts_folder", "Drafts"),
+            drafts_folder=cfg.get("drafts_folder", ""),
             imap_port=int(cfg.get("imap_port", 993)),
             smtp_port=int(cfg.get("smtp_port", 465)),
             login_name=cfg.get("login", ""),
@@ -368,7 +369,12 @@ def cmd_folders(accounts: dict[str, Account], args) -> None:
     conn = imap_connect(accounts[args.account])
     status, boxes = conn.list()
     for box in boxes or []:
-        print(box.decode(errors="replace"))
+        line = box.decode(errors="replace") if isinstance(box, bytes) else str(box)
+        m = LIST_ZEILE.match(box) if isinstance(box, bytes) else None
+        if m:  # Namen lesbar, mit Umlauten statt Modified UTF-7
+            name = list_folders([box])[0][1]
+            line = line[:m.start("name")] + (f'"{name}"' if m.group("name").startswith(b'"') else name)
+        print(line)
     conn.logout()
 
 
@@ -389,10 +395,79 @@ def search_args(criteria: str) -> tuple[list[str], bytes | None]:
     return ["CHARSET", "UTF-8", *([rest] if rest else []), match.group(1)], match.group(2).encode()
 
 
-def imap_folder(name: str) -> str:
-    """Ordnernamen für IMAP quoten, imaplib tut das nicht ("[Gmail]/Alle Nachrichten")."""
-    if name.startswith('"') and name.endswith('"') and len(name) > 1:
+MUTF7_FOLGE = re.compile(r"&([A-Za-z0-9+,]*)-")
+
+
+def mutf7_encode(name: str) -> str:
+    """Ordnernamen nach IMAP Modified UTF-7 (RFC 3501, 5.1.3): «Entwürfe» → «Entw&APw-rfe», «&» → «&-»."""
+    out: list[str] = []
+    rest: list[str] = []
+
+    def flush():
+        if rest:
+            b64 = base64.b64encode("".join(rest).encode("utf-16-be")).decode().rstrip("=").replace("/", ",")
+            out.append(f"&{b64}-")
+            rest.clear()
+
+    for ch in name:
+        if 0x20 <= ord(ch) <= 0x7E:
+            flush()
+            out.append("&-" if ch == "&" else ch)
+        else:
+            rest.append(ch)
+    flush()
+    return "".join(out)
+
+
+def mutf7_decode(name: str) -> str:
+    """Gegenstück zu mutf7_encode; ValueError, wenn der Name kein gültiges Modified UTF-7 ist."""
+    if not name.isascii() or "&" in MUTF7_FOLGE.sub("", name):
+        raise ValueError(f"kein Modified UTF-7: {name}")
+
+    def zeichen(m: re.Match) -> str:
+        if not m.group(1):
+            return "&"
+        b64 = m.group(1).replace(",", "/")
+        return base64.b64decode(b64 + "=" * (-len(b64) % 4)).decode("utf-16-be")
+
+    return MUTF7_FOLGE.sub(zeichen, name)
+
+
+def folder_name(name: str) -> str:
+    """Lesbarer Name: schon kodierte Namen («[Gmail]/Entw&APw-rfe») dekodiert, andere unverändert."""
+    try:
+        return mutf7_decode(name)
+    except (ValueError, UnicodeDecodeError):
         return name
+
+
+LIST_ZEILE = re.compile(rb'\((?P<flags>[^)]*)\)\s+(?:"[^"]*"|NIL)\s+(?P<name>"(?:[^"\\]|\\.)*"|\S+)')
+
+
+def list_folders(lines: list) -> list[tuple[bytes, str]]:
+    """LIST-Antwort → (Kennzeichen, lesbarer Ordnername) je Ordner."""
+    found = []
+    for line in lines or []:
+        m = LIST_ZEILE.match(line) if isinstance(line, bytes) else None
+        if not m:
+            continue
+        raw = m.group("name").decode("ascii", errors="replace")
+        if raw.startswith('"'):
+            raw = re.sub(r'\\(.)', r'\1', raw[1:-1])
+        found.append((m.group("flags"), folder_name(raw)))
+    return found
+
+
+def flagged_folder(lines: list, flag: bytes) -> str | None:
+    return next((name for flags, name in list_folders(lines) if flag in flags.split()), None)
+
+
+def imap_folder(name: str) -> str:
+    """Ordnernamen für IMAP: Umlaute als Modified UTF-7 (schon kodierte Namen bleiben), dann quoten, imaplib tut
+    beides nicht ("[Gmail]/Alle Nachrichten")."""
+    if name.startswith('"') and name.endswith('"') and len(name) > 1 and name.isascii():
+        return name
+    name = mutf7_encode(folder_name(name))
     if re.search(r'[\s"\\(){%*]', name):
         return '"' + name.replace("\\", "\\\\").replace('"', '\\"') + '"'
     return name
@@ -457,23 +532,32 @@ def smtp_send(acc: Account, msg: EmailMessage) -> None:
         conn = imap_connect(acc)
         # Neues Postfach hat noch keinen Ordner «Sent»; anlegen ist idempotent genug (Fehler beim Anlegen ignorieren)
         try:
-            conn.create(acc.sent_folder)
+            conn.create(imap_folder(acc.sent_folder))
         except imaplib.IMAP4.error:
             pass
-        conn.append(acc.sent_folder, r"(\Seen)", imaplib.Time2Internaldate(__import__("time").time()), msg.as_bytes())
+        conn.append(imap_folder(acc.sent_folder), r"(\Seen)", imaplib.Time2Internaldate(__import__("time").time()), msg.as_bytes())
         conn.logout()
 
 
-def save_draft(acc: Account, msg: EmailMessage) -> None:
-    """Legt die Nachricht als Entwurf in den Entwurfsordner, ohne sie zu senden; Thunderbird zeigt sie dort."""
+def save_draft(acc: Account, msg: EmailMessage) -> str:
+    """Legt die Nachricht als Entwurf in den Entwurfsordner, ohne sie zu senden; Thunderbird zeigt sie dort.
+    Entwurfsordner: drafts_folder aus der TOML, sonst der Ordner mit \\Drafts (Gmail: «[Gmail]/Entwürfe»), sonst
+    «Drafts» (wird angelegt). Gibt den Ordnernamen lesbar zurück."""
     conn = imap_connect(acc)
-    try:
-        conn.create(imap_folder(acc.drafts_folder))
-    except imaplib.IMAP4.error:
-        pass
-    conn.append(imap_folder(acc.drafts_folder), r"(\Draft \Seen)",
+    folder = acc.drafts_folder
+    if not folder:
+        status, lines = conn.list()
+        folder = flagged_folder(lines if status == "OK" else [], rb"\Drafts")
+    if not folder:
+        folder = "Drafts"
+        try:
+            conn.create(imap_folder(folder))
+        except imaplib.IMAP4.error:
+            pass
+    conn.append(imap_folder(folder), r"(\Draft \Seen)",
                 imaplib.Time2Internaldate(__import__("time").time()), msg.as_bytes())
     conn.logout()
+    return folder_name(folder)
 
 
 def imap_date(day: date) -> str:
@@ -490,11 +574,7 @@ def sent_today(acc: Account, recipients: list[str]) -> list[email.message.Messag
     folder = acc.sent_folder
     if not folder:
         status, lines = conn.list()
-        for line in lines if status == "OK" else []:
-            m = re.match(rb'\((?P<flags>[^)]*)\)\s+"[^"]*"\s+(?P<name>"(?:[^"\\]|\\.)*"|\S+)', line)
-            if m and rb"\Sent" in m.group("flags"):
-                folder = m.group("name").decode("utf-7" if b"&" in m.group("name") else "ascii").strip('"')
-                break
+        folder = flagged_folder(lines if status == "OK" else [], rb"\Sent")
     if not folder:
         conn.logout()
         return []
@@ -551,8 +631,8 @@ def cmd_send(accounts: dict[str, Account], args) -> None:
         print(msg.as_string())
         return
     if args.draft:
-        save_draft(acc, msg)
-        print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {args.subject}")
+        folder = save_draft(acc, msg)
+        print(f"Entwurf gespeichert in {folder} ({acc.address}): {args.subject}")
         return
     guard_double(acc, msg, args.doppel_geprueft)
     smtp_send(acc, msg)
@@ -576,8 +656,8 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
         print(msg.as_string())
         return
     if args.draft:
-        save_draft(acc, msg)
-        print(f"Entwurf gespeichert in {acc.drafts_folder} ({acc.address}): {msg['Subject']}")
+        folder = save_draft(acc, msg)
+        print(f"Entwurf gespeichert in {folder} ({acc.address}): {msg['Subject']}")
         return
     guard_double(acc, msg, args.doppel_geprueft)
     smtp_send(acc, msg)
@@ -610,12 +690,7 @@ def resolve_folder(list_lines: list[bytes], name: str) -> str:
     flag = SONDERORDNER.get(kurz)
     if not flag:
         return name
-    for line in list_lines:
-        m = re.match(rb'\((?P<flags>[^)]*)\)\s+"[^"]*"\s+(?P<name>"(?:[^"\\]|\\.)*"|\S+)', line)
-        if m and flag in m.group("flags"):
-            folder = m.group("name").decode("utf-7" if b"&" in m.group("name") else "ascii", errors="replace")
-            return folder.strip('"').replace('\\"', '"')
-    return name
+    return flagged_folder(list_lines, flag) or name
 
 
 def cmd_move(accounts: dict[str, Account], args) -> None:
