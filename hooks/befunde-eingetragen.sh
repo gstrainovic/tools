@@ -11,6 +11,8 @@ ein=$(cat)
 [ "$(jq -r '.stop_hook_active // false' <<<"$ein" 2>/dev/null)" = "true" ] && freigeben
 transkript=$(jq -r '.transcript_path // empty' <<<"$ein" 2>/dev/null)
 [ -n "$transkript" ] && [ -r "$transkript" ] || freigeben
+# codex exec läuft als Recherche mit «nichts eintragen»; ein Block ersetzt dort die Antwort in der -o-Datei
+[ "$(head -1 "$transkript" | jq -r '.payload.originator? // empty' 2>/dev/null)" = "codex_exec" ] && freigeben
 
 # Je Zeile: U = echte Nutzernachricht, T = Änderung an einer todo.md, B:<text> = Text von Claude
 spur=$(jq -R -r '

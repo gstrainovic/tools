@@ -29,10 +29,9 @@ ganze Seiten im Modell:
    (ricardo, kleinanzeigen, moneyhouse); tutti und laendleanzeiger kann auch Exa nicht.
 3. **Codex mit Websuche** parallel im Hintergrund: läuft über Gorans ChatGPT-Abo, kostet keine Claude-Tokens und
    findet kleine Anbieter über Verzeichnisse (local.ch, search.ch), die ddgs und Exa nicht liefern. Im Auftrag
-   «Nur lesen, nichts in Dateien eintragen, keine TODO-Einträge, keine Commits» schreiben. Trotzdem blockiert
-   der Stop-Hook `befunde-eingetragen.sh` (auch in `~/.codex/hooks.json`) die erste Antwort, Codex schreibt
-   danach eine kurze Meta-Antwort, und nur diese landet in der `-o`-Datei. Die eigentliche Antwort steht im
-   stdout-Log im `codex`-Block vor der Zeile `hook: Stop Blocked`; dort lesen, bevor Codex als leer gilt.
+   «Nur lesen, nichts in Dateien eintragen, keine TODO-Einträge, keine Commits» schreiben. Der Stop-Hook
+   `befunde-eingetragen.sh` lässt `codex exec` durch, die Antwort steht also in der `-o`-Datei. Enthält sie
+   nur eine Meta-Antwort, steht die eigentliche im stdout-Log im `codex`-Block vor `hook: Stop Blocked`.
 
 Grund: Im Vergleichstest (`vergleich-2026-10.md` neben dieser Datei, dort auch geprüfte Such-APIs und
 GitHub-Werkzeuge) belegten Exa und ddgs mit Skript vier Preise für rund 8000 Tokens, ein Sonnet-Agent mit WebSearch
