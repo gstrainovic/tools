@@ -56,7 +56,9 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten. Chrome 155 antwortet
   auf `/json/version` mit 404 und `--cdp=chrome` scheitert: dann die WebSocket-Adresse aus
   `~/.config/google-chrome/DevToolsActivePort` nehmen, `attach --cdp="ws://127.0.0.1:9222$(sed -n 2p
-  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Läuft Gorans Chrome nicht (nur ein
+  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Hängt dieses Anhängen im Timeout («ws
+  connecting»), zeigt Chrome einen Dialog «Remote-Debugging zulassen»: Goran bestätigt ihn, dann neu anhängen.
+  Läuft Gorans Chrome nicht (nur ein
   Playwright-Chromium mit `--user-data-dir=/tmp/playwright…`), `google-chrome --restore-last-session &` starten
   und 25 s warten.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
