@@ -81,6 +81,10 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   im offenen Dialog, danach weiterarbeiten.
 - Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
   schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
+- **Vor jedem `goto`, `run-code` oder Skript zuerst `tab-list`:** Nach dem Anhängen ist der aktive Tab einer von
+  Gorans, und `page` in `run-code` zeigt auf ihn; ein `page.goto` überschreibt dann seine Arbeit. Darum erst einen
+  eigenen Tab öffnen (`tab-new`) und prüfen, dass er `(current)` ist; Skripte öffnen ihren Tab selbst
+  (`const tab = await page.context().newPage()`, am Ende `tab.close()`, Muster `find-jobs/linkedin/suche_cli.py`).
 - Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
   nicht alte Refs wiederverwenden.
 - In Popups (OAuth, Facebook-Einrichtung) nie Escape drücken: Es schliesst das ganze Fenster, alle Schritte samt
