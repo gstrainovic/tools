@@ -1,9 +1,11 @@
 # Offene Aufgaben
 
-- [ ] **Sitzungsübernahme der Videoaufnahmen auf `chrome_sitzung.py` umstellen:** `hubspot-bexio-connector/video/aufnahme/sitzung.py`
-      und `bexio-formular-connector/video-firmenanfragen/aufnahme/bexio_sitzung.py` sind Kopien desselben Codes; durch
-      `chrome-sitzung <ziel> bexio.com hubspot.com` ersetzen (Prüfung auf KEYCLOAK_IDENTITY bzw. hubspotapi in die
-      Aufnahme-Skripte), `test_sitzung.py` dort löschen, `drehbuch.md` anpassen.
+- [ ] **Entscheid Goran: Sitzungsübernahme der Videoaufnahmen** (`hubspot-bexio-connector/video/aufnahme/sitzung.py`,
+      `bexio-formular-connector/video-firmenanfragen/aufnahme/bexio_sitzung.py`, zwei Kopien desselben Codes): Der
+      frühere Plan, beide durch `chrome-sitzung` zu ersetzen, widerspricht der Regel «keine frischen oder kopierten
+      Profile» (Skill `browser-wahl`, Hook `hooks/browser-profil.sh` sperrt `chrome-sitzung`). Beide Skripte kopieren
+      selbst Gorans Sitzung und fallen unter dieselbe Regel. Offen, wie Aufnahmen künftig angemeldet laufen (etwa an
+      Gorans Chrome angehängt per CDP); erst nach dem Entscheid umbauen.
 
 - [ ] **Codex-Hooks freigeben:** Die geänderten Definitionen in `~/.codex/hooks.json` unter `/hooks`
       prüfen und freigeben: Agenten-/Browser-Matcher, Transkriptsicherung vor der Kontextkürzung,
