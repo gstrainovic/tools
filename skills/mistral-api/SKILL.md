@@ -1,6 +1,6 @@
 ---
 name: mistral-api
-description: Mistral-API (OCR, Vision, Embedding): Modellnamen, Grenzen für Dateien und Bilder, Tarife und Ratenlimits, bewährte Pipeline. Laden bei Arbeit mit Mistral in dms, rag-pgvector-beispiel, ai-proxy oder einem neuen Projekt.
+description: Mistral-API (OCR, Vision, Embedding): Modellnamen, Grenzen für Dateien und Bilder, Tarife und Ratenlimits, bewährte Pipeline. Laden bei Arbeit mit Mistral in dms, wartungsheft, rag-pgvector-beispiel, ai-proxy oder einem neuen Projekt.
 ---
 
 # Mistral-API
@@ -12,6 +12,10 @@ Grenzen und Preise vor Entscheidungen in der offiziellen Doku (docs.mistral.ai) 
 - OCR: `mistral-ocr-latest`, Dokument zu Markdown
 - Vision und Chat: `mistral-small-latest`, Text und Bilder
 - Embedding: `mistral-embed` (1024 Dimensionen)
+- Mistral Small 4: 0.15 USD je Mio. Tokens Eingabe, 0.60 USD Ausgabe (docs.mistral.ai/models/mistral-small-4-0-26-03)
+- Welches Modell an welchen Endpunkt gehört, sagt `GET /v1/models`: das Feld `capabilities` unterscheidet
+  `completion_chat`, `audio_transcription`, `audio_transcription_realtime` und `audio_speech`. Produktnamen aus der
+  Dokumentation sind keine Modell-IDs.
 
 ## OCR
 
@@ -19,7 +23,8 @@ Grenzen und Preise vor Entscheidungen in der offiziellen Doku (docs.mistral.ai) 
 - Bilder PNG, JPEG, AVIF; Dokumente PDF, PPTX, DOCX (URL, Base64 oder Upload)
 - Seitenauswahl 0-basiert (einzeln, Bereich, Liste); `table_format`: null, markdown oder html
 - Keine Zeichenformatierung (fett, kursiv), aber Fussnoten
-- Rund 1 USD je 1000 Seiten
+- OCR 4.1: 4 USD je 1000 Seiten, 5 USD mit Annotation (docs.mistral.ai/models/ocr-4-1)
+- Scale-Tarif: 2000 Seiten je Minute; über Azure/Foundry höchstens 30 MB und 30 Seiten
 
 ## Vision
 
