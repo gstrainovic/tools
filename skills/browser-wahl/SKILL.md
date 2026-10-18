@@ -127,6 +127,16 @@ anmelden und angehängt per CDP weiterarbeiten.
 
 ## Arbeiten mit playwright-cli
 
+- **Vor dem Ausfüllen eines Formulars zuerst den Cookie-Banner akzeptieren** (Screenshot nach dem Laden, Banner
+  wegklicken), dann ausfüllen. Grund: Akzeptiert Goran den Banner danach, lädt die Seite neu und alle Eingaben sind
+  weg (Bailaho, 18.10.2026).
+- Kästchen und Optionen, bei denen `check()` oder `click` in «waiting for element to be visible, enabled and
+  stable» hängt, per `locator.evaluate(e => { if (!e.checked) e.click() })` setzen und danach mit `isChecked()`
+  zurücklesen. Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
+  `boundingBox()`.
+- Schleifen über viele Seiten nie unbeaufsichtigt im Hintergrund starten: zuerst ein Durchgang im Vordergrund mit
+  Bildschirmfoto, dann jede weitere Seite einzeln prüfen.
+
 - Einfache Seiten: `snapshot`, dann `click e15`, `fill e7 "…"`, `select`, `dblclick`.
 - Seiten mit Frames und Knöpfen, deren Text Zeilenumbrüche hat (ältere ERP-Oberflächen): `run-code` mit einer
   Funktion, die den Frame über `page.frames()` und die URL sucht und Felder per ID anspricht; Ergebnis als JSON
