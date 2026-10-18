@@ -56,9 +56,16 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten. Chrome 155 antwortet
   auf `/json/version` mit 404 und `--cdp=chrome` scheitert: dann die WebSocket-Adresse aus
   `~/.config/google-chrome/DevToolsActivePort` nehmen, `attach --cdp="ws://127.0.0.1:9222$(sed -n 2p
-  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Hängt dieses Anhängen im Timeout («ws
-  connecting»), zeigt Chrome einen Dialog «Remote-Debugging zulassen»: Goran bestätigt ihn, dann neu anhängen.
-  Läuft Gorans Chrome nicht (nur ein
+  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`.
+- **Dialog «Remote-Debugging zulassen»:** Chrome fragt bei jeder neuen Verbindung, nicht einmal pro Chrome-Lauf.
+  Dauerhaft erlauben geht nicht (Chrome-Team, chrome-devtools-mcp Issue 825, «not planned»: sonst könnte jedes
+  Programm unbemerkt das Profil auslesen); empfohlen sind lange Verbindungen. Darum: vor jedem Anhängen
+  `playwright-cli -s=gchrome tab-list` probieren und eine laufende Session weiterverwenden, nie schliessen. Hängt
+  das Anhängen im Timeout («ws connecting»), wartet der Dialog: Goran einmal bitten, ihn zu bestätigen, und erst
+  nach seinem «freigegeben» genau einmal neu anhängen. Nicht mehrfach versuchen (jeder Versuch öffnet einen neuen
+  Dialog, ein bestätigter alter nützt dann nichts) und Chrome dafür nie neu starten (der Neustart verlangt die
+  Freigabe erneut).
+- Läuft Gorans Chrome nicht (nur ein
   Playwright-Chromium mit `--user-data-dir=/tmp/playwright…`), `google-chrome --restore-last-session &` starten
   und 25 s warten.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
@@ -77,8 +84,9 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
 ## Claude in Chrome (Rückfall)
 
 - **Extension «not connected»:** Chrome selbst starten bzw. den Tab öffnen (`google-chrome "<URL>" &`, auch
-  bei laufendem Chrome) und erneut verbinden; hilft das nicht, Chrome per `kill -TERM` beenden, warten, bis
-  kein Prozess mehr läuft, `google-chrome --restore-last-session &`, 25 s warten. Erst danach Goran fragen.
+  bei laufendem Chrome) und erneut verbinden; hilft das nicht, Goran fragen. Chrome nicht neu starten, solange
+  eine angehängte playwright-cli-Session läuft oder ein Freigabe-Dialog wartet: Der Neustart kappt sie, und
+  Goran muss erneut freigeben.
 - **Erst wiederholen, dann melden:** Fehler aus Batch-Aufrufen («Navigation to this domain is not allowed»,
   Timeouts) einzeln mit `navigate` in einem frischen Tab wiederholen. Nur berichten, was im Tool-Ergebnis
   steht; ungeprüfte Ursachen weglassen oder als Vermutung kennzeichnen. Liefert ein Tab kaputte (weisse)
