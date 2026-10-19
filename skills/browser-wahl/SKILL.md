@@ -1,6 +1,6 @@
 ---
 name: browser-wahl
-description: Welches Werkzeug für Browserarbeit (API, playwright-cli, Skript oder Claude in Chrome), Formularfelder lesen, Chrome-Extension und Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird und wenn ein Login oder die Chrome-Extension hakt. Recherche ohne Browser steht im Skill recherche.
+description: Welches Werkzeug für Browserarbeit (API, playwright-cli an Gorans Chrome oder Skript; Claude in Chrome verboten), Formularfelder lesen, Login per Autofill, Sessions, Kennwörter, erkundete Abläufe als Skill festhalten. Laden, bevor im Browser etwas erkundet, eingerichtet oder geprüft wird und wenn ein Login oder das Anhängen an Chrome hakt. Recherche ohne Browser steht im Skill recherche.
 ---
 
 # Browser-Werkzeug wählen
@@ -19,8 +19,8 @@ Reihenfolge, das erste passende nehmen:
    `~/projects/tools/hooks/browser-profil.sh` sperrt diese Befehle.
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
-4. **Claude in Chrome** nur als Rückfall, wenn das Anhängen per CDP nicht geht. Den Grund in den Skill des Portals
-   schreiben, damit der Rückfall dort gilt und nicht überall.
+**Claude in Chrome ist verboten** (Gorans Regel), auch als Rückfall: keine `mcp__claude-in-chrome__*`-Werkzeuge.
+Geht das Anhängen per CDP nicht, Goran den Fehler in einem Satz melden und warten.
 
 **Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
 Objekt, anderer Ablauf) zuerst lokal (`rg` in `~/projects`), dann die API-Doku des Systems und fehlende Rechte des
@@ -35,7 +35,7 @@ Das Playwright-MCP-Plugin ist abgeschaltet (`~/.claude/settings.json`), playwrig
 Nachschlagen, Websuche, Jina, Exa, Codex-Websuche und Recherche-Agenten: Skill `recherche`. Hier gilt nur:
 Formularfelder (Pflichtfelder, Optionen, Zeichengrenzen, Captcha) liest playwright-cli im Browser, nicht Jina oder
 curl: Viele Formulare entstehen erst per JavaScript, und ohne Browser bleibt «nicht geprüft» stehen. Agenten, die
-Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chrome.
+Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 
 ## Mehrere Seiten nacheinander
 
@@ -77,7 +77,7 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   `run-code` mit `await page.bringToFront()`, Formulare dann per `el.form.requestSubmit(el)` absenden; Dateifelder
   per `page.setInputFiles('<selector>', '<pfad>')` statt Dateidialog.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
-  App-Geheimcodes) kann weder playwright-cli noch die Extension ausfüllen: in einem Satz melden, Goran tippt es
+  App-Geheimcodes) kann playwright-cli nicht ausfüllen: in einem Satz melden, Goran tippt es
   im offenen Dialog, danach weiterarbeiten.
 - Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
   schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
@@ -92,29 +92,6 @@ Formulare vorbereiten, darum nie Browser-Werkzeuge verbieten, nur Claude in Chro
   eine Option schliessen.
 - Eigene Auswahllisten (Facebook, Meta) reagieren nicht auf `click <ref>`: per `run-code` die `boundingBox()` der
   Option holen und `page.mouse.click()` auf die Mitte setzen.
-
-## Claude in Chrome (Rückfall)
-
-- **Extension «not connected»:** Chrome selbst starten bzw. den Tab öffnen (`google-chrome "<URL>" &`, auch
-  bei laufendem Chrome) und erneut verbinden; hilft das nicht, Goran fragen. Chrome nicht neu starten, solange
-  eine angehängte playwright-cli-Session läuft oder ein Freigabe-Dialog wartet: Der Neustart kappt sie, und
-  Goran muss erneut freigeben.
-- **Erst wiederholen, dann melden:** Fehler aus Batch-Aufrufen («Navigation to this domain is not allowed»,
-  Timeouts) einzeln mit `navigate` in einem frischen Tab wiederholen. Nur berichten, was im Tool-Ergebnis
-  steht; ungeprüfte Ursachen weglassen oder als Vermutung kennzeichnen. Liefert ein Tab kaputte (weisse)
-  Screenshots, einen neuen Tab nehmen.
-- **Selbst einloggen:** Jede Login-Seite, auch mitten in einem OAuth-Ablauf, meldet Claude selbst an: E-Mail-
-  oder Benutzerfeld anklicken, den Autofill-Vorschlag von Chromes Passwortmanager wählen, «Anmelden» klicken.
-  Nie «Mit Google fortfahren» (Popup bzw. FedCM ist für die Extension unsichtbar), nie ein Passwort tippen
-  oder auslesen. Autofill füllt nur im sichtbaren Vordergrund-Tab. Nur bei fehlendem Autofill, 2FA oder Captcha
-  Goran melden; nie «das macht Goran» in eine Doku schreiben.
-- **Bestehenden Tab nehmen:** Nach einem Login durch Goran oder dem Neuverbinden der Extension zuerst alle
-  Fenster und Tabs nach der eingeloggten Seite absuchen und dort weiterarbeiten statt einen neuen Tab zu öffnen.
-- **Lesen verweigert:** Lehnt die Extension das Lesen einer Seite ab, trotzdem Screenshot und Klick versuchen,
-  bevor gemeldet wird.
-- **Datei-Uploads:** `file_upload` auf das `input[type=file]`, je Datei ein Aufruf. Viele Formulare (etwa Codester)
-  laden sofort beim Auswählen hoch, ohne weiteren Knopf. Scheitert ein Upload (Status-Platzhalter, 5xx), erst mit
-  einer Datei in einem frisch geladenen Formular wiederholen, bevor eine Störung beim Anbieter gemeldet wird.
 
 ## Kennwörter
 

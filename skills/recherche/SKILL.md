@@ -52,8 +52,8 @@ Einzelne Seiten, die curl blockt oder die per JavaScript entstehen, über Jina R
 Gorans eingeloggter Sitzung vorbehalten ist. Jina läuft ohne Schlüssel und kostenlos, 20 Abrufe pro Minute je IP;
 kein Guthaben kaufen. Die Jina-Suche (`s.jina.ai`) braucht einen Schlüssel und entfällt. Bot-Schutz (Cloudflare,
 eBay, DATEV-Community) umgeht Jina nicht, und playwright-cli bleibt in der Cloudflare-Prüfung («Nur einen
-Moment…») hängen: Zeigt Jina diese Seite, gleich Claude in Chrome nehmen (Gorans Profil besteht die Prüfung, etwa
-bei codecanyon.net und codester.com), nur zum Lesen.
+Moment…») hängen: Zeigt Jina diese Seite, playwright-cli angehängt an Gorans Chrome nehmen (Gorans Profil besteht
+die Prüfung, etwa bei codecanyon.net und codester.com; Skill `browser-wahl`), nur zum Lesen.
 
 Ein Recherche-Agent (Sonnet mit WebSearch und Jina) nur, wo Seiten wirklich gelesen und beurteilt werden müssen
 (Vorschriften, Doku, Bewertungen); er bekommt die Funde aus «Zuerst per Skript» mit. Recherche-Agenten laufen als
