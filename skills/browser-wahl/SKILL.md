@@ -20,7 +20,7 @@ Reihenfolge, das erste passende nehmen:
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
 **Claude in Chrome ist verboten** (Gorans Regel), auch als Rückfall: keine `mcp__claude-in-chrome__*`-Werkzeuge.
-Geht das Anhängen per CDP nicht, Goran den Fehler in einem Satz melden und warten.
+Scheitert `chrome-anhaengen`, Goran den Fehler in einem Satz melden und warten.
 
 **Je Teilaufgabe neu wählen, nicht je Sitzung:** Wer schon im Browser ist, liest vor jeder neuen Teilaufgabe (anderes
 Objekt, anderer Ablauf) zuerst lokal (`rg` in `~/projects`), dann die API-Doku des Systems und fehlende Rechte des
@@ -51,20 +51,17 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 
 ## Gorans Chrome anhängen
 
-- `playwright-cli attach --cdp=chrome --session=gchrome` hängt sich an den laufenden Chrome mit Gorans Profil;
-  danach `playwright-cli -s=gchrome …`. Voraussetzung: in `chrome://inspect/#remote-debugging` ist «Allow remote
-  debugging for this browser instance» angehakt; scheitert das Anhängen, Goran darum bitten. Chrome 155 antwortet
-  auf `/json/version` mit 404 und `--cdp=chrome` scheitert: dann die WebSocket-Adresse aus
-  `~/.config/google-chrome/DevToolsActivePort` nehmen, `attach --cdp="ws://127.0.0.1:9222$(sed -n 2p
-  ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`.
-- **Dialog «Remote-Debugging zulassen»:** Chrome fragt bei jeder neuen Verbindung, nicht einmal pro Chrome-Lauf.
-  Dauerhaft erlauben geht nicht (Chrome-Team, chrome-devtools-mcp Issue 825, «not planned»: sonst könnte jedes
-  Programm unbemerkt das Profil auslesen); empfohlen sind lange Verbindungen. Darum: vor jedem Anhängen
-  `playwright-cli -s=gchrome tab-list` probieren und eine laufende Session weiterverwenden, nie schliessen. Hängt
-  das Anhängen im Timeout («ws connecting»), wartet der Dialog: Goran einmal bitten, ihn zu bestätigen, und erst
-  nach seinem «freigegeben» genau einmal neu anhängen. Nicht mehrfach versuchen (jeder Versuch öffnet einen neuen
-  Dialog, ein bestätigter alter nützt dann nichts) und Chrome dafür nie neu starten (der Neustart verlangt die
-  Freigabe erneut).
+- **`chrome-anhaengen`** (`~/projects/tools/chrome_anhaengen.py`) hängt die Session `gchrome` über die Playwright
+  Extension an Gorans laufenden Chrome, ohne Dialog und ohne Maus; eine laufende Session bleibt. Danach
+  `playwright-cli -s=gchrome …`. Die Session sieht nur die Tabs ihrer eigenen Tabgruppe, Gorans übrige Tabs nicht.
+- **Einrichtung:** Erweiterung «Playwright Extension» (Microsoft, ID `mmlmfjhmonkocbjadbfplnigmagldckm`) per
+  Chrome-Richtlinie `ExtensionInstallForcelist` in `/etc/opt/chrome/policies/managed/playwright-extension.json`
+  (Vorlage `~/projects/tools/chrome-policy/`, dann `chrome://policy` → «Richtlinien neu laden»). Token von
+  `chrome-extension://mmlmfjhmonkocbjadbfplnigmagldckm/status.html` («PLAYWRIGHT_MCP_EXTENSION_TOKEN») in
+  `~/.config/playwright-extension/token` (600, Tresor). Mit Token verbindet die Erweiterung ohne Rückfrage.
+- **Nicht `attach --cdp`:** Chrome zeigt bei jeder CDP-Verbindung den Dialog «Remote-Fehlerbehebung zulassen?»
+  (lässt sich nicht abschalten, chrome-devtools-mcp Issue 825), und eingefrorene Tabs (Speichersparmodus) lassen
+  `attach --cdp` nach «ws connected» endlos hängen.
 - Läuft Gorans Chrome nicht (nur ein
   Playwright-Chromium mit `--user-data-dir=/tmp/playwright…`), `google-chrome --restore-last-session &` starten
   und 25 s warten.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse-Hook für Bash: sperrt frische Browser-Profile (Gorans Regel, Skill browser-wahl). Browserarbeit läuft
-# nur in Gorans laufendem Chrome über CDP (`playwright-cli attach --cdp=chrome --session=gchrome`). Gesperrt sind
+# nur in Gorans laufendem Chrome (`chrome-anhaengen`, Session gchrome über die Playwright Extension). Gesperrt sind
 # `playwright-cli … open` (startet ein leeres Profil), `state-load` und `chrome-sitzung` (Cookie-Kopie in ein
 # fremdes Profil). Grund: Ohne Gorans Cookies erscheinen Captchas und Logins fehlen.
 cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -18,5 +18,5 @@ elif grep -qE '(^|[;&|[:space:]])chrome-sitzung([[:space:]]|$)' <<<"$cmd"; then
 fi
 [ -n "$grund" ] || exit 0
 
-text="Verboten (Gorans Regel, Skill browser-wahl): kein frisches oder kopiertes Browser-Profil. Erkannt: $grund. Stattdessen an Gorans laufenden Chrome anhängen: playwright-cli attach --cdp=chrome --session=gchrome, dann eigene Tabs mit -s=gchrome tab-new."
+text="Verboten (Gorans Regel, Skill browser-wahl): kein frisches oder kopiertes Browser-Profil. Erkannt: $grund. Stattdessen an Gorans laufenden Chrome anhängen: chrome-anhaengen, dann eigene Tabs mit -s=gchrome tab-new."
 jq -n --arg t "$text" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $t}}'

@@ -35,6 +35,9 @@ auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` 
 | `fr-po/` | Glossar des französischen Teams als CSV mit Quelle und Abrufdatum (`fr-po-pruefen --glossar-aktualisieren`) |
 | `chrome_sitzung.py` | Cookies gewählter Domains aus Gorans Chrome entschlüsseln und als Speicherstand für `playwright-cli state-load` schreiben, als `~/.local/bin/chrome-sitzung` verknüpft; gesperrt durch `hooks/browser-profil.sh` (Gorans Regel: nur Gorans Chrome per CDP, Skill browser-wahl) |
 | `test_chrome_sitzung.py` | Tests gegen eine Cookie-Datenbank im tmp-Ordner (`uv run --with cryptography python -m unittest test_chrome_sitzung.py`) |
+| `chrome_anhaengen.py` | playwright-cli-Session `gchrome` über die Playwright Extension an Gorans Chrome hängen, ohne Dialog, als `~/.local/bin/chrome-anhaengen` verknüpft; Einrichtung im Skill browser-wahl |
+| `test_chrome_anhaengen.py` | Tests mit falschem playwright-cli im PATH (`python3 -m unittest test_chrome_anhaengen.py`) |
+| `chrome-policy/` | Chrome-Richtlinie, die die Playwright Extension ohne Klick installiert (nach `/etc/opt/chrome/policies/managed/`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `link.sh` | Verknüpfungen für Scripts und Skills |

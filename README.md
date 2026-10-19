@@ -28,7 +28,7 @@ noch eigenständige Terminal-Scripts.
 | `hooks/agent-auftrag.sh` | Claude-/Codex-Hook vor Agentenaufträgen: lehnt Video/Film ohne die Regeln aus produktvideos ab («nie eingebrannt») |
 | `hooks/erst-lokal.sh` | Claude-/Codex-Hook vor unterstützten Recherche-Werkzeugen und Agentenaufträgen: verlangt seit der letzten Nutzernachricht lokale Suche; Aufträge mit «zuerst lokal» laufen durch |
 | `hooks/bash-bearbeiten.sh` | Claude-/Codex-Hook vor Bash: Hinweis «Edit/Write statt sed, Heredoc oder Umleitung», wenn ein Befehl eine Datei schreibt |
-| `hooks/browser-profil.sh` | Claude-Hook vor Bash: sperrt frische oder kopierte Browser-Profile (`playwright-cli … open`, `state-load`, `chrome-sitzung`); erlaubt ist nur `attach --cdp` an Gorans Chrome. Tests `bash hooks/test_browser_profil.sh` |
+| `hooks/browser-profil.sh` | Claude-Hook vor Bash: sperrt frische oder kopierte Browser-Profile (`playwright-cli … open`, `state-load`, `chrome-sitzung`); erlaubt ist nur das Anhängen an Gorans Chrome (`chrome-anhaengen`). Tests `bash hooks/test_browser_profil.sh` |
 | `hooks/skill-hinweis.sh` | Claude-/Codex-Hook vor Shellbefehlen, Dateiänderungen, Browserarbeit und bei jedem Prompt: erinnert an passende, noch nicht gelesene Skills |
 | `hooks/befunde-eingetragen.sh` | Stop-Hook für beide Programme: verlangt bei Befunden eine TODO-Änderung seit der letzten Nutzernachricht, liefert auch bei Freigabe JSON |
 | `hooks/transkript-sichern.sh` | PreCompact-Hook für beide Programme: sichert `transcript_path` aus der JSON-Eingabe unter einem eindeutigen Namen |
