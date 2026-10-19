@@ -107,7 +107,11 @@ anmelden und angehängt per CDP weiterarbeiten.
 - Kästchen und Optionen, bei denen `check()` oder `click` in «waiting for element to be visible, enabled and
   stable» hängt, per `locator.evaluate(e => { if (!e.checked) e.click() })` setzen und danach mit `isChecked()`
   zurücklesen. Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
-  `boundingBox()`.
+  `boundingBox()`. Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404; stattdessen
+  `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `bringToFront()`, das Suchfeld
+  «Jede URL unter … prüfen» per `fill(url, {force: true})` und `press('Enter')`, dann «Indexierung beantragen» per
+  `page.mouse.click()` und bis rund 2 Minuten auf «Indexierung wurde beantragt» warten (meldet die Seite einen Fehler,
+  einmal wiederholen).
 - Schleifen über viele Seiten nie unbeaufsichtigt im Hintergrund starten: zuerst ein Durchgang im Vordergrund mit
   Bildschirmfoto, dann jede weitere Seite einzeln prüfen.
 
