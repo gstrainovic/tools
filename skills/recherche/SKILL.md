@@ -17,7 +17,9 @@ ganze Seiten im Modell:
    **Exa** (`type: auto`, rund 0,007 USD je Anfrage; 10 USD Gratisguthaben pro Monat plus aufgeladenes Guthaben,
    Gorans Entscheid: lieber Exa-Dollar als Claude-Tokens, also bei Bedarf `deep` nehmen und nicht sparen), holt die
    Trefferseiten per curl und gibt je Seite nur Titel, PLZ mit Ort, Preise und Stichwortstellen (50 Zeichen Umfeld)
-   als Tabelle aus: `recherche.py -q "…" -q "…" --muster "regex" -m 8` (`--json` für Rohdaten, `--ohne-exa`).
+   als Tabelle aus: `~/projects/tools/recherche.py -q "…" -q "…" --muster "regex" -m 8` (`--json` für Rohdaten,
+   `--ohne-exa`). Direkt aufrufen, nie `python3 recherche.py`: nur so lädt `uv` die Pakete (sonst bricht ddgs mit
+   «No module named 'lxml'» ab).
    Ausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen.
 2. **Exa-Stufe `deep`** (12 USD je 1000 Anfragen, `deep-reasoning` 15, `instant` 4, `fast`/`auto` 7; Doku
    https://docs.exa.ai/reference/search) für Fragen, die `auto`, ddgs und Codex nicht beantworten: Sie liest den
