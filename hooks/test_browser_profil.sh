@@ -19,6 +19,8 @@ fall "open mit --session sperrt" sperre "playwright-cli --session=gsc open about
 fall "state-load sperrt" sperre "playwright-cli -s=x state-load /tmp/stand.json"
 fall "chrome-sitzung sperrt" sperre "chrome-sitzung /tmp/stand.json linkedin.com"
 fall "attach an Gorans Chrome ist frei" frei "playwright-cli attach --cdp=chrome --session=gchrome"
+fall "attach über die Erweiterung ist frei" frei "playwright-cli attach --extension=chrome --session=gchrome"
+fall "chrome-anhaengen ist frei" frei "chrome-anhaengen"
 fall "Befehle in angehängter Sitzung sind frei" frei "playwright-cli -s=gchrome goto https://partner.zendesk.com"
 fall "tab-new in angehängter Sitzung ist frei" frei "playwright-cli -s=gchrome tab-new https://a.ch"
 fall "close ist frei" frei "playwright-cli -s=partner close"
