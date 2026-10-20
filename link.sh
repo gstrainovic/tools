@@ -41,14 +41,25 @@ for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do
     link "${dir%/}" "$SKILL_DIR/$name"
 done
 
-# Globale Claude-Richtlinien aus dem privaten Repo; eine vorhandene echte Datei wird vorher gesichert
-GLOBAL_CLAUDE="$HOME/projects/skills-privat/claude/CLAUDE.md"
-if [[ -f "$GLOBAL_CLAUDE" ]]; then
-    if [[ -f "$HOME/.claude/CLAUDE.md" && ! -L "$HOME/.claude/CLAUDE.md" ]]; then
-        mv "$HOME/.claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md.vor-link-$(date +%Y%m%d%H%M%S)"
+# Globale Dateien aus dem privaten Repo (Quelle in skills-privat/claude/ → Ziel unter HOME);
+# eine vorhandene echte Datei wird vorher als <ziel>.vor-link-<Zeit> gesichert
+GLOBAL_DIR="$HOME/projects/skills-privat/claude"
+declare -A GLOBAL_FILES=(
+    [CLAUDE.md]=".claude/CLAUDE.md"
+    [settings.json]=".claude/settings.json"
+    [caveman-statusline.sh]=".claude/caveman-statusline.sh"
+    [projects-AGENTS.md]="projects/AGENTS.md"
+    [skill-lock.json]=".agents/.skill-lock.json"
+)
+for src in "${!GLOBAL_FILES[@]}"; do
+    [[ -f "$GLOBAL_DIR/$src" ]] || continue
+    dst="$HOME/${GLOBAL_FILES[$src]}"
+    mkdir -p "$(dirname "$dst")"
+    if [[ -f "$dst" && ! -L "$dst" ]]; then
+        mv "$dst" "$dst.vor-link-$(date +%Y%m%d%H%M%S)"
     fi
-    link "$GLOBAL_CLAUDE" "$HOME/.claude/CLAUDE.md"
-fi
+    link "$GLOBAL_DIR/$src" "$dst"
+done
 
 # Kopie aus früheren setup.sh-Läufen, Inhalt steht jetzt im Skill screenshots
 if [[ -d "$SKILL_DIR/tui-screenshot" && ! -L "$SKILL_DIR/tui-screenshot" ]]; then

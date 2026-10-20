@@ -13,8 +13,10 @@ Installiert: System-Pakete (tmux, wkhtmltopdf, timg, ydotool, ImageMagick), tmux
 mcp-tui-driver, die Konten-Vorlage für mailbox und die MCP-Config. `link.sh` (läuft in `setup.sh`,
 auch allein ausführbar, idempotent) verknüpft die Scripts nach `~/.local/bin` und jeden Ordner unter
 `skills/` nach `~/.claude/skills/<name>`, dazu die Skills aus dem privaten Repo
-`~/projects/skills-privat` (setup.sh klont es) und von dort die globale `~/.claude/CLAUDE.md`
-(`skills-privat/claude/CLAUDE.md`; eine vorhandene echte Datei wird als `CLAUDE.md.vor-link-<Zeit>` gesichert).
+`~/projects/skills-privat` (setup.sh klont es) und von dort aus `skills-privat/claude/` die globalen Dateien
+`~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.claude/caveman-statusline.sh`, `~/projects/AGENTS.md`
+(Quelle `projects-AGENTS.md`) und `~/.agents/.skill-lock.json` (Quelle `skill-lock.json`, Liste der fremden Skills
+für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>` gesichert.
 
 **Voraussetzungen:** `uv`, `cargo`, `python3`.
 
