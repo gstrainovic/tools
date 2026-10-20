@@ -155,6 +155,33 @@ else
 fi
 rm -rf "$TMP_HOME"
 
+# Test 10b: link.sh verknüpft die übrigen globalen Dateien aus skills-privat/claude und sichert vorhandene echte Dateien
+TMP_HOME="$(mktemp -d)"
+mkdir -p "$TMP_HOME/projects/skills-privat/claude" "$TMP_HOME/.claude"
+declare -A GLOBALE=(
+    [settings.json]=".claude/settings.json"
+    [caveman-statusline.sh]=".claude/caveman-statusline.sh"
+    [projects-AGENTS.md]="projects/AGENTS.md"
+    [skill-lock.json]=".agents/.skill-lock.json"
+)
+for quelle in "${!GLOBALE[@]}"; do echo "neu" > "$TMP_HOME/projects/skills-privat/claude/$quelle"; done
+echo "alt" > "$TMP_HOME/.claude/settings.json"
+ok=1
+if HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1 && HOME="$TMP_HOME" bash "$ROOT/link.sh" >/dev/null 2>&1; then
+    for quelle in "${!GLOBALE[@]}"; do
+        [[ "$(readlink -e "$TMP_HOME/${GLOBALE[$quelle]}")" == "$TMP_HOME/projects/skills-privat/claude/$quelle" ]] || ok=0
+    done
+    grep -q 'alt' "$TMP_HOME"/.claude/settings.json.vor-link-* 2>/dev/null || ok=0
+else
+    ok=0
+fi
+if [[ $ok -eq 1 ]]; then
+    pass "link.sh: settings.json, Statuszeile, projects/AGENTS.md und Skill-Lock aus skills-privat verknüpft"
+else
+    fail "link.sh: globale Dateien aus skills-privat fehlen oder alte Datei nicht gesichert"
+fi
+rm -rf "$TMP_HOME"
+
 # Test 11: öffentliches Repo ohne Kunden- oder Arbeitgebernamen (Sperrliste aus dem privaten find-jobs, falls da)
 SPERRLISTE="$HOME/projects/find-jobs/akquise/website-sperrbegriffe.txt"
 if [[ -f "$SPERRLISTE" ]]; then

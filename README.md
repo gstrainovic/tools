@@ -23,7 +23,7 @@ noch eigenständige Terminal-Scripts.
 | `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
 | `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
-| `link.sh` | Scripts nach `~/.local/bin` und Skills nach `~/.claude/skills` verknüpfen (Teil von `setup.sh`) |
+| `link.sh` | Scripts nach `~/.local/bin`, Skills nach `~/.claude/skills` und die globalen Dateien aus `skills-privat/claude/` verknüpfen (Teil von `setup.sh`) |
 | `hooks/modellwahl.sh` | Claude-/Codex-Hook vor Agent, Workflow und spawn_agent: Modellhinweis passend zum Programm |
 | `hooks/agent-auftrag.sh` | Claude-/Codex-Hook vor Agentenaufträgen: lehnt Video/Film ohne die Regeln aus produktvideos ab («nie eingebrannt») |
 | `hooks/erst-lokal.sh` | Claude-/Codex-Hook vor unterstützten Recherche-Werkzeugen und Agentenaufträgen: verlangt seit der letzten Nutzernachricht lokale Suche; Aufträge mit «zuerst lokal» laufen durch |
