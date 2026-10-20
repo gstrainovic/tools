@@ -11,6 +11,3 @@
       `/config`) die Verknüpfung behält oder durch eine echte Datei ersetzt. Prüfen mit `ls -la ~/.claude/settings.json`
       nach so einer Änderung; ist sie ersetzt, die neue Datei nach `skills-privat/claude/settings.json` übernehmen,
       bevor `link.sh` wieder läuft (es würde sie sonst nur als `.vor-link-<Zeit>` beiseitelegen).
-- [ ] **Entscheid Goran: MCP-Server context7 ungepinnt** (`skills-privat/claude/settings.json`): läuft per
-      `npx -y @upstash/context7-mcp` ohne Version, jede neue Paketversion startet ungeprüft mit dem
-      `CONTEXT7_API_KEY`. Version pinnen oder den Server entfernen, falls er nicht mehr gebraucht wird.
