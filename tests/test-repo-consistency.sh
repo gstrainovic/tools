@@ -186,7 +186,7 @@ rm -rf "$TMP_HOME"
 SPERRLISTE="$HOME/projects/find-jobs/akquise/website-sperrbegriffe.txt"
 if [[ -f "$SPERRLISTE" ]]; then
     muster="$(grep -v '^[[:space:]]*#' "$SPERRLISTE" | sed '/^[[:space:]]*$/d' | paste -sd'|')"
-    treffer="$(git -C "$ROOT" ls-files -z | xargs -0 grep -l -i -E "$muster" -- 2>/dev/null | grep -v '^tests/' || true)"
+    treffer="$(cd "$ROOT" && git ls-files -z | xargs -0 grep -l -i -E "$muster" -- 2>/dev/null | grep -v '^tests/' || true)"
     if [[ -z "$treffer" ]]; then
         pass "öffentliches Repo: keine Begriffe aus der Sperrliste"
     else
