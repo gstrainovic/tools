@@ -61,7 +61,9 @@ reicht:
    Forenbeiträge, Ratgeber und Blogartikel, Produkt- und Landingpages, Marktplatz-, Verzeichnis- und Profiltexte,
    readme-Beschreibungen von Plugins, Sprechertexte von Videos, auch deren Übersetzungen in andere Sprachen. Fable (`model: fable`) schreibt sie immer, auch wenn
    das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
-   Regeln aus AGENTS.md und dem Fach-Skill und gibt nur den Text zurück. Formularfelder, Bedingungen, Belege aus
+   Regeln aus AGENTS.md und dem Fach-Skill im Wortlaut und gibt nur den Text zurück. Der Auftrag nennt Ziel, Fakten
+   und Regeln, nie einen eigenen Aufbau, vorformulierte Fragen oder einen eigenen Entwurf: Fable übernimmt sonst die
+   schwächere Vorgabe (wynwood, 21.10.2026). Formularfelder, Bedingungen, Belege aus
    dem Repo und von der Anbieterseite sammelt vorher Sonnet oder ein Skript in einer kurzen Vorlage je Empfänger;
    Fable liest nur diese Vorlage und schreibt. Grund: Fable-Agenten, die selbst Formulare und Repo durchsuchten,
    brauchten je fünf Partnerbewerbungen rund 180'000 Tokens. Ausfüllen, Hochladen, Einbauen und Senden
