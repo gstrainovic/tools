@@ -1,13 +1,9 @@
-# Offene Aufgaben
+# Offene Punkte
 
-- [ ] **Entscheid Goran: Sitzungsübernahme der Videoaufnahmen** (`hubspot-bexio-connector/video/aufnahme/sitzung.py`,
-      `bexio-formular-connector/video-firmenanfragen/aufnahme/bexio_sitzung.py`, zwei Kopien desselben Codes): Der
-      frühere Plan, beide durch `chrome-sitzung` zu ersetzen, widerspricht der Regel «keine frischen oder kopierten
-      Profile» (Skill `browser-wahl`, Hook `hooks/browser-profil.sh` sperrt `chrome-sitzung`). Beide Skripte kopieren
-      selbst Gorans Sitzung und fallen unter dieselbe Regel. Offen, wie Aufnahmen künftig angemeldet laufen (etwa an
-      Gorans Chrome angehängt per CDP); erst nach dem Entscheid umbauen.
-- [ ] **Prüfen: bleibt `~/.claude/settings.json` eine Verknüpfung?** `link.sh` verknüpft sie nach
-      `skills-privat/claude/settings.json`. Ungeprüft ist, ob Claude Code beim eigenen Schreiben (etwa `/permissions`,
-      `/config`) die Verknüpfung behält oder durch eine echte Datei ersetzt. Prüfen mit `ls -la ~/.claude/settings.json`
-      nach so einer Änderung; ist sie ersetzt, die neue Datei nach `skills-privat/claude/settings.json` übernehmen,
-      bevor `link.sh` wieder läuft (es würde sie sonst nur als `.vor-link-<Zeit>` beiseitelegen).
+- [ ] **Offengelegte Geheimnisse ersetzen.** Beim Holen der `clouds.yaml` auf dem Windows-PC hat ein fehlerhafter
+  PowerShell-Filter alle Tresorwerte in eine Datei geschrieben, und die ersten 40 Zeilen davon standen im Klartext
+  im Claude-Verlauf. Die Datei ist gelöscht. Neu ausstellen und im Tresor ersetzen (`geheimnisse hochladen`):
+  SVN-Passwort wordpress.org (`gstrainovic`), Infomaniak-AI-Token (Produkt 111648), Mistral-API-Schlüssel
+  (wartungsheft), WordPress-Admin-Passwort der lokalen Testseite. Vom SSH-Schlüssel standen nur Kopf und
+  öffentlicher Teil im Verlauf; ersetzen trotzdem empfohlen. Supabase-Demo-Schlüssel und die Instant-Testwerte
+  sind keine echten Geheimnisse.

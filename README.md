@@ -214,6 +214,12 @@ Neues Gerät:
    (Gerätekonto → «Zugriffstoken erstellen»); Widerrufen verlangt das Master-Passwort.
 4. `geheimnisse holen`
 
+Auf einem Gerät, das nicht alle Zugangsdaten tragen soll (Firmen-PC), statt `holen` nur einzelne Geheimnisse
+ablegen. In Windows PowerShell 5.1 liefert `bws secret list | ConvertFrom-Json` das ganze Array als ein Objekt
+in die Pipeline; ein `Where-Object` darauf trifft dann alle Einträge, und `.value` verbindet alle Werte. Darum
+mit `foreach` über das Ergebnis von `ConvertFrom-Json` filtern, auf genau einen Treffer prüfen und zur Kontrolle
+nur Länge und erste Zeile ansehen, nie den Inhalt.
+
 ### fr-po-pruefen
 
 ```bash
