@@ -121,6 +121,11 @@ anmelden und angehängt per CDP weiterarbeiten.
   zurückgeben und erst danach weiterklicken.
 - Nachschlagefelder nach dem Tippen mit Tab verlassen, sonst übernimmt die Maske den Wert nicht.
 - Gespeichert ist erst, was nach einem Wechsel auf einen anderen Datensatz und zurück wieder dasteht.
+- **Seitenzustand als Text, nicht als Bild:** nach jedem Schritt per `run-code` `page.url()` und
+  `(await page.locator('body').innerText()).slice(0, 800)` zurückgeben, Knöpfe und Felder per
+  `getByRole`/`getByPlaceholder` ansprechen. Ein Screenshot nur, wenn der Text nicht reicht (Layout, Bildinhalt,
+  Fehler ohne Text), und dann zugeschnitten. Grund: Jedes gelesene Bild kostet ein Vielfaches an Tokens, und
+  genau das soll playwright-cli gegenüber Claude in Chrome sparen.
 - Screenshots für die eigene Kontrolle in den Scratchpad oder `/tmp/<system>-ui/`.
 - Protokolle landen in `.playwright-cli/` im Arbeitsverzeichnis und enthalten Seiteninhalte: Ordner in
   `.gitignore`.
