@@ -218,9 +218,12 @@ Auf einem Gerät, das nicht alle Zugangsdaten tragen soll (Firmen-PC), statt `ho
 ablegen. In Windows PowerShell 5.1 liefert `bws secret list | ConvertFrom-Json` das ganze Array als ein Objekt
 in die Pipeline; ein `Where-Object` darauf trifft dann alle Einträge, und `.value` verbindet alle Werte. Darum
 mit `foreach` über das Ergebnis von `ConvertFrom-Json` filtern, auf genau einen Treffer prüfen und zur Kontrolle
-nur Länge und erste Zeile ansehen, nie den Inhalt. Auf dem Windows-Firmen-PC liegen so
-`~/.config/bws/token`, `~/.config/openstack/clouds.yaml` und `~/projects/odoo/.env`; beim Verlassen des Geräts
+nur Länge und erste Zeile ansehen, nie den Inhalt. Der Windows-Firmen-PC trägt alle Zugangsdaten wie der
+Laptop (`geheimnisse holen`, Gorans Entscheid); beim Verlassen des Geräts alle Dateien aus `geheimnisse status`
 löschen und das Gerätekonto im Web-Tresor sperren.
+
+`geheimnisse holen --help` zeigt keine Hilfe, sondern holt: Unterbefehle kennen keine eigene Hilfe. Hilfe nur über
+`geheimnisse --help`.
 
 ### fr-po-pruefen
 
