@@ -729,6 +729,14 @@ class Doppelversand(unittest.TestCase):
 
     SEND = ["send", "x", "--to", "info@einradshop.ch", "--subject", "Nachfolgemodul", "--body-file", "BODY"]
 
+    def test_neues_postfach_ohne_gesendet_ordner_sendet(self):
+        # info@pink-deko.ch, 21.10.2026: «Sent» entsteht erst beim ersten APPEND, SELECT antwortet NO
+        conn = self.conn({})
+        conn.select = lambda folder, readonly=False: ("NO", [b"Mailbox doesn't exist: Sent"])
+        conn.uid = lambda *a: (_ for _ in ()).throw(AssertionError("SEARCH ohne SELECT"))
+        with mock.patch.object(mb, "imap_connect", return_value=conn):
+            self.assertEqual(mb.sent_today(account(address="info@pink-deko.ch"), ["info@einradshop.ch"]), [])
+
     def test_heute_schon_an_dieselbe_adresse_gesendet_sperrt_und_zeigt_beide_mails(self):
         code, smtp, out = self.senden(self.SEND, {"1367": self.FRUEHER})
         smtp.assert_not_called()
