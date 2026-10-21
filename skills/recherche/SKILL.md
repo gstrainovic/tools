@@ -20,7 +20,8 @@ ganze Seiten im Modell:
    als Tabelle aus: `~/projects/tools/recherche.py -q "…" -q "…" --muster "regex" -m 8` (`--json` für Rohdaten,
    `--ohne-exa`). Direkt aufrufen, nie `python3 recherche.py`: nur so lädt `uv` die Pakete (sonst bricht ddgs mit
    «No module named 'lxml'» ab).
-   Ausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen.
+   Rohausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen; das
+   Ergebnis kommt ins Repo (Abschnitt «Ergebnis speichern»).
 2. **Exa-Stufe `deep`** (12 USD je 1000 Anfragen, `deep-reasoning` 15, `instant` 4, `fast`/`auto` 7; Doku
    https://docs.exa.ai/reference/search) für Fragen, die `auto`, ddgs und Codex nicht beantworten: Sie liest den
    Inhalt der Seiten und findet Einträge, die nur im Seitentext stehen (Moneyhouse-Löschungen, Inserattexte,
@@ -46,6 +47,13 @@ Befehle:
   `{"urls":["…"],"text":{"maxCharacters":4000}}`.
 - Codex: `codex --search exec --skip-git-repo-check -s read-only "<Frage, Quelle je Aussage, Ungeprüftes
   markieren>" -o <scratchpad>/codex.md`.
+
+## Ergebnis speichern
+
+Was eine Recherche ergibt (Listen, Zählungen, Preise mit Quellen, Agentenberichte), kommt als Markdown ins
+betroffene Repo und wird committet, bevor darüber berichtet wird, nie nur ins Scratchpad. Ins Scratchpad gehören
+nur Rohdaten, die nach der Auswertung wertlos sind (heruntergeladene Seiten, Rohantworten). Ein Agentenauftrag
+nennt den Zielpfad; hat der Agent kein Schreibrecht im Repo, legt die Hauptsitzung seinen Bericht sofort dort ab.
 
 ## Einzelseiten und Agenten
 
