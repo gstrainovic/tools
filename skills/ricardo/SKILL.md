@@ -31,6 +31,9 @@ Skill `browser-wahl`, «Gorans Chrome anhängen»: `playwright-cli attach --cdp=
 ~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Port 9222 zu heisst: Chrome läuft nicht oder
 Remote-Debugging ist nicht erlaubt (`chrome://inspect/#remote-debugging`). Nach einem Chrome-Neustart meldet
 `tab-list` «not open», dann einmal neu anhängen. Login auf login.ricardo.ch macht Goran (Autofill lieferte nichts).
+Konto-E-Mail ist info@pink-deko.ch (`mailbox`-Konto `pink-deko`; Ricardo-Codes landen dort im Ordner
+«Promotions»). Konto-Seite `/de/profile/personal-info/`; E-Mail ändern verlangt erst einen Code an die alte,
+dann an die neue Adresse und meldet danach ab.
 
 ## Fallen von playwright-cli auf Ricardo
 
