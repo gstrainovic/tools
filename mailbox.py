@@ -578,7 +578,10 @@ def sent_today(acc: Account, recipients: list[str]) -> list[email.message.Messag
     if not folder:
         conn.logout()
         return []
-    conn.select(imap_folder(folder), readonly=True)
+    # Ein neues Postfach hat noch keinen Gesendet-Ordner (entsteht beim ersten APPEND): dann ging nichts raus
+    if conn.select(imap_folder(folder), readonly=True)[0] != "OK":
+        conn.logout()
+        return []
     status, data = conn.uid("search", f"SINCE {imap_date(date.today())}")
     found = []
     for uid in (data[0].split() if status == "OK" and data and data[0] else []):
