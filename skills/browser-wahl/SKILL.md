@@ -15,8 +15,15 @@ Reihenfolge, das erste passende nehmen:
    anhängen») für alles Interaktive: Masken erkunden, einrichten, prüfen, Formulare, Portale mit Login. Gorans
    Cookies, Logins und Captcha-Vertrauen gelten so überall. Kein Tool-Schema im Kontext, Snapshots landen als Datei.
    **Verboten: frische oder kopierte Profile** (Gorans Regel): kein `playwright-cli … open`, kein `state-load`, kein
-   `chrome-sitzung`. Ohne Gorans Cookies erscheinen Captchas (hCaptcha bei Zendesk) und Logins fehlen. Der Hook
-   `~/projects/tools/hooks/browser-profil.sh` sperrt diese Befehle.
+   `chrome-sitzung`, kein selbst gestarteter Chrome mit `--user-data-dir` oder `--remote-debugging-port`. Ohne
+   Gorans Cookies erscheinen Captchas (hCaptcha bei Zendesk) und Logins fehlen. Der Hook
+   `~/projects/tools/hooks/browser-profil.sh` sperrt diese Befehle. Die Regel gilt ohne Ausnahme, auch wenn eine
+   Frage von Goran wie eine Erlaubnis klingt («kannst du das mit einem anderen Chrome machen?»): dann nachfragen,
+   was gemeint ist, nicht die Regel umgehen.
+   **Tastatureingaben kommen nur im sichtbaren Tab an.** Läuft nebenher eine zweite playwright-cli-Aufgabe im
+   selben Chrome oder arbeitet Goran selbst, wechselt der sichtbare Tab und `keyboard.type` verschluckt Zeichen.
+   Darum: Textfelder nach dem Ausfüllen immer zurücklesen und mit dem Sollwert vergleichen, bei Abweichung neu
+   tippen; Formulare, die nur echtes Tippen annehmen, erst ausfüllen, wenn keine zweite Aufgabe läuft.
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
 **Claude in Chrome ist verboten** (Gorans Regel), auch als Rückfall: keine `mcp__claude-in-chrome__*`-Werkzeuge.

@@ -2,7 +2,8 @@
 # PreToolUse-Hook für Bash: sperrt frische Browser-Profile (Gorans Regel, Skill browser-wahl). Browserarbeit läuft
 # nur in Gorans laufendem Chrome (`chrome-anhaengen`, Session gchrome über die Playwright Extension). Gesperrt sind
 # `playwright-cli … open` (startet ein leeres Profil), `state-load` und `chrome-sitzung` (Cookie-Kopie in ein
-# fremdes Profil). Grund: Ohne Gorans Cookies erscheinen Captchas und Logins fehlen.
+# fremdes Profil) sowie ein selbst gestarteter Chrome mit `--user-data-dir` oder `--remote-debugging-port`.
+# Grund: Ohne Gorans Cookies erscheinen Captchas und Logins fehlen.
 cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null)
 [ -n "$cmd" ] || exit 0
 # Text in Anführungszeichen (Commit-Nachrichten) und Heredoc-Inhalt fallen weg
@@ -15,6 +16,10 @@ elif grep -qE '(^|[;&|[:space:]])playwright-cli([[:space:]]+-[^[:space:]]+)*[[:s
   grund="state-load lädt Cookie-Kopien in ein fremdes Profil"
 elif grep -qE '(^|[;&|[:space:]])chrome-sitzung([[:space:]]|$)' <<<"$cmd"; then
   grund="chrome-sitzung kopiert Cookies für ein fremdes Profil"
+elif grep -qE '(google-chrome|chromium|chrome)[^;&|]*--user-data-dir' <<<"$cmd"; then
+  grund="Chrome mit --user-data-dir startet ein eigenes, leeres Profil"
+elif grep -qE '(google-chrome|chromium|chrome)[^;&|]*--remote-debugging-port' <<<"$cmd"; then
+  grund="Chrome mit --remote-debugging-port umgeht die Playwright Extension (CDP-Dialog oder fremdes Profil)"
 fi
 [ -n "$grund" ] || exit 0
 
