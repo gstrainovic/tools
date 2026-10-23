@@ -60,7 +60,8 @@ reicht:
    Partner und Arbeitgeber, Bewerbungen, Anschreiben, Freitextfelder in Formularen, Upwork-Proposals,
    Forenbeiträge, Ratgeber und Blogartikel, Produkt- und Landingpages, Marktplatz-, Verzeichnis- und Profiltexte,
    readme-Beschreibungen von Plugins, Sprechertexte von Videos, auch deren Übersetzungen in andere Sprachen. Fable (`model: fable`) schreibt sie immer, auch wenn
-   das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
+   das Hauptmodell Opus ist (Server-Lauf, Sitzung auf Opus). Läuft die Sitzung selbst auf Fable, schreibt das
+   Hauptmodell den Text direkt; ein Fable-Agent kostet dann nur Tokens (Goran, 23.10.2026). Fable bekommt Anlass (Inserat, Mail, Thema), Belege und
    Regeln aus AGENTS.md und dem Fach-Skill im Wortlaut und gibt nur den Text zurück. Der Auftrag nennt Ziel, Fakten
    und Regeln, nie einen eigenen Aufbau, vorformulierte Fragen oder einen eigenen Entwurf: Fable übernimmt sonst die
    schwächere Vorgabe (wynwood, 21.10.2026). Formularfelder, Bedingungen, Belege aus
