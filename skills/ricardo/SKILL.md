@@ -71,8 +71,15 @@ verkauft» und lässt sich von dort neu aufschalten.
 ## Bild-Upload über die Playwright Extension
 
 Angehängt per `chrome-anhaengen` (Extension statt CDP) hängen `setInputFiles` und `playwright-cli upload` im
-Timeout; der offene Dateidialog blockiert danach jede weitere Aktion der Session (23.10.2026). Bilder darum nur
-über eine CDP-Anbindung hochladen oder von Hand.
+Timeout, und ein geöffneter Dateidialog blockiert die Session (dann `chrome-anhaengen` neu). Was geht: das Bild als
+Base64 ins Skript legen und im Browser per `DataTransfer` als `File` ins `input[type=file]` setzen, dann ein
+`change`-Event (`ricardo_einstellen.py`, ebenso tutti). Echte Klicks warten dort oft endlos auf «stable»: Knöpfe
+per `evaluate(e => e.click())`, MUI-Selects per `mousedown`-Event. Laufende Angebote ändern: `/de/list/?a=<id>`,
+alle Felder änderbar, «Änderungen bestätigen». Nach `goto` von einem Formular weg fragt ein «beforeunload»-Dialog:
+`playwright-cli dialog-accept`.
+
+tutti: Inserate unter `/de/myads/active`, je Inserat «Weitere Optionen» → Bearbeiten, Deaktivieren, Löschen. Neue
+und bearbeitete Inserate stehen erst auf «Wird geprüft».
 
 ## Einzelformular (`/de/list/`)
 
