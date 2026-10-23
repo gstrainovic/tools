@@ -61,6 +61,19 @@ dann an die neue Adresse und meldet danach ab.
 - Der Knopf **«Veröffentlichen (n)»** auf der Prüfseite des Mehrfach-Formulars reagiert auf keinen Skript-Klick
   (evaluate, click, mouse down/up); Goran klickt ihn selbst. Im Einzelformular geht «Veröffentlichen» per Skript.
 
+## Angebote beenden
+
+`/de/my-ricardo/selling/offers/`: je Zeile ein Kästchen (Kästchen 0 ist «alle»), Zuordnung über «Ref.: <nr>» im
+nächsten Vorfahren (einzeln eingestellte Angebote haben keine Ref., dann über den Titel). Nach dem Anhaken erscheint
+«Beenden (n)», der Dialog «Angebote beenden ?» bestätigt mit «Angebote beenden»; danach steht die Zeile auf «Nicht
+verkauft» und lässt sich von dort neu aufschalten.
+
+## Bild-Upload über die Playwright Extension
+
+Angehängt per `chrome-anhaengen` (Extension statt CDP) hängen `setInputFiles` und `playwright-cli upload` im
+Timeout; der offene Dateidialog blockiert danach jede weitere Aktion der Session (23.10.2026). Bilder darum nur
+über eine CDP-Anbindung hochladen oder von Hand.
+
 ## Einzelformular (`/de/list/`)
 
 Reihenfolge, die funktioniert (`ricardo_einstellen.py`): Bild hochladen → Titel (max. 60 Zeichen) → Produkttyp
