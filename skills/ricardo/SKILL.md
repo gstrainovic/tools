@@ -5,7 +5,7 @@ description: Auf ricardo.ch inserieren (Einzelformular, «Mehrere Angebote erste
 
 # Ricardo
 
-Stand 18.10.2026, erarbeitet beim Einstellen der Action-Dupes (`~/projects/vesna/action-dupes/`, Konto `mr__rn6m`).
+Stand 18.10.2026, erarbeitet beim Einstellen der Action-Dupes (`~/projects/vesna/action-dupes/`, Konto `pink-deko`).
 Die Skripte liegen dort: `ricardo_einstellen.py` (Einzelformular), `ricardo_mehrfach.py` und `ricardo_gruppe.js`
 (Mehrfach-Formular und Gruppen-Eigenschaften), `inserate.py`/`symbolbild.py` (Texte und Bilder).
 
