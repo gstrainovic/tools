@@ -76,12 +76,13 @@ Base64 ins Skript legen und im Browser per `DataTransfer` als `File` ins `input[
 `change`-Event (`ricardo_einstellen.py`, ebenso tutti). Echte Klicks warten dort oft endlos auf «stable»: Knöpfe
 per `evaluate(e => e.click())`, MUI-Selects per `mousedown`-Event. Laufende Angebote ändern: `/de/list/?a=<id>`,
 alle Felder änderbar, «Änderungen bestätigen» (`ricardo_einstellen.py <nr> --aendern`). Nach `goto` von einem
-Formular weg fragt ein «beforeunload»-Dialog, den die Extension selbst abfängt («does not handle the modal
-state»); ein `page.once('dialog')` im Skript greift nicht. Lösung: vor dem `goto` im Browser
-`window.onbeforeunload = null` setzen und `beforeunload` in der Capture-Phase mit `stopImmediatePropagation`
-abfangen (`inserate.KEIN_VERLASSEN_DIALOG` in action-dupes). Hängt die Session schon: `playwright-cli dialog-accept`;
-der angehaltene Lauf läuft danach weiter, einen zweiten Lauf erst danach starten, sonst landen die Bilder doppelt.
-Es gibt nur eine Session: Läufe nie parallel. Mehrere
+Formular weg (goto, reload, tab-close, auch nach einem abgebrochenen Lauf) fragt Chrome «Website verlassen?».
+Die Extension bricht den laufenden Befehl mit «does not handle the modal state» ab; stammt der Dialog aus einem
+früheren Befehl, kennt sie ihn nicht mehr, `dialog-accept` meldet «no modal state», und nur ein Klick im Browser
+hilft. Weder `window.onbeforeunload = null`, `page.once('dialog')`, ein eigener Tab (`newPage`: Hintergrund-Tabs
+drosselt Chrome, Uploads hängen) noch `tab-close` umgehen ihn. Abhilfe: die Erweiterung
+`~/projects/tools/chrome-kein-verlassen-dialog` (einmal entpackt laden, README dort) macht `beforeunload` auf
+ricardo.ch und tutti.ch wirkungslos. Es gibt nur eine Session: Läufe nie parallel. Mehrere
 Fotos als Base64 sprengen die Grenze eines Befehlsarguments (128 KB): Code in eine Datei schreiben und
 `playwright-cli run-code --filename <datei>` aufrufen.
 
