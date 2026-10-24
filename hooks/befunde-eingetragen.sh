@@ -54,8 +54,10 @@ nach=$(awk '/^U$/ {buf=""; next} {buf = buf $0 "\n"} END {printf "%s", buf}' <<<
 # Das Transkript kann beim Stopp der letzten Antwort hinterherhinken; massgeblich ist last_assistant_message
 letzter=$(jq -r '.last_assistant_message // empty' <<<"$ein" 2>/dev/null)
 [ -n "$letzter" ] || letzter=$(grep '^B:' <<<"$nach" | tail -1)
-# Befunde heissen nicht immer so (Entscheid 3a, 11.10.2026): auch Risiken, Ungeklärtes, Fehlendes, Widersprüche
-grep -qiE 'befund|risiko|ungeklärt|unklar|fehlt|nicht aufgeht' <<<"$letzter" || freigeben
+# Befunde heissen nicht immer so (Entscheid 3a, 11.10.2026): auch Risiken, Ungeklärtes, Fehlendes, Widersprüche,
+# Ungeprüftes und offene Fragen (die Regel verlangt beide in der todo.md)
+grep -qiE 'befund|risiko|ungeklärt|unklar|fehlt|nicht aufgeht|nicht geprüft|ungeprüft|offene frage' <<<"$letzter" ||
+  freigeben
 grep -q '^T$' <<<"$nach" && freigeben
 
 jq -cn '{decision: "block", reason: "Der Schlussbericht nennt Befunde, aber seit der letzten Nutzernachricht wurde keine todo.md geändert. Befunde und offene Fragen in die todo.md des betroffenen Repos eintragen, committen und hochladen (Regel «Knapp berichten», ~/.claude/CLAUDE.md), dann den Bericht wiederholen. Stehen sie dort schon, kurz so melden."}'
