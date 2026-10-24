@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Kein «Website verlassen?»-Dialog",
+  "version": "1.0",
+  "description": "Macht beforeunload-Handler auf ricardo.ch und tutti.ch wirkungslos, damit automatisierte Läufe (playwright-cli) nie am Dialog «Website verlassen?» hängen bleiben.",
+  "content_scripts": [
+    {
+      "matches": ["https://www.ricardo.ch/*", "https://www.tutti.ch/*"],
+      "js": ["kein-verlassen.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    }
+  ]
+}
