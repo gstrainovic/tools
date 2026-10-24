@@ -2,6 +2,7 @@ import importlib.util
 import math
 import random
 import struct
+import subprocess
 import tempfile
 import unittest
 import wave
@@ -94,6 +95,22 @@ class Abarbeiten(unittest.TestCase):
         mithoeren.abarbeiten(self.ordner, self.ausgabe, lambda p: "Hallo\n[00:00] Goran: Festpreis 3000", set(),
                              gegenueber="Kunde", ende=True)
         self.assertEqual(self.ausgabe.read_text().splitlines(), ["[00:00] Kunde: Hallo [00:00] Goran: Festpreis 3000"])
+
+
+class Aufnahme(unittest.TestCase):
+    def test_ton_beider_seiten_bleibt_als_stereo_datei_neben_den_stuecken(self):
+        ordner = Path(tempfile.mkdtemp())
+        ton = ordner / "meeting.ogg"
+        ffmpeg = mithoeren.aufnahme(ordner, "sine=frequency=440:duration=3", "sine=frequency=880:duration=3", ton,
+                                    eingabe="lavfi")
+        self.assertEqual(ffmpeg.wait(timeout=30), 0)
+        kanaele, dauer = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "stream=channels:format=duration", "-of", "csv=p=0", ton],
+            capture_output=True, text=True, check=True).stdout.split()
+        self.assertEqual(kanaele, "2", "links Goran, rechts Gegenüber")
+        self.assertAlmostEqual(float(dauer), 3, delta=0.2)
+        self.assertTrue((ordner / "goran-00000.wav").exists())
+        self.assertTrue((ordner / "gegenueber-00000.wav").exists())
 
 
 if __name__ == "__main__":
