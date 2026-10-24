@@ -40,18 +40,18 @@ class Abarbeiten(unittest.TestCase):
         for name in ("gegenueber-00000.wav", "goran-00000.wav", "goran-00001.wav", "gegenueber-00001.wav"):
             wav(self.ordner / name, laut=True)
         erledigt = set()
-        mithoeren.abarbeiten(self.ordner, self.ausgabe, self.umschreiben, erledigt, gegenueber="comza")
+        mithoeren.abarbeiten(self.ordner, self.ausgabe, self.umschreiben, erledigt, gegenueber="Kunde")
         # Das jeweils letzte Segment schreibt ffmpeg noch, es bleibt liegen
         self.assertEqual(self.ausgabe.read_text().splitlines(), [
             "[00:00] Goran: Text aus goran-00000.wav",
-            "[00:00] comza: Text aus gegenueber-00000.wav",
+            "[00:00] Kunde: Text aus gegenueber-00000.wav",
         ])
         for name in ("goran-00002.wav", "gegenueber-00002.wav"):
             wav(self.ordner / name, laut=True)
-        mithoeren.abarbeiten(self.ordner, self.ausgabe, self.umschreiben, erledigt, gegenueber="comza")
+        mithoeren.abarbeiten(self.ordner, self.ausgabe, self.umschreiben, erledigt, gegenueber="Kunde")
         self.assertEqual(self.ausgabe.read_text().splitlines()[2:], [
             f"[00:{mithoeren.SEGMENT_S:02d}] Goran: Text aus goran-00001.wav",
-            f"[00:{mithoeren.SEGMENT_S:02d}] comza: Text aus gegenueber-00001.wav",
+            f"[00:{mithoeren.SEGMENT_S:02d}] Kunde: Text aus gegenueber-00001.wav",
         ])
         self.assertEqual(len(self.gesendet), 4, "kein Segment doppelt an Voxtral")
 
