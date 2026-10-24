@@ -87,6 +87,14 @@ class Kompatibilitaet(unittest.TestCase):
                           last_assistant_message="Befunde: Der Export ist defekt.")
         self.assertEqual(aus.get("decision"), "block")
 
+    def test_ungepruefte_aussage_im_bericht_gilt_als_befund(self):
+        # 24.10.: «ob die Begriffsliste hilft, habe ich nicht geprüft» stand nur im Bericht, nicht in der todo.md
+        for text in ("Ob die Begriffsliste hilft, habe ich nicht geprüft.", "Der Preis ist ungeprüft.",
+                     "Offene Fragen: 3. Wann testen wir?"):
+            with self.subTest(text=text):
+                aus = self.aufruf("befunde-eingetragen.sh", hook_event_name="Stop", last_assistant_message=text)
+                self.assertEqual(aus.get("decision"), "block")
+
     def test_codex_echter_todo_patch_gilt_als_dokumentation(self):
         self.schreibe({"type": "response_item", "payload": {"type": "custom_tool_call", "name": "apply_patch",
                        "input": "*** Begin Patch\n*** Update File: /projekt/TODO.md\n@@\n+a\n*** End Patch"}})
