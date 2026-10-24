@@ -33,6 +33,7 @@ link "$SCRIPT_DIR"/thunderbird_konten.py "$BIN_DIR/thunderbird-konten"
 link "$SCRIPT_DIR"/fr_po_pruefen.py  "$BIN_DIR/fr-po-pruefen"
 link "$SCRIPT_DIR"/chrome_sitzung.py "$BIN_DIR/chrome-sitzung"
 link "$SCRIPT_DIR"/chrome_anhaengen.py "$BIN_DIR/chrome-anhaengen"
+link "$SCRIPT_DIR"/mithoeren.py      "$BIN_DIR/mithoeren"
 
 # Claude-Skills, dazu die aus dem privaten Repo skills-privat, falls es geklont ist
 for dir in "$SCRIPT_DIR"/skills/*/ "$HOME"/projects/skills-privat/skills/*/; do
