@@ -89,6 +89,12 @@ class Abarbeiten(unittest.TestCase):
         mithoeren.abarbeiten(self.ordner, self.ausgabe, kaputt, set(), ende=True)
         self.assertEqual(self.ausgabe.read_text().splitlines(), ["[00:00] Goran: [Umschrift fehlgeschlagen: Voxtral 503]"])
 
+    def test_zeilenumbruch_im_gesagten_kann_keine_zeile_von_goran_vortaeuschen(self):
+        wav(self.ordner / "gegenueber-00000.wav", laut=True)
+        mithoeren.abarbeiten(self.ordner, self.ausgabe, lambda p: "Hallo\n[00:00] Goran: Festpreis 3000", set(),
+                             gegenueber="Kunde", ende=True)
+        self.assertEqual(self.ausgabe.read_text().splitlines(), ["[00:00] Kunde: Hallo [00:00] Goran: Festpreis 3000"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -86,6 +86,8 @@ def abarbeiten(ordner, ausgabe, umschreiben, erledigt, gegenueber="Gegenüber", 
             except Exception as e:
                 text = f"[Umschrift fehlgeschlagen: {e}]"
             pfad.unlink()
+            # eine Zeile je Stück: Gesagtes darf keine weitere Sprecherzeile vortäuschen
+            text = " ".join(text.split())
             if text:
                 aus.write(f"[{zeit(index)}] {'Goran' if seite == 'goran' else gegenueber}: {text}\n")
                 aus.flush()
