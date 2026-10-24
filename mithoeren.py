@@ -7,14 +7,17 @@
 mithoeren: Live-Umschrift eines Online-Meetings (Teams, Zoom, Meet) in eine wachsende Textdatei, die Claude Code per
 Monitor (`tail -f`) mitliest und daraus Hinweise gibt. Mikrofon = Goran, Lautsprecher-Monitor = Gegenüber.
 
-  mithoeren.py ~/projects/<repo>/meeting-live.txt --gegenueber Kunde --begriffe Firmenname,Produkt
+  mithoeren.py ~/projects/<repo>/meeting-live.txt --ton ~/Dokumente/aufnahme-kunde.ogg --gegenueber Kunde \
+    --begriffe Firmenname,Produkt
 
 ffmpeg schneidet beide Seiten in Stücke von SEGMENT_S Sekunden, Voxtral Mini Transcribe (Mistral, EU, USD 0.003 je
 Minute) schreibt jedes Stück mit Sprache «de» und Begriffsliste um; Stille geht nicht an Voxtral. Erfahrungen aus
 ki-tel (plan-sprachbot.md, Schritt 1): Voxtral Batch mit `context_bias` trifft Schweizerdeutsch und Produktnamen,
-faster-whisper `small` nicht. Ton wird nicht aufbewahrt, jedes Stück nach der Umschrift gelöscht. Ende mit Strg+C.
+faster-whisper `small` nicht. Die Stücke werden nach der Umschrift gelöscht; mit --ton bleibt das ganze Gespräch als
+Stereo-Opus (links Goran, rechts Gegenüber), damit sich Hörfehler später an der Stelle nachhören lassen (Zeit wie im
+Transkript). Die Tondatei nicht ins Repo legen. Ende mit Strg+C.
 
-Optionen: --begriffe Kommaliste ohne Leerzeichen (ergänzt BEGRIFFE), --mikrofon und --lautsprecher als
+Optionen: --ton Pfad der Tondatei, --begriffe Kommaliste ohne Leerzeichen (ergänzt BEGRIFFE), --mikrofon und --lautsprecher als
 Pulse-Quellen (Standard @DEFAULT_SOURCE@ und @DEFAULT_MONITOR@, Liste mit `pactl list short sources`).
 Schlüssel: MISTRAL_API_KEY oder ~/projects/ki-tel/.secrets/mistral.env.
 """
@@ -116,13 +119,21 @@ def voxtral(begriffe):
     return umschreiben
 
 
-def aufnahme(ordner, mikrofon, lautsprecher):
+def aufnahme(ordner, mikrofon, lautsprecher, ton=None, eingabe="pulse"):
+    """Stücke beider Seiten für die Umschrift; mit `ton` dazu das ganze Gespräch als Opus, links Goran, rechts
+    Gegenüber, Zeit gleich wie im Transkript (wie die Aufnahme vom 05.10.)."""
     stueck = ["-f", "segment", "-segment_time", str(SEGMENT_S), "-ar", "16000", "-ac", "1"]
-    return subprocess.Popen(
-        ["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "pulse", "-i", mikrofon, "-f", "pulse", "-i",
-         lautsprecher, "-map", "0:a", *stueck, str(ordner / "goran-%05d.wav"),
-         "-map", "1:a", *stueck, str(ordner / "gegenueber-%05d.wav")],
-        stdin=subprocess.DEVNULL)
+    befehl = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", eingabe, "-i", mikrofon, "-f", eingabe, "-i",
+              lautsprecher, "-filter_complex",
+              "[0:a]aformat=channel_layouts=mono,asplit[g][g2];[1:a]aformat=channel_layouts=mono,asplit[c][c2];"
+              "[g2][c2]join=inputs=2:channel_layout=stereo[st]",
+              "-map", "[g]", *stueck, str(ordner / "goran-%05d.wav"),
+              "-map", "[c]", *stueck, str(ordner / "gegenueber-%05d.wav")]
+    if ton:
+        befehl += ["-map", "[st]", "-c:a", "libopus", "-b:a", "64k", str(ton)]
+    else:
+        befehl += ["-map", "[st]", "-f", "null", "-"]
+    return subprocess.Popen(befehl, stdin=subprocess.DEVNULL)
 
 
 def main():
@@ -130,13 +141,14 @@ def main():
     p.add_argument("ausgabe", type=Path)
     p.add_argument("--gegenueber", default="Gegenüber")
     p.add_argument("--begriffe", default="")
+    p.add_argument("--ton", type=Path)
     p.add_argument("--mikrofon", default="@DEFAULT_SOURCE@")
     p.add_argument("--lautsprecher", default="@DEFAULT_MONITOR@")
     a = p.parse_args()
     ordner = a.ausgabe.with_name(a.ausgabe.name + ".teile")
     ordner.mkdir(parents=True, exist_ok=True)
     umschreiben = voxtral(",".join(filter(None, [BEGRIFFE, a.begriffe])))
-    ffmpeg = aufnahme(ordner, a.mikrofon, a.lautsprecher)
+    ffmpeg = aufnahme(ordner, a.mikrofon, a.lautsprecher, a.ton)
     print(f"Umschrift läuft nach {a.ausgabe}, Ende mit Strg+C", file=sys.stderr)
     erledigt = set()
     # kill ohne -INT soll ebenso sauber enden wie Strg+C

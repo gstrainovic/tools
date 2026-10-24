@@ -49,7 +49,7 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `test_chrome_sitzung.py` | Tests gegen eine Cookie-Datenbank im tmp-Ordner (`uv run --with cryptography python -m unittest test_chrome_sitzung.py`) |
 | `chrome_anhaengen.py` | playwright-cli-Session `gchrome` über die Playwright Extension an Gorans Chrome hängen, ohne Dialog, als `~/.local/bin/chrome-anhaengen` verknüpft; Einrichtung im Skill browser-wahl |
 | `test_chrome_anhaengen.py` | Tests mit falschem playwright-cli im PATH (`python3 -m unittest test_chrome_anhaengen.py`) |
-| `mithoeren.py` | Live-Umschrift eines Online-Meetings (Mikrofon = Goran, Lautsprecher = Gegenüber) mit Voxtral in eine wachsende Textdatei, die Claude Code per Monitor mitliest; kein Ton aufbewahrt; als `~/.local/bin/mithoeren` verknüpft. Namen von Kunden nur beim Aufruf per `--begriffe`, nie hier im öffentlichen Repo |
+| `mithoeren.py` | Live-Umschrift eines Online-Meetings (Mikrofon = Goran, Lautsprecher = Gegenüber) mit Voxtral in eine wachsende Textdatei, die Claude Code per Monitor mitliest; mit `--ton` bleibt das Gespräch als Stereo-Opus zum Nachhören von Hörfehlern; als `~/.local/bin/mithoeren` verknüpft. Namen von Kunden nur beim Aufruf per `--begriffe`, nie hier im öffentlichen Repo |
 | `test_mithoeren.py` | Tests mit erzeugten WAV-Stücken und falscher Umschrift (`uv run --python 3.13 python -m unittest test_mithoeren`) |
 | `chrome-policy/` | Chrome-Richtlinie, die die Playwright Extension ohne Klick installiert (nach `/etc/opt/chrome/policies/managed/`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
