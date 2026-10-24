@@ -75,10 +75,14 @@ Timeout, und ein geöffneter Dateidialog blockiert die Session (dann `chrome-anh
 Base64 ins Skript legen und im Browser per `DataTransfer` als `File` ins `input[type=file]` setzen, dann ein
 `change`-Event (`ricardo_einstellen.py`, ebenso tutti). Echte Klicks warten dort oft endlos auf «stable»: Knöpfe
 per `evaluate(e => e.click())`, MUI-Selects per `mousedown`-Event. Laufende Angebote ändern: `/de/list/?a=<id>`,
-alle Felder änderbar, «Änderungen bestätigen». Nach `goto` von einem Formular weg fragt ein «beforeunload»-Dialog:
-`playwright-cli dialog-accept`.
+alle Felder änderbar, «Änderungen bestätigen» (`ricardo_einstellen.py <nr> --aendern`). Nach `goto` von einem
+Formular weg fragt ein «beforeunload»-Dialog: `playwright-cli dialog-accept`. Achtung: Der angehaltene Lauf läuft
+nach dem Bestätigen weiter; einen zweiten Lauf erst danach starten, sonst landen die Bilder doppelt. Mehrere
+Fotos als Base64 sprengen die Grenze eines Befehlsarguments (128 KB): Code in eine Datei schreiben und
+`playwright-cli run-code --filename <datei>` aufrufen.
 
-tutti: Inserate unter `/de/myads/active`, je Inserat «Weitere Optionen» → Bearbeiten, Deaktivieren, Löschen. Neue
+tutti: Inserate unter `/de/myads/active`, je Inserat «Weitere Optionen» → Bearbeiten (`/de/listings/<id>/edit`,
+Fotos per Knopf «Entfernen»), Deaktivieren, Löschen. Neue
 und bearbeitete Inserate stehen erst auf «Wird geprüft».
 
 ## Einzelformular (`/de/list/`)
