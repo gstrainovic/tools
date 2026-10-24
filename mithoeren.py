@@ -7,7 +7,7 @@
 mithoeren: Live-Umschrift eines Online-Meetings (Teams, Zoom, Meet) in eine wachsende Textdatei, die Claude Code per
 Monitor (`tail -f`) mitliest und daraus Hinweise gibt. Mikrofon = Goran, Lautsprecher-Monitor = Gegenüber.
 
-  mithoeren.py ~/projects/find-jobs/akquise/bexio-hubspot/comza-2026-10-29-live.txt --gegenueber comza
+  mithoeren.py ~/projects/<repo>/meeting-live.txt --gegenueber Kunde --begriffe Firmenname,Produkt
 
 ffmpeg schneidet beide Seiten in Stücke von SEGMENT_S Sekunden, Voxtral Mini Transcribe (Mistral, EU, USD 0.003 je
 Minute) schreibt jedes Stück mit Sprache «de» und Begriffsliste um; Stille geht nicht an Voxtral. Erfahrungen aus
@@ -36,7 +36,7 @@ SPRACHE_ABSTAND_DB = 15
 URL = "https://api.mistral.ai/v1/audio/transcriptions"
 MODELL = "voxtral-mini-2602"
 # Mistral lehnt Begriffe mit Leerzeichen oder Komma ab (ki-tel whatsapp_demo/app.py)
-BEGRIFFE = "Strainovic,bexio,HubSpot,comza,timly,Make,n8n,QR-Rechnung,Marketplace,evendigo,Zumbühl,Uplift,Renewal"
+BEGRIFFE = "Strainovic,bexio,HubSpot,Make,n8n,QR-Rechnung,Marketplace"
 SCHLUESSEL = Path.home() / "projects/ki-tel/.secrets/mistral.env"
 NAME = re.compile(r"(goran|gegenueber)-(\d+)\.wav$")
 
