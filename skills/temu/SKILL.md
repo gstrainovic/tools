@@ -25,6 +25,17 @@ Erarbeitet beim Einkauf für Pink Deko (`~/projects/vesna/action-dupes/`, Preise
 - **Preis ist der der vorausgewählten Variante.** Grösse, Menge und Farbe im Warenkorb prüfen, bevor bestellt wird;
   Preise und Bestände ändern sich innert Tagen (Hartschalen-Etui am 25.10. morgens CHF 3.15, nachmittags 6.49).
 
+## Gorans Regel vom 25.10.2026: nichts blind skripten
+
+- Ein Link von Goran ist der Auftrag, genau diesen Artikel zu lesen. Nie stillschweigend einen gleichartigen
+  Treffer nehmen und dessen Preis ausweisen. Findet die Suche den Artikel nicht, Goran in einem Satz melden und
+  um Preis oder Screenshot bitten.
+- Mit playwright-cli Schritt für Schritt arbeiten und jeden Schritt ansehen: `snapshot` nach der Suche, Treffer
+  im Snapshot prüfen, dann `click`, dann Seite lesen. Ein Suchlauf, der mehrere Artikel ohne Zwischenkontrolle
+  abarbeitet, ist verboten; `temu_produkt.sh` nur noch für einzelne Artikel, deren Ergebnis danach gegen Gorans
+  Link geprüft wird (ID in der URL).
+- Keine Temu-Läufe im Hintergrund; sie liefern nichts und blockieren den Tab.
+
 ## Hilfsskript
 
 `temu_produkt.sh "<Produktname>" ["<weiterer>" …]` (neben dieser Datei) gibt je Artikel `URL:`, `Titel:` und den
