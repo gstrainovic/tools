@@ -17,6 +17,8 @@ async page => {
   await page.waitForTimeout(9000);
   body = (await page.locator('body').innerText()).replace(/​/g, '');
   if (captcha(body.slice(0, 3000))) return 'CAPTCHA Trefferliste';
+  // Optional: Temu-ID (g-…) aus einem Link; dann zählt die ID, nicht der Name.
+  const id = '__ID__';
   const key = q.toLowerCase().replace(/[^a-zäöü0-9]/g, '').slice(0, 24);
   const links = await page.$$('a[href*="-g-"]');
   const treffer = [];
@@ -27,9 +29,10 @@ async page => {
     if (!/CHF/.test(txt)) continue;
     treffer.push(txt.slice(0, 120) + ' || ' + href.replace(/\?.*/, ''));
     const norm = txt.toLowerCase().replace(/[^a-zäöü0-9]/g, '');
-    if (!ziel && norm.includes(key)) ziel = a;
+    if (!ziel && id && href.includes('-g-' + id + '.html')) ziel = a;
+    if (!ziel && !id && norm.includes(key)) ziel = a;
   }
-  if (!ziel) return 'KEIN TREFFER mit diesem Namen; Trefferliste:\n' + [...new Set(treffer)].slice(0, 10).join('\n');
+  if (!ziel) return 'KEIN TREFFER mit diesem ' + (id ? 'Link (g-' + id + ')' : 'Namen') + '; Trefferliste:\n' + [...new Set(treffer)].slice(0, 10).join('\n');
   // Kein scrollIntoViewIfNeeded(): Temus Seite ist für Playwright nie «stabil» (Animationen).
   await ziel.evaluate(e => e.scrollIntoView({block: 'center'}));
   await page.waitForTimeout(1500);
@@ -48,7 +51,7 @@ async page => {
   // Produktpreis steht nach dem Titel; der erste CHF-Treffer im Text ist der Warenkorb.
   const start = Math.max(0, t.indexOf(h1.slice(0, 40)));
   const i = start + t.slice(start).search(/CHF ?\d/);
-  const out = 'URL: ' + p.url().replace(/\?.*/, '') + '\nTitel: ' + h1.slice(0, 220) + '\nPreis: ' + t.slice(i, i + 420);
+  const out = 'URL: ' + p.url().replace(/\?.*/, '') + '\nTitel: ' + h1.slice(0, 220) + '\nPreis: ' + t.slice(i, i + 900);
   if (neu) await neu.close();
   return out;
 }
