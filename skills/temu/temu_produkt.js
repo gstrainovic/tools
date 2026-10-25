@@ -1,6 +1,7 @@
-// Öffnet auf temu.com/ch einen Artikel so, wie Temu es ohne Captcha zulässt: Startseite, Suchfeld, Enter,
-// Treffer per Mausklick. Direktaufrufe von Produkt-URLs (goods.html, /ch/…-g-…html) lösen Captchas aus.
-// Platzhalter __Q__ ersetzt temu_produkt.sh durch den Suchbegriff (am besten der Produktname von Temu).
+// Sucht auf temu.com/ch über Startseite und Suchfeld und gibt die Trefferliste mit Preis und Link zurück; nur mit
+// einer Temu-ID (__ID__, aus einem Link von Goran) klickt es diesen einen Treffer an und liest die Produktseite.
+// Direktaufrufe von Produkt-URLs (goods.html, /ch/…-g-…html) lösen Captchas aus, Produktseiten manchmal auch.
+// Platzhalter __Q__ ersetzt temu_produkt.sh durch den Suchbegriff (kurz, zwei bis vier Wörter).
 async page => {
   const q = '__Q__';
   const captcha = t => /Überprüfung|Sicherheitsüberprüfung|verify you are|Captcha|Schieberegler/i.test(t);
@@ -17,22 +18,23 @@ async page => {
   await page.waitForTimeout(9000);
   body = (await page.locator('body').innerText()).replace(/​/g, '');
   if (captcha(body.slice(0, 3000))) return 'CAPTCHA Trefferliste';
-  // Optional: Temu-ID (g-…) aus einem Link; dann zählt die ID, nicht der Name.
+  // Ohne Temu-ID (g-… aus einem Link von Goran) wird nichts angeklickt: Die Trefferliste mit Preis und Link ist
+  // das Ergebnis. Nur mit ID öffnet das Skript genau diesen Artikel.
   const id = '__ID__';
-  const key = q.toLowerCase().replace(/[^a-zäöü0-9]/g, '').slice(0, 24);
   const links = await page.$$('a[href*="-g-"]');
   const treffer = [];
   let ziel = null;
   for (const a of links) {
     const txt = (await a.evaluate(e => e.parentElement.parentElement.parentElement.innerText)).replace(/\s+/g, ' ');
     const href = await a.getAttribute('href');
-    if (!/CHF/.test(txt)) continue;
-    treffer.push(txt.slice(0, 120) + ' || ' + href.replace(/\?.*/, ''));
-    const norm = txt.toLowerCase().replace(/[^a-zäöü0-9]/g, '');
+    const preis = txt.match(/CHF ?[\d'.]+/);
+    if (!preis) continue;
+    const gid = (href.match(/-g-(\d+)\.html/) || [])[1] || '?';
+    treffer.push(preis[0] + ' | g-' + gid + ' | ' + txt.replace(/CHF ?[\d'.]+.*$/, '').slice(0, 110));
     if (!ziel && id && href.includes('-g-' + id + '.html')) ziel = a;
-    if (!ziel && !id && norm.includes(key)) ziel = a;
   }
-  if (!ziel) return 'KEIN TREFFER mit diesem ' + (id ? 'Link (g-' + id + ')' : 'Namen') + '; Trefferliste:\n' + [...new Set(treffer)].slice(0, 10).join('\n');
+  if (!id) return 'TREFFERLISTE (Preis je Kachel, ohne ID wird nichts geöffnet):\n' + [...new Set(treffer)].slice(0, 15).join('\n');
+  if (!ziel) return 'KEIN TREFFER mit diesem Link (g-' + id + '); Trefferliste:\n' + [...new Set(treffer)].slice(0, 15).join('\n');
   // Kein scrollIntoViewIfNeeded(): Temus Seite ist für Playwright nie «stabil» (Animationen).
   await ziel.evaluate(e => e.scrollIntoView({block: 'center'}));
   await page.waitForTimeout(1500);

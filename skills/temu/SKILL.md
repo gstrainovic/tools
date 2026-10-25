@@ -16,7 +16,10 @@ Erarbeitet beim Einkauf für Pink Deko (`~/projects/vesna/action-dupes/`, Preise
   die Seite findet sich über die Suche nach dem Produktnamen wieder.
 - **Nie Produkt-URLs direkt aufrufen** (`goods.html?goods_id=…`, `/ch/…-g-….html`, `share.temu.com/…`) und nie
   `search_result.html` per `goto`: Temu zeigt dann ein Captcha, das Goran von Hand lösen muss. Erlaubt ist nur:
-  Startseite `temu.com/ch`, Suchfeld, Enter, Treffer per Mausklick. Genau das macht `temu_produkt.sh`.
+  Startseite `temu.com/ch`, Suchfeld, Enter, Treffer per Mausklick. Genau das macht `temu_produkt.sh`. Auch auf
+  diesem Weg kommt ein Captcha vor (25.10.2026 auf der Produktseite, zweiter Lauf innert zwei Minuten); sicher
+  verhindern lässt es sich nicht. Dann die Seite im Tab stehen lassen, Goran einmal ums Lösen bitten und danach
+  dieselbe Seite per `run-code` lesen, nicht neu suchen.
 - **Nur in Gorans angehängtem Chrome** (Skill `browser-wahl`, `chrome-anhaengen`, Session `gchrome`, eigener Tab
   per `tab-new`). Jina, curl und Exa liefern von Temu nur eine JavaScript-Hülle. Es gibt keine Käufer-API; die
   Partner-API (partner.temu.com) ist nur für Verkäufer (geprüft 14.10.2026, Notiz `research_notes/Startplan mit
@@ -36,14 +39,23 @@ Erarbeitet beim Einkauf für Pink Deko (`~/projects/vesna/action-dupes/`, Preise
   Link geprüft wird (ID in der URL).
 - Keine Temu-Läufe im Hintergrund; sie liefern nichts und blockieren den Tab.
 
+## Captcha: nie Goran bitten (Gorans Regel vom 25.10.2026)
+
+Goran löst keine Temu-Captchas und will nicht darum gebeten werden. Kommt eines, die Produktseite aufgeben, den
+Tab schliessen und den Preis aus der Trefferliste nehmen (die Suche selbst zeigt kein Captcha): Kachelpreis plus
+Link mit ID, in der Liste als «Preis aus der Trefferliste, Variante nicht geprüft» kennzeichnen, wie bei
+AliExpress. Ein Preis der vorausgewählten Variante braucht die Produktseite; ohne sie bleibt es beim Kachelpreis.
+
 ## Hilfsskript
 
-`temu_produkt.sh "<Produktname>" ["<weiterer>" …]` (neben dieser Datei) gibt je Artikel `URL:`, `Titel:` und den
-Text ab `Preis:` (Varianten, Menge, Lieferung) aus, rund 25 Sekunden je Artikel. Bester Suchbegriff ist der
-Produktname von Temu, auch gekürzt; das Skript öffnet den ersten Treffer, dessen Kacheltext mit den ersten 24
-Zeichen des Begriffs beginnt, sonst gibt es `KEIN TREFFER` mit den zehn ersten Treffern (Text und Link) zurück,
-aus denen sich der passende Name wählen lässt. `CAPTCHA …` heisst: Goran in einem Satz um das Lösen bitten, dann
-denselben Aufruf wiederholen. Innenleben in `temu_produkt.js` (run-code für playwright-cli).
+`temu_produkt.sh "<Suchbegriff>"` (neben dieser Datei) sucht über Startseite und Suchfeld und gibt die
+Trefferliste zurück, je Kachel `CHF <Preis> | g-<ID> | <Titel>`; es klickt nichts an. Suchbegriff kurz, zwei bis
+vier Wörter wie auf Temu («Versandboxen Logo braun»), nie ein ganzer Kacheltext. Nur mit `"<Suchbegriff>=g-<ID>"`
+(ID aus einem Link von Goran) öffnet es genau diesen Treffer und gibt `URL:`, `Titel:` und den Text ab `Preis:`
+(Varianten, Menge, Lieferung) aus; `CAPTCHA Produktseite` heisst dann: Kachelpreis aus der Trefferliste nehmen,
+siehe oben. Mehrere Suchbegriffe in einem Aufruf laufen nacheinander; jede Trefferliste vor der Verwendung
+ansehen und den passenden Treffer selbst wählen. Innenleben in `temu_produkt.js`
+(run-code für playwright-cli).
 
 ## Plattform
 
