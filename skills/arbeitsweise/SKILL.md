@@ -149,6 +149,18 @@ zuständigen Skill und den AGENTS.md-Abschnitt lesen, die Regeln als Liste notie
 umsetzen; die kritischen als Test festschreiben. Abweichungen nur, wenn die Maschine sie erzwingt (etwa kein
 Browser), und dann ausdrücklich nennen, weil eine stille Abkürzung den Ablauf bricht.
 
+## Nichts blind skripten (Gorans Regel vom 25.10.2026, gilt für alle Repos)
+
+- Ein Skript, das Seiten öffnet, sucht, klickt oder Daten sammelt, ersetzt das Hinsehen nicht: Jedes
+  Ergebnis vor der Verwendung selbst prüfen (Snapshot, Ausgabe, Stichprobe) und gegen den Auftrag halten. Ein
+  Lauf über mehrere Objekte ohne Zwischenkontrolle ist verboten; erst ein Objekt, ansehen, dann das nächste.
+- Gibt Goran einen Link, eine ID oder einen Namen, ist genau das der Auftrag. Nie ein gleichartiges Objekt
+  nehmen und dessen Daten ausweisen. Ist das Objekt nicht erreichbar, in einem Satz melden und nach dem
+  fehlenden Wert fragen.
+- Grund: Am 25.10.2026 lieferte ein Temu-Suchlauf zu Gorans Link einen anderen Artikel; der Preis stand ohne
+  Prüfung in der Präsentation. Dasselbe Muster (Skript gebaut, Ergebnis übernommen) war vorher schon mehrfach
+  der Fehler.
+
 ## Rückmeldungen überall anwenden
 
 Eine Korrektur von Goran zu einer Seite, Datei oder Mail gilt für alle gleichartigen Stellen (alle
