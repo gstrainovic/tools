@@ -88,7 +88,9 @@ Fotos als Base64 sprengen die Grenze eines Befehlsarguments (128 KB): Code in ei
 
 tutti: Inserate unter `/de/myads/active`, je Inserat «Weitere Optionen» → Bearbeiten (`/de/listings/<id>/edit`,
 Fotos per Knopf «Entfernen»), Deaktivieren, Löschen. Neue
-und bearbeitete Inserate stehen erst auf «Wird geprüft».
+und bearbeitete Inserate stehen erst auf «Wird geprüft». Fotos per DataTransfer ins Dateifeld kommen beim
+Bearbeiten nicht mehr an (Zähler «n/5 Fotos» steigt nicht, 25.10.2026); Text- und Preisänderungen darum mit
+`tutti_einstellen.py <nr> --aendern --nur-text`, Fotos bleiben stehen.
 
 ## Einzelformular (`/de/list/`)
 
