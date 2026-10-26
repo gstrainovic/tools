@@ -27,10 +27,10 @@ Die Skripte liegen dort: `ricardo_einstellen.py` (Einzelformular), `ricardo_mehr
 
 ## Anhängen
 
-Skill `browser-wahl`, «Gorans Chrome anhängen»: `playwright-cli attach --cdp="ws://127.0.0.1:9222$(sed -n 2p
-~/.config/google-chrome/DevToolsActivePort)" --session=gchrome`. Port 9222 zu heisst: Chrome läuft nicht oder
-Remote-Debugging ist nicht erlaubt (`chrome://inspect/#remote-debugging`). Nach einem Chrome-Neustart meldet
-`tab-list` «not open», dann einmal neu anhängen. Login auf login.ricardo.ch macht Goran (Autofill lieferte nichts).
+Skill `browser-wahl`, «Gorans Chrome anhängen»: `chrome-anhaengen` (Playwright Extension, ohne Dialog), dann
+`playwright-cli -s=gchrome …`. Nie `attach --cdp`: Es löst in Gorans Chrome den Dialog «Remote-Fehlerbehebung
+zulassen?» aus (der Hook `browser-profil.sh` sperrt es). Meldet ein Skript «The browser 'gchrome' is not open»,
+einmal `chrome-anhaengen`. Login auf login.ricardo.ch macht Goran (Autofill lieferte nichts).
 Konto-E-Mail ist info@pink-deko.ch (`mailbox`-Konto `pink-deko`, Werbefilter aus, Ricardo-Mails im INBOX). Konto-Seite `/de/profile/personal-info/`; E-Mail ändern verlangt erst einen Code an die alte,
 dann an die neue Adresse und meldet danach ab.
 
