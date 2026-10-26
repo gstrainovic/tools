@@ -294,6 +294,7 @@ playwright-cli open --profile=/path/to/profile
 playwright-cli attach --extension=chrome
 
 # Connect to a running Chrome or Edge by channel name
+# Gorans Chrome: nie --cdp (Dialog «Remote-Fehlerbehebung zulassen?», Hook sperrt es), immer chrome-anhaengen
 playwright-cli attach --cdp=chrome
 playwright-cli attach --cdp=msedge
 
