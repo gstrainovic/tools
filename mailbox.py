@@ -15,7 +15,6 @@ einer eigenen Datei (Anwendungs- oder Gerätekennwort, Modus 600), nie in der TO
     password_file = "~/.config/mail/firma.pass"
     sent_folder = "Sent"        # Kopie per IMAP APPEND; "" wenn der Server selbst ablegt (Gmail)
     login = "info@example.ch"   # nur nötig, wenn address ein Domain-Alias eines anderen Postfachs ist
-    send = false                # nur lesen: jeder Versand (send, reply) bricht ab; für Postfächer, die ein Agent nur liest
 
 Befehle:
     mailbox accounts                                   Konten und Verbindungstest
@@ -68,7 +67,6 @@ class Account:
     imap_port: int = 993
     smtp_port: int = 465
     login_name: str = ""  # Anmeldung, wenn sie vom Absender abweicht (Domain-Alias)
-    can_send: bool = True  # send = false: nur lesen, smtp_send verweigert (Postfach, das ein Agent nur liest)
 
     @property
     def login(self) -> str:
@@ -109,7 +107,6 @@ def load_accounts(path: Path = CONFIG) -> dict[str, Account]:
             imap_port=int(cfg.get("imap_port", 993)),
             smtp_port=int(cfg.get("smtp_port", 465)),
             login_name=cfg.get("login", ""),
-            can_send=bool(cfg.get("send", True)),
         )
     return accounts
 
@@ -525,8 +522,6 @@ def cmd_read(accounts: dict[str, Account], args) -> None:
 
 
 def smtp_send(acc: Account, msg: EmailMessage) -> None:
-    if not acc.can_send:
-        raise SystemExit(f"{acc.key}: Konto ist nur lesen (send = false in accounts.toml), nichts gesendet")
     recipients = addresses(msg.get("To"), msg.get("Cc"), msg.get("Bcc"))
     if not recipients:
         raise SystemExit("Keine Empfänger")

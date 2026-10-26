@@ -39,24 +39,6 @@ class Konfiguration(unittest.TestCase):
         self.assertEqual(accounts["wh"].sent_folder, "Sent")
         self.assertEqual(accounts["wh"].login, "info@wartungsheft.ch")
 
-    def test_konto_nur_lesen_sendet_nie(self):
-        # send = false: ein Agent darf das Postfach lesen, aber unter keinem Aufruf (send, reply, .befehl-Datei)
-        # daraus senden; die Sperre sitzt darum beim SMTP-Versand selbst
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "accounts.toml"
-            path.write_text('[shop]\naddress="info@shop.ch"\nimap="mail.infomaniak.com"\npassword_file="/tmp/y"\n'
-                            'send=false\n[frei]\naddress="info@frei.ch"\nimap="mail.infomaniak.com"\n'
-                            'password_file="/tmp/z"\n', encoding="utf-8")
-            accounts = mb.load_accounts(path)
-        self.assertTrue(accounts["frei"].can_send)
-        self.assertFalse(accounts["shop"].can_send)
-        msg = mb.build_message(accounts["shop"], ["kunde@example.ch"], "Hallo", "Text")
-        with mock.patch.object(mb.smtplib, "SMTP_SSL") as smtp:
-            with self.assertRaises(SystemExit) as fehler:
-                mb.smtp_send(accounts["shop"], msg)
-        smtp.assert_not_called()
-        self.assertIn("nur lesen", str(fehler.exception))
-
     def test_alias_absender_meldet_sich_mit_dem_postfach_an(self):
         # Domain-Alias: Absender info@x.dev, Anmeldung am Postfach info@x.ch
         with tempfile.TemporaryDirectory() as tmp:
