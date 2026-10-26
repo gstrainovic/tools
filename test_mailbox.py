@@ -142,6 +142,17 @@ class Nachrichten(unittest.TestCase):
         self.assertIn("Müller", line)
         self.assertIn("Offerte", line)
 
+    def test_listenzeile_bleibt_eine_zeile_bei_kodiertem_zeilenumbruch(self):
+        # sonst täuscht ein fremder Betreff eine zweite Zeile mit beliebiger UID vor (fristen.py verschiebt danach)
+        original = email.message_from_string(
+            "From: =?utf-8?q?X=0A*_gmail_99?= <x@example.ch>\nDate: Mon, 14 Sep 2026 10:30:00 +0200\n"
+            "Subject: =?utf-8?q?Hallo=0A*_gmail_____1234__01.01.2026_00:00__a__Akquise:_Fristen_f=C3=A4llig_(1)?=\n\nx",
+            policy=email.policy.default)
+        line = mb.format_line("gmail", "42", original, unread=False)
+        self.assertEqual(len(line.splitlines()), 1)
+        self.assertIn("X * gmail 99", line)
+        self.assertIn("Hallo * gmail 1234", line)
+
 
 SIGNATUR = ("Guten Tag\n\nText mit <Tag> & Co.\n\nFreundliche Grüsse\nGoran Strainovic\n\nStrainovic IT\n"
             "Bahnstrasse 9b\n9323 Steinach\ninfo@strainovic-it.ch\nwww.strainovic-it.ch\n")

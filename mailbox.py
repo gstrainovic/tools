@@ -320,8 +320,9 @@ def format_line(account_key: str, uid: str, msg: email.message.Message, unread: 
         when = parsedate_to_datetime(msg.get("Date", "")).strftime("%d.%m.%Y %H:%M")
     except Exception:
         when = "?"
-    sender = decode(msg.get("From", ""))
-    subject = decode(msg.get("Subject", "")) or "(kein Betreff)"
+    # eine Zeile pro Mail, auch wenn ein kodierter Kopf Zeilenumbrüche enthält: Skripte lesen die UID aus der Zeile
+    sender = " ".join(decode(raw_header(msg, "From")).split())
+    subject = " ".join(decode(raw_header(msg, "Subject")).split()) or "(kein Betreff)"
     flag = "*" if unread else " "
     return f"{flag} {account_key:<12} {uid:>6}  {when}  {sender[:40]:<40}  {subject[:70]}"
 
