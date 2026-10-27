@@ -14,6 +14,7 @@ noch eigenständige Terminal-Scripts.
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
+| `sprachnachricht.py` | Telegram-Sprachnachricht lokal mit faster-whisper umschreiben, Deutsch oder Serbisch automatisch; schnelles Modell als Standard, `--genau` für das grosse |
 | `thunderbird_konten.py` | Thunderbird um die fehlenden Konten aus der mailbox-Konfiguration ergänzen |
 | `geheimnisse.py` | Dateien mit Zugangsdaten über den Bitwarden Secrets Manager zwischen Geräten abgleichen |
 | `ads.py` | Google-Ads-Konto über die Google Ads API: Kampagnen auflisten, abfragen, entfernen |
