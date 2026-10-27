@@ -65,3 +65,15 @@ ansehen und den passenden Treffer selbst wählen. Innenleben in `temu_produkt.js
   hochgeladen; Gravur gilt laut Angeboten für Text oder Logo, nicht für fortlaufende Nummern.
 - Temu erlaubt in den Schweizer Nutzungsbedingungen keinen gewerblichen Weiterverkauf; Einkauf von Verbrauchs- und
   Verpackungsmaterial ist Gorans Entscheid (vesna `action-dupes/AGENTS.md`).
+
+## SHEIN (gleiches Muster, erprobt 27.10.2026)
+
+- Teilen-Links (`onelink.shein.com/…`) und Produkt-URLs nie direkt öffnen: Sie landen auf
+  `ch.shein.com/risk/challenge` (Captcha). Jina und Exa liefern nur die Startseite.
+- Weg ohne Captcha und ohne Anmeldung: `tab-new https://ch.shein.com/`, Cookie-Hinweis «Alle akzeptieren» per
+  `page.mouse.click()` auf die `boundingBox()` von `text=Alle akzeptieren` (Rollen-Klick hängt), dann
+  `page.mouse.click()` ins Suchfeld oben (das `input[name=header-search]` ist unsichtbar), Suchbegriff mit
+  `keyboard.type`, Enter, Treffer über `a[href*="<Artikelnummer>"]` suchen und per Maus anklicken; die Produktseite
+  öffnet sich in einem neuen Tab (`tab-list`, `tab-select`).
+- Alles als Text lesen (`innerText`), keine Bildschirmfotos. Hersteller, EU-Verantwortliche und Warnhinweise stehen
+  im Fenster «Sicherheitsinformationen und Kontakte» (Klick darauf, dann `[class*=dialog]` lesen).
