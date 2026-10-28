@@ -302,6 +302,18 @@ def raw_header(msg: email.message.Message, name: str) -> str | None:
     return None
 
 
+def quote_original(original: email.message.Message) -> str:
+    """Verlauf für die Antwort: «Am … schrieb …:» und der Text des Originals mit «>» je Zeile."""
+    sender = decode(raw_header(original, "From") or "")
+    try:
+        when = parsedate_to_datetime(raw_header(original, "Date"))  # Zeit des Absenders, nicht die des Servers (UTC)
+        intro = f"Am {when:%d.%m.%Y} um {when:%H:%M} schrieb {sender}:"
+    except (TypeError, ValueError):
+        intro = f"{sender} schrieb:"
+    lines = body_text(original).replace("\r\n", "\n").rstrip().splitlines()
+    return intro + "\n" + "\n".join(f"> {ln}" if ln.strip() else ">" for ln in lines) + "\n"
+
+
 def reply_recipients(original: email.message.Message, own: str, all_recipients: bool) -> tuple[list[str], list[str]]:
     """Eigene Mail: ursprüngliche To; fremde Mail: Reply-To oder From; --all ergänzt Cc ohne uns."""
     get = lambda name: raw_header(original, name)  # noqa: E731
@@ -651,8 +663,11 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
     conn.logout()
     to, cc = reply_recipients(original, acc.address, args.all)
     cc += [a for a in args.cc if a not in cc and a not in to]
+    body = read_body(args.body_file)
+    if not getattr(args, "ohne_zitat", False):
+        body += "\n" + quote_original(original)
     msg = build_message(
-        acc, to, reply_subject(decode(raw_header(original, "Subject") or "")), read_body(args.body_file), cc=cc,
+        acc, to, reply_subject(decode(raw_header(original, "Subject") or "")), body, cc=cc,
         in_reply_to=raw_header(original, "Message-ID"), references=raw_header(original, "References"),
         attachments=[Path(a) for a in args.attach],
     )
@@ -774,6 +789,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--draft", action="store_true", help="nicht senden, als Entwurf in den Entwurfsordner legen")
+    p.add_argument("--ohne-zitat", action="store_true", help="Originalmail nicht als Verlauf anhängen")
     p.add_argument("--doppel-geprueft", metavar="GRUND", help=DOPPEL_HILFE)
     p.set_defaults(fn=cmd_reply)
 
