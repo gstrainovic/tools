@@ -7,5 +7,3 @@
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
   gespeicherte Tab-Gruppen, alle namens «Claude» (von Claude in Chrome). Offene Frage 2: sind diese gemeint?
   Löschen geht nur in der Oberfläche (Rechtsklick auf die Gruppe, «Gruppe löschen»).
-- `gui-screenshot` liefert kein Bild (Exit 141 bzw. keine neue Datei in `~/Bilder/Bildschirmfotos`), Ursache
-  ungeprüft.
