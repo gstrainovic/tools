@@ -30,8 +30,11 @@ fi
 
 export YDOTOOL_SOCKET
 
+# Newest screenshot; ls gets SIGPIPE from head with many files, so ignore its status
+newest() { ls -t "$SCREENSHOT_DIR"/*.png 2>/dev/null | head -1 || true; }
+
 # Remember newest screenshot before taking one
-BEFORE=$(ls -t "$SCREENSHOT_DIR"/*.png 2>/dev/null | head -1)
+BEFORE=$(newest)
 
 # Simulate Shift+Print (keycodes: 42=LShift, 99=SysRq/Print)
 ydotool key 42:1 99:1 99:0 42:0
@@ -39,7 +42,7 @@ ydotool key 42:1 99:1 99:0 42:0
 # Wait for new file to appear (max 5 seconds)
 for i in $(seq 1 50); do
     sleep 0.1
-    AFTER=$(ls -t "$SCREENSHOT_DIR"/*.png 2>/dev/null | head -1)
+    AFTER=$(newest)
     if [[ -n "$AFTER" && "$AFTER" != "$BEFORE" ]]; then
         if [[ -n "$OUTPUT_PATH" ]]; then
             mkdir -p "$(dirname "$OUTPUT_PATH")"
