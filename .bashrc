@@ -3,5 +3,5 @@
 #   [ -f "$HOME/projects/tools/.bashrc" ] && source "$HOME/projects/tools/.bashrc"
 
 # Telegram als Kanal, sonst holt der Bot Nachrichten ab, ohne sie an die Sitzung weiterzugeben.
-alias claude="claude --channels plugin:telegram@claude-plugins-official --allow-dangerously-skip-permissions --resume"
+alias claude="claude --channels plugin:telegram@claude-plugins-official --allow-dangerously-skip-permissions"
 alias ll='ls -lha --color=auto'
