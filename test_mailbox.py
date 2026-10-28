@@ -211,6 +211,38 @@ class AntwortAufOutlookKopf(unittest.TestCase):
         self.assertEqual(msg["In-Reply-To"], "<o@example.com>")
 
 
+class AntwortMitZitat(unittest.TestCase):
+    ORIGINAL = ("From: =?utf-8?Q?B=2E_Hofer?= <mail@zeichenbuero.ch>\nTo: info@strainovic-it.ch\n"
+                "Date: Wed, 28 Oct 2026 13:42:41 +0100\nMessage-ID: <z@zeichenbuero.ch>\n"
+                "Subject: Ihre Frage\n\nSehr geehrter Herr Strainovic\n\nWas ist mit Tablets?\n> alter Text\n")
+
+    def antwort(self, *extra):
+        original = email.message_from_string(self.ORIGINAL, policy=email.policy.default)
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "antwort.txt"
+            body.write_text("Guten Tag Frau Hofer\n\nTablets gehen gut.\n", encoding="utf-8")
+            out = io.StringIO()
+            with mock.patch.object(mb, "load_accounts", return_value={"x": account()}), \
+                    mock.patch.object(mb, "imap_connect"), \
+                    mock.patch.object(mb, "fetch", return_value=(original, False)), contextlib.redirect_stdout(out):
+                mb.main(["reply", "x", "7", "--body-file", str(body), "--dry-run", *extra])
+        return email.message_from_string(out.getvalue(), policy=email.policy.default)
+
+    def test_antwort_haengt_original_als_zitat_an(self):
+        msg = self.antwort()
+        text = msg.get_body(("plain",)).get_content().replace("\r\n", "\n")
+        self.assertIn("Tablets gehen gut.\n\nAm 28.10.2026 um 13:42 schrieb B. Hofer <mail@zeichenbuero.ch>:\n", text)
+        self.assertIn("> Sehr geehrter Herr Strainovic\n>\n> Was ist mit Tablets?\n> > alter Text", text)
+        html = msg.get_body(("html",)).get_content()
+        self.assertIn("<blockquote", html)
+        self.assertIn("Was ist mit Tablets?", html)
+
+    def test_ohne_zitat_nur_eigener_text(self):
+        text = self.antwort("--ohne-zitat").get_body(("plain",)).get_content()
+        self.assertNotIn("schrieb", text)
+        self.assertNotIn("Tablets?", text)
+
+
 class Lesen(unittest.TestCase):
     def test_kopf_mit_zeilenumbruch_im_namen_bricht_nicht_ab(self):
         # Outlook kodiert gelegentlich einen Zeilenumbruch in den Anzeigenamen (=0A), policy.default wirft dann

@@ -166,7 +166,7 @@ mailbox accounts                           # Konten und Verbindungstest
 mailbox list --unread                      # ungelesene Mails aller Konten
 mailbox read firma 42                      # Kopfzeilen, Anhänge, Text
 mailbox send firma --to x@y.ch --subject "Offerte" --body-file text.txt --attach offerte.pdf
-mailbox reply firma 42 --body-file antwort.txt
+mailbox reply firma 42 --body-file antwort.txt   # hängt die Originalmail als Zitat an; --ohne-zitat lässt es weg
 ```
 
 Für Agenten gedacht, die Mails im Namen einer Person lesen und senden, während die Person
