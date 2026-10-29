@@ -35,7 +35,7 @@ import wave
 from pathlib import Path
 
 # Stücke von 0.5 s, zu Sätzen gesammelt: Ein Satz endet nach PAUSE_S ohne Sprache, ab MIN_S schon an der ersten
-# kurzen Pause, spätestens nach MAX_S. Stimmtest 24.10. (find-jobs akquise/bexio-hubspot/meeting-live-hilfe.md):
+# kurzen Pause, spätestens nach MAX_S. Stimmtest (Skill meeting-hilfe, «Umschrift: was gilt»):
 # feste 8-s-Stücke trennten Wörter, Schnitte nach 0.5 s Pause ergaben Schnipsel, aus denen Voxtral Englisch erfand
 SEGMENT_S = 0.5
 PAUSE_S = 1
