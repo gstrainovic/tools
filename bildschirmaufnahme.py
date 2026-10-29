@@ -49,7 +49,7 @@ def main(argv=None, proxy=None):
             return False
         zustand["laeuft"] = True
         print("Stück", name, flush=True)
-        GLib.timeout_add_seconds(a.stueck, naechstes)
+        GLib.timeout_add(a.stueck * 1000, naechstes)  # nicht timeout_add_seconds: das rundet bis zu 1 s auf
         return False
 
     def stop():
