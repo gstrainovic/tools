@@ -55,6 +55,15 @@ class Kopfzeilen(unittest.TestCase):
         self.assertEqual(mb.decode("=?utf-8?q?Gr=C3=BCezi_Herr_M=C3=BCller?="), "Grüezi Herr Müller")
         self.assertEqual(mb.decode(None), "")
 
+    def test_listenzeile_mit_ungueltigem_8bit_betreff_laesst_sich_ausgeben(self):
+        # Spam mit rohen Latin-1-Bytes im Betreff: die Zeile muss sich als UTF-8 ausgeben lassen
+        raw = b"From: Spam <x@y.z>\r\nSubject: Gewinn \xe4\xf6 jetzt\r\nDate: Thu, 29 Oct 2026 05:00:00 +0100\r\n\r\n"
+        msg = email.message_from_bytes(raw, policy=email.policy.default)
+        zeile = mb.format_line("gmail", "7", msg, False)
+        zeile.encode("utf-8")
+        self.assertIn("Gewinn", zeile)
+        self.assertIn("jetzt", zeile)
+
     def test_adressen_auch_bei_leeren_feldern(self):
         self.assertEqual(mb.addresses("A <a@b.ch>", "", None, "c@d.ch, E <e@f.ch>"), ["a@b.ch", "c@d.ch", "e@f.ch"])
         self.assertEqual(mb.addresses("", None), [])

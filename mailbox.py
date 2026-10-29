@@ -118,9 +118,15 @@ def decode(value: str | None) -> str:
     if not value:
         return ""
     try:
-        return str(make_header(decode_header(value)))
+        value = str(make_header(decode_header(value)))
     except Exception:
-        return value
+        pass
+    # rohe 8-Bit-Bytes im Kopf (Spam) kommen als Surrogate an und liessen print() abbrechen
+    roh = value.encode("utf-8", "surrogateescape")
+    try:
+        return roh.decode("utf-8")
+    except UnicodeDecodeError:
+        return roh.decode("cp1252", "replace")
 
 
 def html_to_text(html: str) -> str:
