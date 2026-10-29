@@ -1,0 +1,18 @@
+/* @theme hochformat */
+/* Marp-Theme für Meeting-Spickzettel auf dem Handy: Hochformat 9:16. Die Foliengrösse kommt nur aus dem Theme,
+   ein <style> in der Markdown-Datei ändert sie nicht. */
+@import 'default';
+
+section {
+  width: 720px;
+  height: 1280px;
+  font-size: 26px;
+  padding: 48px 40px;
+}
+
+/* Default-Theme zentriert senkrecht; auf dem Handy soll der Text oben stehen */
+section { place-content: start !important; justify-content: flex-start !important; }
+
+h1 { font-size: 40px; }
+h2 { font-size: 34px; }
+table { font-size: 22px; }
