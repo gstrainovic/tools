@@ -269,6 +269,99 @@ class Lesen(unittest.TestCase):
         self.assertIn("Hallo", out.getvalue())
 
 
+class AnhaengeSpeichern(unittest.TestCase):
+    """mailbox attachments KONTO UID --out ORDNER: alle Anhänge als Dateien, Mail bleibt ungelesen."""
+
+    def mail(self, anhaenge):
+        msg = email.message.EmailMessage()
+        msg["From"] = "Kunde <kunde@example.ch>"
+        msg["Subject"] = "Unterlagen"
+        msg.set_content("Im Anhang")
+        for name, inhalt in anhaenge:
+            msg.add_attachment(inhalt, maintype="application", subtype="pdf", filename=name)
+        return msg.as_bytes()
+
+    def speichern(self, roh, ordner, *extra):
+        aufrufe = []
+
+        class Conn:
+            def select(self, folder, readonly=False):
+                aufrufe.append(("select", folder, readonly))
+                return "OK", [b"1"]
+
+            def uid(self, cmd, *args):
+                aufrufe.append(("uid", cmd, *args))
+                if cmd == "fetch":
+                    return "OK", [(b"1 (UID 7 FLAGS () BODY[] {1}", roh), b")"]
+                return "OK", [None]
+
+            def logout(self):
+                pass
+
+        out = io.StringIO()
+        with mock.patch.object(mb, "load_accounts", return_value={"x": account()}), \
+                mock.patch.object(mb, "imap_connect", return_value=Conn()), contextlib.redirect_stdout(out):
+            mb.main(["attachments", "x", "7", "--out", str(ordner), *extra])
+        return out.getvalue(), aufrufe
+
+    def test_speichert_anhaenge_mit_inhalt_und_gibt_pfad_und_groesse_aus(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ziel = Path(tmp) / "neu" / "anhaenge"
+            out, _ = self.speichern(self.mail([("Rechnung.pdf", b"%PDF-1"), ("Offerte.pdf", b"%PDF-22")]), ziel)
+            self.assertEqual((ziel / "Rechnung.pdf").read_bytes(), b"%PDF-1")
+            self.assertEqual((ziel / "Offerte.pdf").read_bytes(), b"%PDF-22")
+        self.assertEqual(out.splitlines(), [f"{ziel / 'Rechnung.pdf'} 6", f"{ziel / 'Offerte.pdf'} 7"])
+
+    def test_gleicher_name_bekommt_nummer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ziel = Path(tmp)
+            out, _ = self.speichern(self.mail([("a.pdf", b"1"), ("a.pdf", b"22"), ("a.pdf", b"333")]), ziel)
+            self.assertEqual((ziel / "a.pdf").read_bytes(), b"1")
+            self.assertEqual((ziel / "a-2.pdf").read_bytes(), b"22")
+            self.assertEqual((ziel / "a-3.pdf").read_bytes(), b"333")
+        self.assertEqual(out.splitlines(), [f"{ziel / 'a.pdf'} 1", f"{ziel / 'a-2.pdf'} 2", f"{ziel / 'a-3.pdf'} 3"])
+
+    def test_vorhandene_datei_wird_nicht_ueberschrieben(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ziel = Path(tmp)
+            (ziel / "a.pdf").write_bytes(b"alt")
+            self.speichern(self.mail([("a.pdf", b"neu")]), ziel)
+            self.assertEqual((ziel / "a.pdf").read_bytes(), b"alt")
+            self.assertEqual((ziel / "a-2.pdf").read_bytes(), b"neu")
+
+    def test_gefaehrlicher_dateiname_bleibt_im_ordner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ziel = Path(tmp) / "ziel"
+            namen = [("../x.pdf", b"1"), ("/etc/passwd", b"2"), ("..\\..\\win.pdf", b"3"), ("..", b"4"),
+                     ('a<b>:"|?*.pdf', b"5")]
+            out, _ = self.speichern(self.mail(namen), ziel)
+            dateien = sorted(p.name for p in ziel.iterdir())
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ["ziel"], "nichts ausserhalb des Ordners")
+        self.assertEqual(len(dateien), 5)
+        self.assertIn("x.pdf", dateien)
+        self.assertIn("passwd", dateien)
+        self.assertIn("win.pdf", dateien)
+        for name in dateien:
+            self.assertFalse(name.startswith("."), name)
+            self.assertNotRegex(name, r'[<>:"|?*\\/]')
+        for zeile in out.splitlines():
+            self.assertEqual(Path(zeile.rsplit(" ", 1)[0]).parent, ziel)
+
+    def test_mail_bleibt_ungelesen(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, aufrufe = self.speichern(self.mail([("a.pdf", b"1")]), Path(tmp), "--folder", "Archiv")
+        self.assertIn(("select", "Archiv", True), aufrufe)
+        holen = [a for a in aufrufe if a[:2] == ("uid", "fetch")]
+        self.assertEqual(len(holen), 1)
+        self.assertIn("BODY.PEEK[]", holen[0][3])
+        self.assertFalse([a for a in aufrufe if a[:2] == ("uid", "store")])
+
+    def test_ohne_anhaenge(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out, _ = self.speichern(self.mail([]), Path(tmp) / "leer")
+        self.assertEqual(out.strip(), "keine Anhänge")
+
+
 class HtmlFassung(unittest.TestCase):
     def test_alternative_mit_text_und_html(self):
         msg = mb.build_message(account(), ["a@b.ch"], "Test", SIGNATUR)
