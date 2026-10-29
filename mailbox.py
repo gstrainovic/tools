@@ -20,6 +20,7 @@ Befehle:
     mailbox accounts                                   Konten und Verbindungstest
     mailbox list [KONTO] [--unread] [--limit 20] [--folder INBOX]
     mailbox read KONTO UID [--folder INBOX] [--html]
+    mailbox attachments KONTO UID --out ORDNER [--folder INBOX]   Anhänge speichern, je Datei «<pfad> <bytes>»
     mailbox search KONTO 'FROM "x"' | 'SUBJECT "y"' | 'SINCE 01-Sep-2026' [--folder INBOX]
     mailbox send KONTO --to a@b.ch [--cc ...] [--bcc ...] --subject "…" --body-file text.txt [--reply-to ...] [--attach cv.pdf ...] [--list-unsubscribe [--unsubscribe-url https://…]] [--dry-run]
     mailbox reply KONTO UID --body-file text.txt [--all] [--cc ...] [--attach ...] [--folder INBOX] [--dry-run]
@@ -165,12 +166,30 @@ def body_text(msg: email.message.Message, prefer_html: bool = False) -> str:
     return html_to_text(html)
 
 
+def attachment_parts(msg: email.message.Message) -> list[email.message.Message]:
+    return [p for p in msg.walk() if "attachment" in str(p.get("Content-Disposition", ""))]
+
+
 def attachments(msg: email.message.Message) -> list[str]:
-    names = []
-    for part in msg.walk():
-        if "attachment" in str(part.get("Content-Disposition", "")):
-            names.append(decode(part.get_filename()) or part.get_content_type())
-    return names
+    return [decode(p.get_filename()) or p.get_content_type() for p in attachment_parts(msg)]
+
+
+def safe_filename(name: str) -> str:
+    """Dateiname aus einem Anhang ohne Pfadbestandteile und unsichere Zeichen («../x.pdf» → «x.pdf»)."""
+    name = re.split(r"[\\/]", name)[-1]
+    name = re.sub(r"[^\w.\- ]", "_", name).strip(" .")
+    return name or "anhang"
+
+
+def free_path(folder: Path, name: str) -> Path:
+    """Pfad im Ordner, der noch nicht existiert: «a.pdf», sonst «a-2.pdf», «a-3.pdf» …"""
+    path = folder / name
+    stem, suffix = path.stem, path.suffix
+    n = 2
+    while path.exists():
+        path = folder / f"{stem}-{n}{suffix}"
+        n += 1
+    return path
 
 
 def addresses(*fields: object) -> list[str]:
@@ -540,6 +559,24 @@ def cmd_read(accounts: dict[str, Account], args) -> None:
     print(body_text(msg, prefer_html=args.html))
 
 
+def cmd_attachments(accounts: dict[str, Account], args) -> None:
+    conn = imap_connect(accounts[args.account])
+    conn.select(imap_folder(args.folder), readonly=True)
+    msg, _ = fetch(conn, args.uid)  # BODY.PEEK: Mail bleibt ungelesen
+    conn.logout()
+    parts = attachment_parts(msg)
+    if not parts:
+        print("keine Anhänge")
+        return
+    out = Path(args.out).expanduser()
+    out.mkdir(parents=True, exist_ok=True)
+    for part in parts:
+        data = part.get_payload(decode=True) or b""
+        path = free_path(out, safe_filename(decode(part.get_filename())))
+        path.write_bytes(data)
+        print(f"{path} {len(data)}")
+
+
 def smtp_send(acc: Account, msg: EmailMessage) -> None:
     recipients = addresses(msg.get("To"), msg.get("Cc"), msg.get("Bcc"))
     if not recipients:
@@ -766,6 +803,13 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--folder", default="INBOX")
     p.add_argument("--html", action="store_true", help="HTML-Teil roh statt als Text")
     p.set_defaults(fn=cmd_read)
+
+    p = sub.add_parser("attachments", help="alle Anhänge einer Mail in einen Ordner speichern (Mail bleibt ungelesen)")
+    p.add_argument("account")
+    p.add_argument("uid")
+    p.add_argument("--out", required=True, metavar="ORDNER", help="Zielordner, wird angelegt")
+    p.add_argument("--folder", default="INBOX")
+    p.set_defaults(fn=cmd_attachments)
 
     p = sub.add_parser("send")
     p.add_argument("account")
