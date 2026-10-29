@@ -4,6 +4,12 @@
   SYSTRAN/faster-whisper#1589).
 - Alias `claude` (`.bashrc`) startet jede Sitzung mit `--channels` Telegram: prüfen, ob eine zweite Sitzung der
   Akquise-Sitzung die Telegram-Nachrichten wegnimmt (ein Bot, nur ein Empfänger).
+- Telegram-Kanal der Akquise-Sitzung nach der Anmeldung vom 29.10. mitten im Lauf getrennt («failed to connect»);
+  die Sitzung hört die Gruppe mit Vesna dann nicht mehr. Ursache klären (zweite Sitzung mit `--channels`, siehe
+  Punkt oben, oder Absturz des Plugins) und Neuverbinden ohne Neustart der Sitzung prüfen.
+- `mailbox search gmail … --folder '[Gmail]/Spam'` bricht mit `UnicodeEncodeError … surrogates not allowed` in
+  `cmd_search` (`print(line)`) ab, sobald ein Betreff ungültige Zeichen trägt; Ausgabe mit `errors="replace"`
+  schreiben (TDD).
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
   gespeicherte Tab-Gruppen, alle namens «Claude» (von Claude in Chrome); Goran will alle 31 weg. Kein Knopf für
   alle auf einmal. Offene Frage 3: (a) Kästchen «Tab-Gruppen» in «Browserdaten löschen» → Erweitert (laut
