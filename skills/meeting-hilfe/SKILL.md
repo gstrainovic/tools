@@ -27,8 +27,16 @@ Rendern (PNG zum Prüfen, PDF fürs Handy) immer mit
 `markdown.marp.themes`. Marp übernimmt Zeilenumbrüche im Quelltext (`breaks`): Absätze und Listenpunkte auf einer
 Zeile schreiben, sonst bricht die Zeile auf dem Handy mitten im Satz.
 
-Inhalt, je Thema eine Folie: Ziel und Schlusssatz, seine Wörter übersetzt, seine erwarteten Fragen mit Antwort,
-Gorans eigene Fragen nach Wichtigkeit, was nicht gesagt wird. Was nur Claude braucht (interne Zahlen, Quellen,
+Die Datei ist ein Leitfaden zum Vorlesen, keine Notizsammlung: Goran liest sie im Gespräch von oben nach unten.
+
+- Teil 1 in Gesprächsreihenfolge (Einstieg mit Themenvorschlag, je Thema eine Folie, Abschluss mit nächstem
+  Schritt und Zusage der Zusammenfassung). Je Folie **Sagen:** mit ausformulierten Sätzen in Anführungszeichen,
+  wie Goran sie spricht (Du- oder Sie-Form wie im Verhältnis), und **Fragen:** mit den Fragen an das Gegenüber.
+  Eigene Fragen stehen beim Thema, zu dem sie gehören, nicht als Liste am Schluss.
+- Teil 2 «Falls er fragt …»: erwartete Fragen des Gegenübers mit vorlesbarer Antwort, dann «Nicht sagen».
+- Am Ende Fachwörter des Gegenübers übersetzt.
+- Folien im Titel nummerieren, ohne `paginate` (Seitenzahl und Titelnummer liefen sonst auseinander); Verweise
+  im Leitfaden («→ Folie 11») auf diese Nummern. Was nur Claude braucht (interne Zahlen, Quellen,
 Aufruf von `mithoeren`), steht als HTML-Kommentar (`<!-- … -->`) unter der Folie: Marp zeigt ihn nicht, die
 Begleit-Sitzung liest ihn.
 
