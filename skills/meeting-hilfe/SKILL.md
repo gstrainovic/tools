@@ -61,7 +61,8 @@ Begleit-Sitzung liest ihn.
    und den Monitor auf diese Datei. Kundennamen nur im Aufruf, nie in diesem öffentlichen Repo.
 3. **Probe vor dem Einwählen:** Goran sagt zwei Sätze, ein Video läuft 15 s über die Kopfhörer; beide Seiten müssen im
    Transkript stehen.
-4. **Einwilligung** zu Beginn mit einem Satz holen («Läuft wie letztes Mal mit, okay?»). Sagt das Gegenüber nein:
+4. **Einwilligung** zu Beginn mit einem Satz holen, ausser das Gegenüber hat dauerhaft zugestimmt (steht dann in
+   der Vorbereitung). Sagt das Gegenüber nein:
    `mithoeren` beenden, Ton- und Textdatei löschen, weiter mit Chat neben dem Meeting (Goran tippt Stichworte,
    Claude antwortet).
 5. **Danach:** `mithoeren` beenden (Strg+C bzw. `kill`), Transkript committen, Tondatei je Kanal am Stück neu
@@ -75,7 +76,8 @@ Der Ton bleibt als Stereo-Opus (links Goran, rechts Gegenüber, Zeit wie im Tran
 Art. 179ter StGB: Wer als Gesprächsteilnehmer ein nichtöffentliches Gespräch ohne Einwilligung der anderen auf einen
 Tonträger aufnimmt, wird auf Antrag bestraft (bis ein Jahr oder Geldstrafe; EDÖB «Aufzeichnung von Gesprächen»). Die
 Einwilligung gilt je Aufnahme durch den, der aufnimmt; dass das Gegenüber selbst aufnimmt, ersetzt sie nach dem
-Wortlaut nicht (Wertung, nicht anwaltlich geprüft). Darum in jedem Meeting fragen.
+Wortlaut nicht (Wertung, nicht anwaltlich geprüft). Darum in jedem Meeting fragen, ausser es liegt eine dauerhafte
+Einwilligung vor.
 
 ## Umschrift: was gilt
 
