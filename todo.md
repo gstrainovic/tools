@@ -17,7 +17,6 @@
   und nur arbeiten, wenn Goran nicht am Rechner ist; gehört in den Skill screenshots.- `mithoeren.py`: kurze Einwürfe unter rund 2 s nicht einzeln an Voxtral schicken, sondern an den nächsten Satz
   anhängen oder verwerfen. Beleg Meeting comza 29.10. (find-jobs `akquise/bexio-hubspot/comza-gespraech-2026-10-29-
   transkript*.txt`): live erfand Voxtral bei Gorans kurzen Einwürfen fremde Sprachen (11 von 276 Zeilen, beim
-  Gegenüber 3 von 204); dieselbe Aufnahme je Kanal am Stück mit `timestamp_granularities=segment` (Skript in
-  der find-jobs-Auswertung beschrieben): 3 bzw. 0, zusammenhängende Sätze fehlerfrei. Nach dem Meeting lohnt
-  sich die Umschrift am Stück immer; Vorlage `batch_umschrift.py` aus dem Scratchpad als Option `--nachher` in
-  mithoeren übernehmen.
+  Gegenüber 3 von 204); dieselbe Aufnahme je Kanal am Stück mit `timestamp_granularities=segment`: 3 bzw. 0,
+  zusammenhängende Sätze fehlerfrei. Nach dem Meeting lohnt sich die Umschrift am Stück immer; Vorlage
+  `find-jobs/akquise/bexio-hubspot/umschrift_am_stueck.py` als Option `--nachher` in mithoeren übernehmen.
