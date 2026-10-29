@@ -66,16 +66,24 @@ Begleit-Sitzung liest ihn.
      --ton ~/Dokumente/aufnahme-<kunde>-<datum>.ogg --gegenueber <Vorname> --begriffe <Firma>,<Produkte>,<Namen>
    ```
 
-   und den Monitor auf diese Datei. Kundennamen nur im Aufruf, nie in diesem öffentlichen Repo.
+   und den Monitor auf diese Datei. Kundennamen nur im Aufruf, nie in diesem öffentlichen Repo. Daneben
+   `bildschirmaufnahme ~/Dokumente/aufnahme-<kunde>-<datum>` (Skill `screenshots`): Teilt das Gegenüber den
+   Bildschirm («ich zeige dir»), zieht die Sitzung ein Standbild aus dem letzten fertigen Stück und liest es; ohne
+   Video sieht sie nur, was gesagt wird (Meeting 29.10.2026: Zahlteil und Listungsdialog nur über Gorans
+   Screenshots).
 3. **Probe vor dem Einwählen:** Goran sagt zwei Sätze, ein Video läuft 15 s über die Kopfhörer; beide Seiten müssen im
    Transkript stehen.
 4. **Einwilligung** zu Beginn mit einem Satz holen, ausser das Gegenüber hat dauerhaft zugestimmt (steht dann in
    der Vorbereitung). Sagt das Gegenüber nein:
    `mithoeren` beenden, Ton- und Textdatei löschen, weiter mit Chat neben dem Meeting (Goran tippt Stichworte,
    Claude antwortet).
-5. **Danach:** `mithoeren` beenden (Strg+C bzw. `kill`), Transkript committen, Tondatei je Kanal am Stück neu
-   umschreiben lassen (trifft mehr als live), Hörfehler an der Tondatei prüfen und die Begriffsliste ergänzen,
-   Auswertung mit Abmachungen und offenen Punkten ins Repo, Zusammenfassung an das Gegenüber als Entwurf zur Freigabe.
+5. **Danach:** `mithoeren` und `bildschirmaufnahme` beenden (Strg+C bzw. `kill -INT`), Transkript committen,
+   Tondatei je Kanal am Stück neu umschreiben: Kanäle mit ffmpeg trennen und in Zehn-Minuten-Stücke schneiden
+   (`-filter_complex "[0:a]pan=mono|c0=c0[g];[0:a]pan=mono|c0=c1[c]"`, je Kanal `-f segment -segment_time 600`),
+   dann `umschrift-am-stueck <ordner> <transkript-batch.txt>` (Quelle `~/projects/tools/umschrift_am_stueck.py`,
+   Begriffe dort per Kommandozeile ergänzen). Hörfehler an der Tondatei prüfen und die Begriffsliste ergänzen,
+   Auswertung mit Abmachungen und offenen Punkten ins Repo, Zusammenfassung an das Gegenüber als Entwurf zur
+   Freigabe. Nur mp4-Stücke und Tondatei bleiben in `~/Dokumente/`, nie im Repo.
 
 Der Ton bleibt als Stereo-Opus (links Goran, rechts Gegenüber, Zeit wie im Transkript) in `~/Dokumente/`, nie im Repo.
 
@@ -93,7 +101,12 @@ Einwilligung vor.
   Schweizerdeutsch und Produktnamen mit Begriffsliste. Feste Stücke schneiden Wörter; Schnitte schon nach 0.5 s Pause
   ergeben Schnipsel, aus denen Voxtral Englisch erfindet. Eine zu starke Begriffsliste zieht ähnliche Wörter zu sich
   («Termin» → Produktname).
-- **Am Stück** trifft Voxtral deutlich mehr als live; darum die Auswertung aus der Tondatei.
+- **Kurze Einwürfe** («Mm-hmm», «Ja, okay», ein halber Satz) sind live die Schwachstelle: Voxtral rät dann eine
+  Sprache und erfindet Russisch, Niederländisch oder Spanisch. Meeting 29.10.2026: 11 von 276 Zeilen auf Gorans Seite,
+  3 von 204 beim Gegenüber; am Stück 3 bzw. 0. Zusammenhängende Sätze treffen auch live. Hinweise der
+  Begleit-Sitzung stützen sich darum auf ganze Sätze, Einwürfe werden überlesen.
+- **Am Stück** (je Kanal, Zehn-Minuten-Stücke, `timestamp_granularities=segment`) trifft Voxtral deutlich mehr als
+  live; darum die Auswertung aus der Tondatei.
 
 Geprüft und nicht gewählt:
 

@@ -51,6 +51,8 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `test_chrome_anhaengen.py` | Tests mit falschem playwright-cli im PATH (`python3 -m unittest test_chrome_anhaengen.py`) |
 | `mithoeren.py` | Live-Umschrift eines Online-Meetings (Mikrofon = Goran, Lautsprecher = Gegenüber) mit Voxtral in eine wachsende Textdatei, die Claude Code per Monitor mitliest; mit `--ton` bleibt das Gespräch als Stereo-Opus zum Nachhören von Hörfehlern; als `~/.local/bin/mithoeren` verknüpft. Namen von Kunden nur beim Aufruf per `--begriffe`, nie hier im öffentlichen Repo |
 | `test_mithoeren.py` | Tests mit erzeugten WAV-Stücken und falscher Umschrift (`uv run --python 3.13 python -m unittest test_mithoeren`) |
+| `umschrift_am_stueck.py` | Tondatei eines Meetings je Kanal am Stück mit Voxtral umschreiben (nach dem Meeting, trifft mehr als live); Ablauf im Skill meeting-hilfe, als `~/.local/bin/umschrift-am-stueck` verknüpft |
+| `bildschirmaufnahme.py` | Bildschirm während eines Meetings in mp4-Stücken aufnehmen (GNOME Shell per D-Bus, kein Dialog, ohne Ton), damit Claude Code Standbilder von geteilten Bildschirmen ziehen kann; neben `mithoeren` starten, als `~/.local/bin/bildschirmaufnahme` verknüpft; Details im Skill screenshots |
 | `chrome-policy/` | Chrome-Richtlinie, die die Playwright Extension ohne Klick installiert (nach `/etc/opt/chrome/policies/managed/`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
