@@ -15,8 +15,8 @@
 - ydotool tippt in das Fenster, das gerade vorne ist, nicht in ein bestimmtes: Tastatureingaben sind in eine
   Terminal-Sitzung von Goran geraten. Bevor ydotool tippt, mit `gui-screenshot` prüfen, welches Fenster vorne ist,
   und nur arbeiten, wenn Goran nicht am Rechner ist; gehört in den Skill screenshots.- `mithoeren.py`: kurze Einwürfe unter rund 2 s nicht einzeln an Voxtral schicken, sondern an den nächsten Satz
-  anhängen oder verwerfen. Beleg Meeting comza 29.10. (find-jobs `akquise/bexio-hubspot/comza-gespraech-2026-10-29-
+  anhängen oder verwerfen. Beleg Meeting 29.10.2026 (Transkripte in find-jobs, `akquise/bexio-hubspot/*-2026-10-29-
   transkript*.txt`): live erfand Voxtral bei Gorans kurzen Einwürfen fremde Sprachen (11 von 276 Zeilen, beim
   Gegenüber 3 von 204); dieselbe Aufnahme je Kanal am Stück mit `timestamp_granularities=segment`: 3 bzw. 0,
-  zusammenhängende Sätze fehlerfrei. Nach dem Meeting lohnt sich die Umschrift am Stück immer; Vorlage
-  `find-jobs/akquise/bexio-hubspot/umschrift_am_stueck.py` als Option `--nachher` in mithoeren übernehmen.
+  zusammenhängende Sätze fehlerfrei (Skill meeting-hilfe). `umschrift_am_stueck.py` als Option `--nachher` in
+  mithoeren übernehmen, samt Kanaltrennung per ffmpeg, mit Tests.

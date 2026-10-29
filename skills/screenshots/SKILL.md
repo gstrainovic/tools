@@ -34,10 +34,27 @@ gui-screenshot /tmp/out.png     # verschiebt den Screenshot dorthin
 
 Simuliert Shift+Print per `ydotool` und wartet bis zu 5 Sekunden auf die neue Datei in `~/Bilder/Bildschirmfotos`. Braucht `ydotoold`, das Script startet ihn bei Bedarf per sudo. Erfasst auch Kitty-Grafiken.
 
+## Bildschirm als Video, etwa im Online-Meeting: `bildschirmaufnahme`
+
+```bash
+bildschirmaufnahme ~/Dokumente/meeting-kunde &        # meeting-kunde-000.mp4, -001.mp4, … je 60 s, 5 Bilder/s
+ffmpeg -ss 30 -i ~/Dokumente/meeting-kunde-003.mp4 -frames:v 1 -vf scale=960:-1 /tmp/bild.png   # Standbild
+```
+
+- Nimmt den ganzen Bildschirm über GNOME Shell auf (D-Bus `org.gnome.Shell.Screencast`, h264 in mp4, kein Dialog,
+  ohne Ton). Beenden mit `kill -INT`.
+- In Stücken, weil GNOME das mp4 erst beim Stoppen abschliesst: lesbar sind nur fertige Stücke, zwischen zweien
+  fehlt rund eine Sekunde. Sagt das Gegenüber «ich zeige dir», ein Standbild aus dem letzten fertigen Stück ziehen
+  und mit Read ansehen; nicht laufend Bilder lesen, jedes kostet Kontext.
+- Zu Meetings gehört daneben `mithoeren --ton` (Ton und Live-Umschrift, tools/AGENTS.md).
+- Ein einzelner `gdbus call … Screencast` bricht sofort ab («Sender has vanished»): die D-Bus-Verbindung muss
+  offen bleiben, darum das Skript.
+
 ## Funktioniert nicht
 
 - `grim`, `gnome-screenshot`: GNOME-49-Portal-Bug (`Failed to associate portal window`).
 - XDG-ScreenCast-Portal: Dialog erscheint bei jedem Aufruf.
+- `org.gnome.Shell.Screenshot` per D-Bus: «Screenshot is not allowed», GNOME lässt nur eigene Apps zu.
 - tui-driver `tui_screenshot`: unlesbarer Pixelbrei ohne Farben.
 
 ## TUIs steuern (MCPs)
