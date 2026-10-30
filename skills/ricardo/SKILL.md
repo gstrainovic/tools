@@ -88,9 +88,15 @@ Fotos als Base64 sprengen die Grenze eines Befehlsarguments (128 KB): Code in ei
 
 tutti: Inserate unter `/de/myads/active`, je Inserat «Weitere Optionen» → Bearbeiten (`/de/listings/<id>/edit`,
 Fotos per Knopf «Entfernen»), Deaktivieren, Löschen. Neue
-und bearbeitete Inserate stehen erst auf «Wird geprüft». Fotos per DataTransfer ins Dateifeld kommen beim
-Bearbeiten nicht mehr an (Zähler «n/5 Fotos» steigt nicht, 25.10.2026); Text- und Preisänderungen darum mit
-`tutti_einstellen.py <nr> --aendern --nur-text`, Fotos bleiben stehen.
+und bearbeitete Inserate stehen erst auf «Wird geprüft». Fotos per DataTransfer: alle Dateien in einem
+DataTransfer übergeben (tutti übernimmt je Änderung des Feldes nur die erste), und `waitForFunction` mit
+`polling: 1000`, nicht der Vorgabe requestAnimationFrame: Ist Gorans Chrome-Fenster verdeckt, hält Chrome die
+Animationsbilder an, der Zähler «n/5 Fotos» stand schon richtig, die Bedingung lief trotzdem in den Timeout
+(30.10.2026; vermutlich auch die Ursache von «Fotos kommen beim Bearbeiten nicht an» vom 25.10., ungeprüft).
+Dasselbe gilt für jede Wartebedingung auf Ricardo.
+
+Ricardo-Einzelformular als Kopie («Angebot kopieren», `?prefill=<id>`) übernimmt auch die Referenz-Nr. der
+Vorlage; `ricardo_einstellen.py` überschreibt sie mit der eigenen Artikelnummer.
 
 ## Einzelformular (`/de/list/`)
 
