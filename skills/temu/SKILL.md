@@ -63,8 +63,10 @@ ansehen und den passenden Treffer selbst wählen. Innenleben in `temu_produkt.js
   Verkäufer). Kleine Einkaufslisten unter 30 mit anderem Bedarf auffüllen, nicht mit Zusatzmenge.
 - Personalisierte Artikel (Logo, Text, Gravur) sind «Vorbestellung», die Gestaltung wird nach dem Kauf
   hochgeladen; Gravur gilt laut Angeboten für Text oder Logo, nicht für fortlaufende Nummern.
-- Temu erlaubt in den Schweizer Nutzungsbedingungen keinen gewerblichen Weiterverkauf; Einkauf von Verbrauchs- und
-  Verpackungsmaterial ist Gorans Entscheid (vesna `action-dupes/AGENTS.md`).
+- Temu erlaubt in den Schweizer Nutzungsbedingungen keinen gewerblichen Weiterverkauf; Goran ignoriert das
+  (Entscheid 233a, vesna `action-dupes/AGENTS.md»): Temu ist Bezugsquelle für Verbrauchsmaterial, Verpackung und
+  Handelsware (etwa gravierte Zerstäuber in der Geschenkbox). Die Pflichten der Importeurin (PrSG, bei Düften
+  ChemV, bei Metall mit Hautkontakt Nickel) bleiben davon unberührt.
 
 ## SHEIN (gleiches Muster, erprobt 27.10.2026)
 
