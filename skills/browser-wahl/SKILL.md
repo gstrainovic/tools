@@ -20,10 +20,20 @@ Reihenfolge, das erste passende nehmen:
    `~/projects/tools/hooks/browser-profil.sh` sperrt diese Befehle. Die Regel gilt ohne Ausnahme, auch wenn eine
    Frage von Goran wie eine Erlaubnis klingt («kannst du das mit einem anderen Chrome machen?»): dann nachfragen,
    was gemeint ist, nicht die Regel umgehen.
-   **Tastatureingaben kommen nur im sichtbaren Tab an.** Läuft nebenher eine zweite playwright-cli-Aufgabe im
-   selben Chrome oder arbeitet Goran selbst, wechselt der sichtbare Tab und `keyboard.type` verschluckt Zeichen.
-   Darum: Textfelder nach dem Ausfüllen immer zurücklesen und mit dem Sollwert vergleichen, bei Abweichung neu
-   tippen; Formulare, die nur echtes Tippen annehmen, erst ausfüllen, wenn keine zweite Aufgabe läuft.
+   **Alle Aktionen per JavaScript im Seitenkontext, nie abhängig vom sichtbaren Tab (Goran, 31.10.2026):** Die
+   Tabs der Session liegen meist im Hintergrund, weil Goran im selben Chrome arbeitet. Playwright-Klicks
+   (`click <ref>`, `locator.click()`, `check()`) warten dort auf «visible, enabled and stable» und hängen,
+   `keyboard.type` und `fill` landen im falschen Tab oder verschlucken Zeichen. Darum in `run-code` alles in
+   `page.evaluate`: Felder per nativem Value-Setter des Prototyps plus `input`- und `change`-Event, Kästchen und
+   Radios per `element.click()`, Knöpfe und Links per `element.click()` (bei Oberflächen, die nur Maus-Events
+   kennen, `pointerdown/mousedown/pointerup/mouseup/click` als `MouseEvent` mit `bubbles: true` feuern),
+   Formulare per `form.requestSubmit()` oder Klick auf den Submit-Knopf; Dateifelder per
+   `page.setInputFiles('<selector>', '<pfad>')`. Kein `bringToFront()`, kein Koordinatenklick, kein Tippen.
+   Nach jedem Schritt den Zustand als Text zurückgeben (unten «Seitenzustand als Text») und Feldwerte zurücklesen
+   (nur Längen bei Kennwörtern). Einzige Ausnahmen, je im Skill des Systems belegt: Chrome-Autofill fürs Kennwort
+   (unten «Selbst einloggen») und Oberflächen, die JavaScript-Events nachweislich verwerfen (Upwork-Proposal-Textfelder,
+   Googles Search Console); dort gilt der dort beschriebene Weg. Vorbild: `find-jobs/kunden/edition-memoria/strato_login.js`
+   und `strato_sftp_anlegen.js`.
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
 **Claude in Chrome ist verboten** (Gorans Regel), auch als Rückfall: keine `mcp__claude-in-chrome__*`-Werkzeuge.
@@ -78,8 +88,8 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   18.10.2026 bei login.wordpress.org und login.klara.ch geklappt. Erst wenn danach ein Feld leer bleibt (kein
   gespeichertes Kennwort), 2FA oder ein Captcha kommt: Goran in einem Satz um den Login bitten.
 - Klicks per Ref hängen in einem Tab im Hintergrund («waiting for element to be visible, enabled and stable»):
-  `run-code` mit `await page.bringToFront()`, Formulare dann per `el.form.requestSubmit(el)` absenden; Dateifelder
-  per `page.setInputFiles('<selector>', '<pfad>')` statt Dateidialog.
+  darum alle Aktionen per JavaScript im Seitenkontext (oben, Punkt 2), auch Dateifelder per
+  `page.setInputFiles('<selector>', '<pfad>')` statt Dateidialog.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
   App-Geheimcodes) kann playwright-cli nicht ausfüllen: in einem Satz melden, Goran tippt es
   im offenen Dialog, danach weiterarbeiten.
@@ -111,18 +121,20 @@ anmelden und angehängt per CDP weiterarbeiten.
 - **Vor dem Ausfüllen eines Formulars zuerst den Cookie-Banner akzeptieren** (Screenshot nach dem Laden, Banner
   wegklicken), dann ausfüllen. Grund: Akzeptiert Goran den Banner danach, lädt die Seite neu und alle Eingaben sind
   weg (Bailaho, 18.10.2026).
-- Kästchen und Optionen, bei denen `check()` oder `click` in «waiting for element to be visible, enabled and
-  stable» hängt, per `locator.evaluate(e => { if (!e.checked) e.click() })` setzen und danach mit `isChecked()`
-  zurücklesen. Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
-  `boundingBox()`. Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404; stattdessen
-  `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `bringToFront()`, das Suchfeld
-  «Jede URL unter … prüfen» per `fill(url, {force: true})` und `press('Enter')`, dann «Indexierung beantragen» per
-  `page.mouse.click()` und bis rund 2 Minuten auf «Indexierung wurde beantragt» warten (meldet die Seite einen Fehler,
-  einmal wiederholen).
+- Kästchen und Optionen per `element.click()` im Seitenkontext setzen und danach `checked` zurücklesen (Punkt 2
+  oben). Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
+  `boundingBox()` (belegte Ausnahme). Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404;
+  stattdessen `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `bringToFront()`, das
+  Suchfeld `input[aria-label="Jede URL unter <domain> prüfen"]` per `fill(url, {force: true})` und `press('Enter')`,
+  dann «Indexierung beantragen» per `page.mouse.click()` und bis rund 2 Minuten auf «Indexierung wurde beantragt»
+  warten (meldet die Seite einen Fehler, einmal wiederholen). Am 31.10.2026 öffnete Enter die Prüfung dreimal nicht
+  (Seite blieb auf der Übersicht); dann von Hand in Chrome beantragen, nicht weiter probieren.
 - Schleifen über viele Seiten nie unbeaufsichtigt im Hintergrund starten: zuerst ein Durchgang im Vordergrund mit
   Bildschirmfoto, dann jede weitere Seite einzeln prüfen.
 
-- Einfache Seiten: `snapshot`, dann `click e15`, `fill e7 "…"`, `select`, `dblclick`.
+- `snapshot` nur zum Lesen der Struktur (Refs, Rollen, Links); Aktionen nicht per `click e15` oder `fill e7`,
+  sondern per `run-code` mit JavaScript im Seitenkontext (Punkt 2 oben), Selektoren aus dem Snapshot oder per
+  `querySelectorAll` plus Textvergleich.
 - Seiten mit Frames und Knöpfen, deren Text Zeilenumbrüche hat (ältere ERP-Oberflächen): `run-code` mit einer
   Funktion, die den Frame über `page.frames()` und die URL sucht und Felder per ID anspricht; Ergebnis als JSON
   zurückgeben und erst danach weiterklicken.
