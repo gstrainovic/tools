@@ -71,6 +71,22 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 - **`chrome-anhaengen`** (`~/projects/tools/chrome_anhaengen.py`) hängt die Session `gchrome` über die Playwright
   Extension an Gorans laufenden Chrome, ohne Dialog und ohne Maus; eine laufende Session bleibt. Danach
   `playwright-cli -s=gchrome …`. Die Session sieht nur die Tabs ihrer eigenen Tabgruppe, Gorans übrige Tabs nicht.
+- **Arbeitsfenster (Goran nicht stören, Entscheid 6a vom 31.10.2026):** `chrome-anhaengen` legt die Session in ein
+  eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und minimiert es über
+  die GNOME-Erweiterung «Window Calls» (D-Bus `org.gnome.Shell.Extensions.Windows`, Methoden List, Activate,
+  Minimize); die Fenster-ID steht in `~/.config/playwright-extension/fenster-<session>`. Alle Tabs der Session
+  entstehen in ihrer Tabgruppe, also im minimierten Fenster, und JavaScript läuft dort ohne Drosselung. Beim
+  Anhängen holt das Skript das Fenster kurz nach vorn (die Erweiterung legt den Session-Tab im zuletzt
+  fokussierten Fenster an), danach ist es wieder weg. Soll Goran etwas klicken (Login, Captcha, 2FA):
+  `chrome-anhaengen --zeigen`, danach `chrome-anhaengen --verstecken`. Ein Headless-Chrome scheidet aus: zwei
+  Chrome-Instanzen können kein Profilverzeichnis teilen, ein Zweitprofil hätte keine Cookies
+  (`find-jobs/akquise/recherche/headless-chrome-2026-10.md`). Window Calls einrichten: `gdbus call --session
+  --timeout 900 --dest org.gnome.Shell --object-path /org/gnome/Shell --method
+  org.gnome.Shell.Extensions.InstallRemoteExtension 'window-calls@domandoman.xyz'`, Goran bestätigt den
+  GNOME-Dialog (eine von Hand nach `~/.local/share/gnome-shell/extensions` kopierte Erweiterung lädt die Shell
+  erst nach neuer Anmeldung). Ohne Window Calls hängt das Skript wie früher in Gorans Fenster an. Auf einen anderen
+  Arbeitsbereich verschieben klappte nicht (`MoveToWorkspace` und das GNOME-Kürzel per ydotool blieben ohne
+  Wirkung), darum Minimieren.
 - **Einrichtung:** Erweiterung «Playwright Extension» (Microsoft, ID `mmlmfjhmonkocbjadbfplnigmagldckm`) per
   Chrome-Richtlinie `ExtensionInstallForcelist` in `/etc/opt/chrome/policies/managed/playwright-extension.json`
   (Vorlage `~/projects/tools/chrome-policy/`, dann `chrome://policy` → «Richtlinien neu laden»). Token von
@@ -95,8 +111,9 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   im offenen Dialog, danach weiterarbeiten.
 - Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
   schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
-- **Vor jedem `goto`, `run-code` oder Skript zuerst `tab-list`:** Nach dem Anhängen ist der aktive Tab einer von
-  Gorans, und `page` in `run-code` zeigt auf ihn; ein `page.goto` überschreibt dann seine Arbeit. Darum erst einen
+- **Vor jedem `goto`, `run-code` oder Skript zuerst `tab-list`:** `page` in `run-code` zeigt auf den aktiven Tab
+  der Session (nach dem Anhängen der Tab «Arbeitsfenster gchrome», den das Skript als Anker im Fenster lässt; ohne
+  Window Calls einer von Gorans Tabs), und ein `page.goto` überschreibt ihn. Darum erst einen
   eigenen Tab öffnen (`tab-new`) und prüfen, dass er `(current)` ist; Skripte öffnen ihren Tab selbst
   (`const tab = await page.context().newPage()`, am Ende `tab.close()`, Muster `find-jobs/linkedin/suche_cli.py`).
 - Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
