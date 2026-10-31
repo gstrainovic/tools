@@ -23,14 +23,29 @@ BASIS = pathlib.Path(__file__).resolve().parents[1]
 TOKEN = pathlib.Path.home() / ".config" / "bws" / "token"
 
 
+class BwsFehler(Exception):
+    """bws hat einen Aufruf abgelehnt; der Text nennt den Grund ohne die übergebenen Werte."""
+
+
 def bws(args):
     umgebung = dict(os.environ)
-    if "BWS_ACCESS_TOKEN" not in umgebung:
+    if not umgebung.get("BWS_ACCESS_TOKEN"):
         umgebung["BWS_ACCESS_TOKEN"] = TOKEN.read_text(encoding="utf-8").strip()
     lauf = subprocess.run(["bws", *args], capture_output=True, text=True, env=umgebung)
     if lauf.returncode != 0:
-        # Nie den Fehlertext von bws ausgeben: Er wiederholt Argumente, also auch Werte.
-        raise SystemExit(f"bws {' '.join(args[:2])} scheiterte (Exit {lauf.returncode})")
+        # Nur die Meldung vor «Location:» (bws druckt danach Quellpfad und Backtrace-Hinweis), und jedes Argument
+        # (Werte, IDs) darin durch *** ersetzt: bws wiederholt Argumente im Fehlertext.
+        zeilen = []
+        for zeile in (lauf.stderr or lauf.stdout).strip().splitlines():
+            if zeile.strip().startswith("Location:"):
+                break
+            if zeile.strip():
+                zeilen.append(zeile.strip())
+        grund = " ".join(zeilen)[:300] or "ohne Meldung"
+        for arg in args[2:]:
+            if len(arg) >= 4:
+                grund = grund.replace(arg, "***")
+        raise BwsFehler(f"bws {' '.join(args[:2])} scheiterte (Exit {lauf.returncode}): {grund}")
     return lauf.stdout
 
 
@@ -67,15 +82,20 @@ class Tresor:
         vorhanden = self.liste()
         ergebnis = []
         for name, wert in paare:
-            if name not in vorhanden:
-                # Werte können mit «-» beginnen (Schlüsseldateien): Optionen vor «--», Werte dahinter.
-                self.lauf(["secret", "create", "--note", "Datei, Name ist der Pfad", "--", name, wert, self.projekt()])
-                ergebnis.append((name, "neu"))
-            elif vorhanden[name][1] != wert:
-                self.lauf(["secret", "edit", f"--value={wert}", "--", vorhanden[name][0]])
-                ergebnis.append((name, "geändert"))
-            else:
-                ergebnis.append((name, "gleich"))
+            try:
+                if name not in vorhanden:
+                    # Werte können mit «-» beginnen (Schlüsseldateien): Optionen vor «--», Werte dahinter.
+                    self.lauf(["secret", "create", "--note", "Datei, Name ist der Pfad", "--", name, wert,
+                               self.projekt()])
+                    ergebnis.append((name, "neu"))
+                elif vorhanden[name][1] != wert:
+                    self.lauf(["secret", "edit", f"--value={wert}", "--", vorhanden[name][0]])
+                    ergebnis.append((name, "geändert"))
+                else:
+                    ergebnis.append((name, "gleich"))
+            except BwsFehler as fehler:
+                # Eine gescheiterte Datei hält die übrigen nicht auf; main meldet sie mit Exit 1.
+                ergebnis.append((name, f"fehlgeschlagen: {fehler}"))
         return ergebnis
 
     def _dateien(self, basis, heim=None):
@@ -125,21 +145,27 @@ def main(argv):
     befehl = argv[1] if len(argv) > 1 else ""
     tresor = Tresor()
     heim = pathlib.Path.home()
-    if befehl == "hochladen" and len(argv) > 2:
-        zeilen = tresor.hochladen(BASIS, argv[2:], heim=heim)
-    elif befehl == "holen":
-        zeilen = tresor.holen(BASIS, ueberschreiben="--ueberschreiben" in argv[2:], heim=heim)
-    elif befehl == "status":
-        zeilen = tresor.status(BASIS, heim=heim)
-    else:
-        print(__doc__)
-        return 2
+    try:
+        if befehl == "hochladen" and len(argv) > 2:
+            zeilen = tresor.hochladen(BASIS, argv[2:], heim=heim)
+        elif befehl == "holen":
+            zeilen = tresor.holen(BASIS, ueberschreiben="--ueberschreiben" in argv[2:], heim=heim)
+        elif befehl == "status":
+            zeilen = tresor.status(BASIS, heim=heim)
+        else:
+            print(__doc__)
+            return 2
+    except BwsFehler as fehler:
+        print(fehler, file=sys.stderr)
+        return 1
     for name, stand in zeilen:
         print(f"{stand:12} {name}")
     if not zeilen:
         print("nichts zu tun, alle Dateien stimmen mit dem Tresor überein")
     if any(stand == "abweichend" for _, stand in zeilen) and befehl == "holen":
         print("Abweichende Dateien blieben unverändert; mit --ueberschreiben gewinnt der Tresor.")
+    if any(stand.startswith("fehlgeschlagen") for _, stand in zeilen):
+        return 1
     return 0
 
 
