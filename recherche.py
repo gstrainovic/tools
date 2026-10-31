@@ -110,6 +110,8 @@ def main() -> None:
     p.add_argument("--ohne-ddgs", action="store_true")
     p.add_argument("--json", action="store_true")
     a = p.parse_args()
+    # Windows-Konsole ohne PYTHONUTF8 kodiert cp1252; Zeichen ausserhalb davon dürfen die Ausgabe nicht abbrechen
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     gefunden: dict[str, dict] = {}
     kosten = 0.0

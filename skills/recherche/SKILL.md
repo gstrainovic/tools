@@ -19,7 +19,8 @@ ganze Seiten im Modell:
    Trefferseiten per curl und gibt je Seite nur Titel, PLZ mit Ort, Preise und Stichwortstellen (50 Zeichen Umfeld)
    als Tabelle aus: `~/projects/tools/recherche.py -q "…" -q "…" --muster "regex" -m 8` (`--json` für Rohdaten,
    `--ohne-exa`). Direkt aufrufen, nie `python3 recherche.py`: nur so lädt `uv` die Pakete (sonst bricht ddgs mit
-   «No module named 'lxml'» ab).
+   «No module named 'lxml'» ab). Unter Windows (kein Start über die Shebang-Zeile):
+   `uv run --script ~/projects/tools/recherche.py …`.
    Rohausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen; das
    Ergebnis kommt ins Repo (Abschnitt «Ergebnis speichern»).
 2. **Exa-Stufe `deep`** (12 USD je 1000 Anfragen, `deep-reasoning` 15, `instant` 4, `fast`/`auto` 7; Doku
