@@ -14,6 +14,7 @@ noch eigenständige Terminal-Scripts.
 | `gui-screenshot.sh` | Vollbild-Screenshot via ydotool Shift+Print |
 | `img-proto-test` | Terminal-Bildprotokolle vergleichen (iTerm2, Kitty, Sixel) |
 | `mailbox.py` | Postfächer per IMAP/SMTP aus der Kommandozeile lesen und schreiben |
+| `chrome_anhaengen.py` | playwright-cli über die Playwright Extension an Gorans laufenden Chrome hängen, in einem eigenen, per GNOME-Erweiterung «Window Calls» minimierten Arbeitsfenster (`--zeigen`, `--verstecken`); Skill `browser-wahl`. Tests `python3 -m unittest test_chrome_anhaengen.py` |
 | `sprachnachricht.py` | Telegram-Sprachnachricht lokal mit faster-whisper umschreiben, Deutsch oder Serbisch automatisch; schnelles Modell als Standard, `--genau` für das grosse |
 | `thunderbird_konten.py` | Thunderbird um die fehlenden Konten aus der mailbox-Konfiguration ergänzen |
 | `geheimnisse.py` | Dateien mit Zugangsdaten über den Bitwarden Secrets Manager zwischen Geräten abgleichen |
