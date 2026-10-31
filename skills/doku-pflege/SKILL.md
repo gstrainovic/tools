@@ -7,7 +7,7 @@ description: Regeln für todo.md, AGENTS.md, CLAUDE.md, README, Skills, Berichte
 
 ## Wohin mit Wissen
 
-- **Keine Memories:** Das automatische Memory von Claude Code ist abgeschaltet (`autoMemoryEnabled: false` in `~/.claude/settings.json`). Dauerhaftes Wissen kommt in die AGENTS.md des Repos oder in einen Skill, nie nach `~/.claude/projects/*/memory/`. Grund: nur Repo-Inhalt ist versioniert, auf allen Rechnern da und für Goran sichtbar.
+- **Keine Memories:** Das automatische Memory von Claude Code ist abgeschaltet (`autoMemoryEnabled: false` in `~/.claude/settings.json`). Dauerhaftes Wissen kommt in die AGENTS.md des Repos oder in einen Skill, nie nach `~/.claude/projects/*/memory/`. Grund: nur Repo-Inhalt ist versioniert, auf allen Rechnern da und für Goran sichtbar. Einstellung und dieser Skill genügen, kein zusätzlicher Eintrag in `CLAUDE.md`; alte Memory-Dateien gelöschter Repos bleiben liegen. Beides nicht mehr zur Frage machen (Gorans Entscheid).
 - **Ergebnisse ins Repo, nicht in den Scratchpad:** Auswertungen und Berichte, die Bestand haben sollen, in ein Projektrepo unter `~/projects/` committen; der Scratchpad ist nur für Zwischenstände und verschwindet mit der Sitzung. Kundennamen, Vertragsdetails und Personendaten nur in private Repos (etwa `find-jobs`), nie in öffentliche (etwa `strainovic-it.ch`).
 - **Aussagen nur mit Beleg:** Technische Aussagen über Gorans Projekte vor dem Aufschreiben am Quelltext prüfen (Projektdatei für Abhängigkeiten, Code für Verhalten). Repo-, Ordner- und Paketnamen sowie AGENTS.md-Zusammenfassungen sind Hinweise, keine Belege. Nicht Belegbares als Vermutung kennzeichnen oder weglassen; bei Texten zur Veröffentlichung gilt das streng und vor dem Veröffentlichen.
 
