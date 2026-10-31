@@ -155,6 +155,63 @@ class GeheimnisseTest(unittest.TestCase):
         self.assertEqual([("a/.env", "gleich"), ("b/.env", "abweichend"), ("c/.env", "fehlt lokal")],
                          self.tresor.status(self.basis))
 
+    def test_hochladen_nennt_die_gescheiterte_datei_und_laedt_die_uebrigen_trotzdem(self):
+        a = self.datei("a/.env", "1\n")
+        b = self.datei("b/.env", "2\n")
+        echt = self.bws.__call__
+
+        def kaputt(args):
+            if args[:2] == ["secret", "create"] and "a/.env" in args:
+                raise geheimnisse.BwsFehler("bws secret create scheiterte (Exit 1): Missing access token")
+            return echt(args)
+
+        self.tresor.lauf = kaputt
+        self.assertEqual([("a/.env", "fehlgeschlagen: bws secret create scheiterte (Exit 1): Missing access token"),
+                          ("b/.env", "neu")], self.tresor.hochladen(self.basis, [a, b]))
+        self.assertEqual("2\n", self.bws.wert("b/.env"))
+
+    def test_main_gibt_exit_1_wenn_eine_datei_scheitert(self):
+        self.datei("a/.env", "1\n")
+        original, basis = geheimnisse.Tresor.__init__, geheimnisse.BASIS
+        geheimnisse.Tresor.__init__ = lambda s, lauf=None: s.__dict__.update(lauf=self.fehlschlag, _projekt="p-2")
+        geheimnisse.BASIS = self.basis
+        ausgabe = []
+        geheimnisse.print = lambda *t, **k: ausgabe.append(" ".join(map(str, t)))
+        try:
+            self.assertEqual(1, geheimnisse.main(["geheimnisse", "hochladen", str(self.basis / "a/.env")]))
+        finally:
+            del geheimnisse.print
+            geheimnisse.Tresor.__init__, geheimnisse.BASIS = original, basis
+        self.assertIn("fehlgeschlagen", ausgabe[0])
+
+    def fehlschlag(self, args):
+        if args[:2] == ["secret", "list"]:
+            return "[]"
+        raise geheimnisse.BwsFehler("bws secret create scheiterte (Exit 1)")
+
+
+class BwsFehlertextTest(unittest.TestCase):
+    def test_fehlertext_nennt_grund_aber_keine_werte(self):
+        class Lauf:
+            returncode = 1
+            stdout = ""
+            stderr = "Error: \n   0: Missing access token for GEHEIMWERT\n\nLocation:\n   crates/bws/src/main.rs:67\n"
+
+        echt = geheimnisse.subprocess.run
+        geheimnisse.subprocess.run = lambda *a, **k: Lauf()
+        geheimnisse.TOKEN = pathlib.Path(tempfile.mkstemp()[1])
+        geheimnisse.TOKEN.write_text("t")
+        try:
+            with self.assertRaises(geheimnisse.BwsFehler) as cm:
+                geheimnisse.bws(["secret", "create", "--note", "n", "--", "a/.env", "GEHEIMWERT", "p-2"])
+        finally:
+            geheimnisse.subprocess.run = echt
+        text = str(cm.exception)
+        self.assertIn("secret create", text)
+        self.assertIn("Missing access token", text)
+        self.assertNotIn("GEHEIMWERT", text)
+        self.assertNotIn("main.rs", text)
+
 
 if __name__ == "__main__":
     unittest.main()

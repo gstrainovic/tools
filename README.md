@@ -201,7 +201,9 @@ Dateien mit Zugangsdaten (`.env`, Schlüssel, Tokens) liegen im Bitwarden Secret
 (vault.bitwarden.eu, Organisation «Strainovic IT», Projekt `strainovic`, Gratisplan mit 3 Projekten und
 3 Gerätekonten). Ein Geheimnis heisst wie der Pfad der Datei: relativ zu `~/projects` (`dms/apps/dms/.env`)
 oder mit `~/` relativ zum Home-Verzeichnis (`~/.config/elevenlabs/key`); der Wert ist der Dateiinhalt. Werte
-werden nie ausgegeben, auch nicht der Fehlertext von `bws`, weil er Argumente wiederholt. Nach jeder
+werden nie ausgegeben; vom Fehlertext von `bws` nur die erste Zeile mit den Argumenten durch `***` ersetzt, weil
+er Argumente wiederholt. Eine gescheiterte Datei hält die übrigen nicht auf (Zeile «fehlgeschlagen: …», Exit 1);
+eine leere Variable `BWS_ACCESS_TOKEN` zählt wie keine. Nach jeder
 Änderung einer solchen Datei wieder hochladen. Tests ohne Netz: `python3 -m unittest test_geheimnisse.py`.
 
 Neues Gerät:
