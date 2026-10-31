@@ -1,5 +1,8 @@
 import importlib.util
+import io
+import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("recherche", Path(__file__).with_name("recherche.py"))
@@ -41,6 +44,22 @@ class Exa(unittest.TestCase):
         urls, kosten = recherche.exa_auslesen(antwort)
         self.assertEqual(urls, [("https://a.ch", "A", "h1")])
         self.assertEqual(kosten, 0.007)
+
+
+class WindowsKonsole(unittest.TestCase):
+    def test_tabelle_auf_cp1252_konsole_bricht_nicht_ab(self):
+        # Windows-Konsole ohne PYTHONUTF8: stdout kodiert cp1252, «→» und «ć» gibt es dort nicht
+        roh = io.BytesIO()
+        konsole = io.TextIOWrapper(roh, encoding="cp1252")
+        treffer = [("https://x.ch", "Vesna Đurić → Studio", "Auszug")]
+        with mock.patch.object(recherche, "exa_suche", return_value=(treffer, 0.0)), \
+                mock.patch.object(recherche, "seite_holen", return_value=""), \
+                mock.patch.object(sys, "argv", ["recherche.py", "-q", "x", "--ohne-ddgs"]), \
+                mock.patch.object(sys, "stdout", konsole), \
+                mock.patch.object(sys, "stderr", io.StringIO()):
+            recherche.main()
+            sys.stdout.flush()
+        self.assertIn("https://x.ch", roh.getvalue().decode("utf-8"))
 
 
 if __name__ == "__main__":
