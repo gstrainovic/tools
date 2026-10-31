@@ -53,6 +53,7 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `test_mithoeren.py` | Tests mit erzeugten WAV-Stücken und falscher Umschrift (`uv run --python 3.13 python -m unittest test_mithoeren`) |
 | `umschrift_am_stueck.py` | Tondatei eines Meetings je Kanal am Stück mit Voxtral umschreiben (nach dem Meeting, trifft mehr als live); Ablauf im Skill meeting-hilfe, als `~/.local/bin/umschrift-am-stueck` verknüpft |
 | `bildschirmaufnahme.py` | Bildschirm während eines Meetings in mp4-Stücken aufnehmen (GNOME Shell per D-Bus, kein Dialog, ohne Ton), damit Claude Code Standbilder von geteilten Bildschirmen ziehen kann; neben `mithoeren` starten, als `~/.local/bin/bildschirmaufnahme` verknüpft; Details im Skill screenshots |
+| `wartungsheft-cost-watch.sh` | Kostenwächter für das OpenStack-Projekt bei Infomaniak (schätzt Monatskosten, mailt über Limit), als `~/.local/bin/wartungsheft-cost-watch` verknüpft; Aufruf im Tagescheck von find-jobs, Details im Skill infomaniak |
 | `chrome-policy/` | Chrome-Richtlinie, die die Playwright Extension ohne Klick installiert (nach `/etc/opt/chrome/policies/managed/`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
