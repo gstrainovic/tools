@@ -1,5 +1,11 @@
 # Offene Punkte
 
+- **Frage 251: Regel für gesperrte Seiten in den Skill `recherche`?** Der Sonnet-Agent der Herstellerrecherche vom
+  30.10. (vesna, `research_notes/Hersteller mit Lieferung in die Schweiz 2026-10-30 - Sonnet.md`) gab myparfum24.ch
+  als «nicht lesbar» auf; Jina liefert bei Cloudflare-Seiten (auch duftzwillinge24.ch) nur die Sperrseite, curl mit
+  Browser-Kennung kam am 2.11. bei beiden durch. Vorschlag: Vor «nicht lesbar» erst curl mit Browser-Kennung, dann
+  playwright-cli an Gorans Chrome. Empfehlung 251a (in den Skill, gilt für alle Recherche-Agenten).
+
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
