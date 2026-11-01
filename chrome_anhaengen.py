@@ -13,6 +13,7 @@ Läuft die Session schon, bleibt sie (nie schliessen); ihr Arbeitsfenster wird w
    also im Arbeitsfenster, und fokussiert es.
 3. Prüfen, dass der Session-Tab im Arbeitsfenster liegt (Titel des Tabs = Fenstertitel), dann das Fenster minimieren.
    Alle weiteren Tabs der Session entstehen in ihrer Tabgruppe, also im minimierten Fenster.
+4. Hat Goran kein eigenes Chrome-Fenster, eines öffnen (sonst landen Links aus anderen Apps im Arbeitsfenster).
 Ohne Window Calls (anderer Rechner, Erweiterung fehlt) nur anhängen wie früher. Die Session sieht nur die Tabs ihrer
 eigenen Tabgruppe, Gorans übrige Tabs nicht. Einrichtung: Skill browser-wahl, «Gorans Chrome anhängen».
 """
@@ -90,6 +91,26 @@ def arbeitsfenster_bereitstellen(session: str, fenster: Fenster):
     return None
 
 
+def eigenes_fenster_sichern(fenster: Fenster, arbeits_id: int):
+    """Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps darin, also unsichtbar,
+    und ein Klick auf Chrome im Dock holt es hervor. Darum Goran ein eigenes Fenster öffnen; der Fokus geht zurück
+    an das Fenster, in dem er gerade arbeitet."""
+    liste = fenster.liste() or []
+    if any(w.get("wm_class") == "google-chrome" and w["id"] != arbeits_id for w in liste):
+        return
+    fokus = next((w["id"] for w in liste if w.get("focus")), None)
+    vorher = {w["id"] for w in liste}
+    subprocess.Popen(["google-chrome", "--new-window"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    for _ in range(20):
+        time.sleep(0.5)
+        if {w["id"] for w in fenster.liste() or []} - vorher:
+            break
+    if fokus is not None:
+        fenster.aktivieren(fokus)
+    print("eigenes Chrome-Fenster für Goran geöffnet (Links aus anderen Apps landen dort)")
+
+
 def tab_im_fenster(session: str, fenster: Fenster, fenster_id: int) -> bool:
     titel = f"Arbeitsfenster {session}"
     subprocess.run(["playwright-cli", f"-s={session}", "run-code",
@@ -128,6 +149,7 @@ def main() -> int:
         if bekannt is not None and bekannt in (fenster.chrome_ids() or set()):
             fenster.minimieren(bekannt)
             print(f"Session {s} läuft schon, Arbeitsfenster {bekannt} minimiert")
+            eigenes_fenster_sichern(fenster, bekannt)
         else:
             print(f"Session {s} läuft schon")
         return 0
@@ -149,6 +171,7 @@ def main() -> int:
     if tab_im_fenster(s, fenster, fenster_id):
         fenster.minimieren(fenster_id)
         print(f"Session {s} angehängt, Arbeitsfenster {fenster_id} minimiert")
+        eigenes_fenster_sichern(fenster, fenster_id)
     else:
         print(f"Session {s} angehängt, aber der Session-Tab liegt nicht im Arbeitsfenster {fenster_id} "
               f"(Goran hat wohl dazwischen geklickt); nichts minimiert")
