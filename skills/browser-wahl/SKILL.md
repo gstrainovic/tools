@@ -75,7 +75,10 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und minimiert es über
   die GNOME-Erweiterung «Window Calls» (D-Bus `org.gnome.Shell.Extensions.Windows`, Methoden List, Activate,
   Minimize); die Fenster-ID steht in `~/.config/playwright-extension/fenster-<session>`. Alle Tabs der Session
-  entstehen in ihrer Tabgruppe, also im minimierten Fenster, und JavaScript läuft dort ohne Drosselung. Beim
+  entstehen in ihrer Tabgruppe, also im minimierten Fenster, und JavaScript läuft dort ohne Drosselung; nur
+  `requestAnimationFrame` steht still, darum bleiben Oberflächen, die damit zeichnen (Odoo 17+ mit Owl), dort
+  leer. Prüfungen solcher Oberflächen mit `chrome-anhaengen --zeigen` und ausgewähltem Tab oder per Skript gegen
+  einen lokalen Container (am 1.11.2026 hielt eine leere Odoo-Seite im Arbeitsfenster für einen Fehler). Beim
   Anhängen holt das Skript das Fenster kurz nach vorn (die Erweiterung legt den Session-Tab im zuletzt
   fokussierten Fenster an), danach ist es wieder weg; auch bei schon laufender Session minimiert jeder Aufruf es
   wieder. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
