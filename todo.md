@@ -1,10 +1,12 @@
 # Offene Punkte
 
-- **Frage 251: Regel für gesperrte Seiten in den Skill `recherche`?** Der Sonnet-Agent der Herstellerrecherche vom
-  30.10. (vesna, `research_notes/Hersteller mit Lieferung in die Schweiz 2026-10-30 - Sonnet.md`) gab myparfum24.ch
-  als «nicht lesbar» auf; Jina liefert bei Cloudflare-Seiten (auch duftzwillinge24.ch) nur die Sperrseite, curl mit
-  Browser-Kennung kam am 2.11. bei beiden durch. Vorschlag: Vor «nicht lesbar» erst curl mit Browser-Kennung, dann
-  playwright-cli an Gorans Chrome. Empfehlung 251a (in den Skill, gilt für alle Recherche-Agenten).
+- **Frage 251: Nacharbeit nach Agentenberichten in den Skill `recherche`?** Der Weg für gesperrte Seiten steht schon
+  dort (Abschnitt «Einzelseiten und Agenten»: curl, Jina, bei Cloudflare playwright-cli an Gorans Chrome), und
+  Agenten markieren solche Seiten auftragsgemäss als «nicht geprüft». Es fehlt nur, dass die Hauptsitzung diese
+  Stellen danach selbst nachliest: Der Sonnet-Agent der Herstellerrecherche vom 30.10. (vesna, `research_notes/
+  Hersteller mit Lieferung in die Schweiz 2026-10-30 - Sonnet.md`) meldete myparfum24.ch «nicht lesbar», niemand
+  las nach. Vorschlag: ein Satz im Abschnitt, dass die Hauptsitzung jede für das Ergebnis wichtige Stelle mit
+  «nicht geprüft» oder «nicht lesbar» über den bestehenden Weg nachliest, bevor sie berichtet. Empfehlung 251a.
 
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
