@@ -61,6 +61,12 @@ dann an die neue Adresse und meldet danach ab.
 - Der Knopf **«Veröffentlichen (n)»** auf der Prüfseite des Mehrfach-Formulars reagiert auf keinen Skript-Klick
   (evaluate, click, mouse down/up); Goran klickt ihn selbst. Im Einzelformular geht «Veröffentlichen» per Skript.
 
+## Statistik der Angebote
+
+`/de/my-ricardo/selling/offers/` (Reiter «Am Verkaufen»; das Menü unter dem Kontonamen öffnet sich per Skript nicht,
+darum direkt diese Adresse) zeigt je Angebot «Angezeigt», «Angeklickt» und «Gespeichert» seit dem Start. Auslesen per
+`innerText` der Seite, aufgeteilt an `\nArtikel: `; Verkauftes steht unter `/de/my-ricardo/selling/orders/`.
+
 ## Angebote beenden
 
 `/de/my-ricardo/selling/offers/`: je Zeile ein Kästchen (Kästchen 0 ist «alle»), Zuordnung über «Ref.: <nr>» im
