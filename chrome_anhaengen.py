@@ -4,7 +4,7 @@ eigenen minimierten Chrome-Fenster («Arbeitsfenster»), damit die Browserarbeit
 
 Aufruf: chrome-anhaengen [--session gchrome]
 
-Läuft die Session schon, bleibt sie (nie schliessen). Sonst:
+Läuft die Session schon, bleibt sie (nie schliessen); ihr Arbeitsfenster wird wieder minimiert. Sonst:
 1. Arbeitsfenster der Session bereitstellen: die gemerkte Fenster-ID (~/.config/playwright-extension/fenster-<session>)
    wird per GNOME-Erweiterung «Window Calls» (D-Bus org.gnome.Shell.Extensions.Windows) aktiviert; fehlt das Fenster,
    öffnet `google-chrome --new-window` ein neues Fenster in Gorans laufendem Chrome (gleiches Profil, gleiche Cookies).
@@ -121,7 +121,15 @@ def main() -> int:
             print(f"Arbeitsfenster {bekannt} minimiert")
         return 0
     if session_laeuft(s):
-        print(f"Session {s} läuft schon")
+        # Ein früherer Lauf oder --zeigen kann das Arbeitsfenster offen gelassen haben: wieder verstecken.
+        fenster = Fenster()
+        datei = KONFIG / f"fenster-{s}"
+        bekannt = int(datei.read_text().strip()) if datei.is_file() else None
+        if bekannt is not None and bekannt in (fenster.chrome_ids() or set()):
+            fenster.minimieren(bekannt)
+            print(f"Session {s} läuft schon, Arbeitsfenster {bekannt} minimiert")
+        else:
+            print(f"Session {s} läuft schon")
         return 0
     datei = KONFIG / "token"
     if not datei.is_file():

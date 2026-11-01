@@ -125,6 +125,19 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertFalse(any(z.startswith("attach") or z.startswith("google-chrome") for z in self.aufrufe()))
         self.assertIn("läuft schon", r.stdout)
 
+    def test_laufende_session_versteckt_ihr_sichtbares_arbeitsfenster(self):
+        # Ein früherer Lauf oder --zeigen hat das Fenster offen gelassen: jeder Aufruf versteckt es wieder.
+        (self.tmp / "offen").touch()
+        self.setze_fenster([fenster(1, "org.gnome.Ptyxis", "Terminal", fokus=True),
+                            fenster(2, "google-chrome", "Gorans Seite - Google Chrome"),
+                            fenster(77, "google-chrome", "Arbeitsfenster gchrome - Google Chrome")])
+        (self.konfig / "fenster-gchrome").write_text("77\n")
+        r = self.lauf()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(self.fenster()[77]["minimized"], "Arbeitsfenster minimiert")
+        self.assertFalse(self.fenster()[2]["minimized"], "Gorans Fenster unberührt")
+        self.assertFalse(any(z.startswith("attach") for z in self.aufrufe()))
+
     def test_andere_session(self):
         self.lauf("--session", "test")
         self.assertIn("attach --extension=chrome --session=test TOKEN=geheim123", self.aufrufe())
