@@ -71,7 +71,11 @@ Ein Recherche-Agent (Sonnet mit WebSearch und Jina) nur, wo Seiten wirklich gele
 Sonnet (Lesen und Vorsortieren) oder Haiku (reines Sammeln in festem Format), nie im Hauptmodell; Stufen im Skill
 `arbeitsweise`, Abschnitt «Modellwahl beim Delegieren». Sie bekommen im Auftrag wörtlich:
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
-markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen.
+markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen. Jede für das Ergebnis wichtige Stelle, die
+ein Agent als «nicht geprüft» oder «nicht lesbar» meldet, liest die Hauptsitzung vor dem Bericht selbst nach, auf
+dem Weg oben (curl, Jina, bei Bot-Schutz playwright-cli an Gorans Chrome). Grund: Bei der Herstellersuche für
+Pink Deko blieb myparfum24.ch «nicht lesbar» liegen, und der Schweizer Vertrieb von Made in Lab mit Händlerpreisen
+(duftzwillinge24.ch) wurde erst durch die Antwort des Herstellers bekannt.
 
 ## «Gibt es X irgendwo?»
 
