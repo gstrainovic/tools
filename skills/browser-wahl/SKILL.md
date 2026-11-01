@@ -77,7 +77,10 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   Minimize); die Fenster-ID steht in `~/.config/playwright-extension/fenster-<session>`. Alle Tabs der Session
   entstehen in ihrer Tabgruppe, also im minimierten Fenster, und JavaScript läuft dort ohne Drosselung. Beim
   Anhängen holt das Skript das Fenster kurz nach vorn (die Erweiterung legt den Session-Tab im zuletzt
-  fokussierten Fenster an), danach ist es wieder weg. Soll Goran etwas klicken (Login, Captcha, 2FA):
+  fokussierten Fenster an), danach ist es wieder weg; auch bei schon laufender Session minimiert jeder Aufruf es
+  wieder. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
+  und das Dock holt es hervor; darum öffnet das Skript dann ein eigenes Fenster für Goran und gibt den Fokus zurück.
+  Soll Goran etwas klicken (Login, Captcha, 2FA):
   `chrome-anhaengen --zeigen`, danach `chrome-anhaengen --verstecken`. Ein Headless-Chrome scheidet aus: zwei
   Chrome-Instanzen können kein Profilverzeichnis teilen, ein Zweitprofil hätte keine Cookies
   (`find-jobs/akquise/recherche/headless-chrome-2026-10.md`). Window Calls einrichten: `gdbus call --session

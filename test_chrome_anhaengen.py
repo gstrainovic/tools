@@ -138,6 +138,31 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertFalse(self.fenster()[2]["minimized"], "Gorans Fenster unberührt")
         self.assertFalse(any(z.startswith("attach") for z in self.aufrufe()))
 
+    def test_ohne_eigenes_fenster_bekommt_goran_eines_und_behaelt_den_fokus(self):
+        # Ist das Arbeitsfenster das einzige Chrome-Fenster, landen Links aus anderen Apps unsichtbar darin
+        # (geprüft 01.11.2026). Darum ein eigenes Fenster für Goran öffnen, Fokus zurück aufs Terminal.
+        (self.tmp / "offen").touch()
+        self.setze_fenster([fenster(1, "org.gnome.Ptyxis", "Terminal", fokus=True),
+                            fenster(77, "google-chrome", "Arbeitsfenster gchrome - Google Chrome", minimiert=True)])
+        (self.konfig / "fenster-gchrome").write_text("77\n")
+        r = self.lauf()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        w = self.fenster()
+        self.assertIn(900, w, "eigenes Fenster für Goran geöffnet")
+        self.assertFalse(w[900]["minimized"])
+        self.assertTrue(w[1]["focus"], "Fokus zurück beim Terminal")
+        self.assertTrue(w[77]["minimized"])
+        self.assertEqual("77", (self.konfig / "fenster-gchrome").read_text().strip(), "Arbeitsfenster bleibt gemerkt")
+
+    def test_mit_eigenem_fenster_kein_zusaetzliches(self):
+        (self.tmp / "offen").touch()
+        self.setze_fenster([fenster(1, "org.gnome.Ptyxis", "Terminal", fokus=True),
+                            fenster(2, "google-chrome", "Gorans Seite - Google Chrome"),
+                            fenster(77, "google-chrome", "Arbeitsfenster gchrome - Google Chrome")])
+        (self.konfig / "fenster-gchrome").write_text("77\n")
+        self.lauf()
+        self.assertFalse(any(z.startswith("google-chrome") for z in self.aufrufe()))
+
     def test_andere_session(self):
         self.lauf("--session", "test")
         self.assertIn("attach --extension=chrome --session=test TOKEN=geheim123", self.aufrufe())
