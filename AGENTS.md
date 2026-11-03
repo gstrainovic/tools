@@ -76,6 +76,16 @@ Ghostty spricht Kitty Graphics Protocol nativ.
 
 Konten, IMAP/SMTP, Befehle und Entwicklung: Skill mailbox (im privaten Repo `~/projects/skills-privat`).
 
+## Google Drive per rclone (Windows-PC)
+
+Die Verbindung `gdrive:` (Konto g.strainovic@gmail.com, Konfiguration laut `rclone config file` im scoop-Ordner)
+nutzt eine eigene OAuth-Kennung aus dem Google-Cloud-Projekt `rclone-gdrive-513615` (App «rclone Strainovic»,
+extern, veröffentlicht, nicht überprüft; Client-Typ Desktop ohne Häkchen «AI-powered agent»). Veröffentlicht, weil
+im Teststatus die Anmeldung nach 7 Tagen verfällt. Das Veröffentlichen und das Anlegen des Clients nehmen in der
+Cloud Console keine Klicks per Skript an; das macht Goran von Hand. Neu anmelden: `rclone config reconnect gdrive:
+--auto-confirm`, die Google-Warnung «App nicht überprüft» über «Erweitert» bestätigen. Einzelne Datei holen:
+`rclone copy gdrive: <ziel> --drive-root-folder-id <ordner-id> --include "<name>"`.
+
 ## Tests
 
 ```bash

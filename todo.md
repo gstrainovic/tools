@@ -1,9 +1,6 @@
 # Offene Punkte
 
 
-- rclone-Verbindung `gdrive:` (Windows-PC) läuft über die gemeinsame client_id von rclone, die Google 2026
-  abschaltet (Warnung bei jedem Aufruf). Eigene OAuth-Client-ID in einem Google-Cloud-Projekt anlegen und
-  `rclone config` darauf umstellen (Goran 4a vom 03.11.2026), Anleitung https://rclone.org/drive/#making-your-own-client-id.
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
