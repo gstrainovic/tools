@@ -47,8 +47,10 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `fr-po/` | Glossar des französischen Teams als CSV mit Quelle und Abrufdatum (`fr-po-pruefen --glossar-aktualisieren`) |
 | `chrome_sitzung.py` | Cookies gewählter Domains aus Gorans Chrome entschlüsseln und als Speicherstand für `playwright-cli state-load` schreiben, als `~/.local/bin/chrome-sitzung` verknüpft; gesperrt durch `hooks/browser-profil.sh` (Gorans Regel: nur Gorans Chrome per CDP, Skill browser-wahl) |
 | `test_chrome_sitzung.py` | Tests gegen eine Cookie-Datenbank im tmp-Ordner (`uv run --with cryptography python -m unittest test_chrome_sitzung.py`) |
-| `chrome_anhaengen.py` | playwright-cli-Session `gchrome` über die Playwright Extension an Gorans Chrome hängen, ohne Dialog, als `~/.local/bin/chrome-anhaengen` verknüpft; Einrichtung im Skill browser-wahl |
-| `test_chrome_anhaengen.py` | Tests mit falschem playwright-cli im PATH (`python3 -m unittest test_chrome_anhaengen.py`) |
+| `chrome_anhaengen.py` | playwright-cli-Session `gchrome` über die Playwright Extension an Gorans Chrome hängen, ohne Dialog, als `~/.local/bin/chrome-anhaengen` verknüpft; Linux: Arbeitsfenster minimiert, Windows: Arbeitsfenster auf dem virtuellen Desktop 2; Einrichtung im Skill browser-wahl |
+| `test_chrome_anhaengen.py` | Tests des Linux-Zweigs mit falschem playwright-cli, gdbus und google-chrome im PATH (`python3 -m unittest test_chrome_anhaengen.py`) |
+| `test_chrome_anhaengen_windows.py` | Tests des Windows-Zweigs mit falschem Desktop und playwright-cli im Modul, laufen auf jedem System (`python3 -m unittest test_chrome_anhaengen_windows.py`) |
+| `vendor/virtualdesktop/` | Quelle von MScholtes/VirtualDesktop (V1.21, MIT) für Windows 11 24H2; `chrome_anhaengen.py` baut daraus `%LOCALAPPDATA%\virtualdesktop\vd.exe` |
 | `mithoeren.py` | Live-Umschrift eines Online-Meetings (Mikrofon = Goran, Lautsprecher = Gegenüber) mit Voxtral in eine wachsende Textdatei, die Claude Code per Monitor mitliest; mit `--ton` bleibt das Gespräch als Stereo-Opus zum Nachhören von Hörfehlern; als `~/.local/bin/mithoeren` verknüpft. Namen von Kunden nur beim Aufruf per `--begriffe`, nie hier im öffentlichen Repo |
 | `test_mithoeren.py` | Tests mit erzeugten WAV-Stücken und falscher Umschrift (`uv run --python 3.13 python -m unittest test_mithoeren`) |
 | `umschrift_am_stueck.py` | Tondatei eines Meetings je Kanal am Stück mit Voxtral umschreiben (nach dem Meeting, trifft mehr als live); Ablauf im Skill meeting-hilfe, als `~/.local/bin/umschrift-am-stueck` verknüpft |

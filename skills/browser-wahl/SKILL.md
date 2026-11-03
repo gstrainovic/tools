@@ -73,9 +73,8 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   `playwright-cli -s=gchrome …`. Die Session sieht nur die Tabs ihrer eigenen Tabgruppe, Gorans übrige Tabs nicht.
 - **Ziel: eigener virtueller Desktop (Goran, Windows und Linux):** Die Session arbeitet in einem eigenen
   Chrome-Fenster auf einem eigenen virtuellen Desktop (GNOME: Arbeitsbereich), nie in Gorans Fenster auf seinem
-  Desktop. Stand: Linux minimiert das Arbeitsfenster nur (unten, Verschieben auf einen Arbeitsbereich ging nicht),
-  Windows hängt noch direkt in Gorans Fenster an (unten). Beides ist offen in `tools/todo.md`; bis es umgesetzt
-  ist, gilt das jeweilige Rückfallverhalten.
+  Desktop. Windows macht das (unten, «Windows»); Linux minimiert das Arbeitsfenster nur, weil das Verschieben auf
+  einen Arbeitsbereich nicht gelang (offen in `tools/todo.md`).
 - **Arbeitsfenster (Goran nicht stören, Entscheid 6a vom 31.10.2026):** `chrome-anhaengen` legt die Session in ein
   eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und minimiert es über
   die GNOME-Erweiterung «Window Calls» (D-Bus `org.gnome.Shell.Extensions.Windows`, Methoden List, Activate,
@@ -98,13 +97,19 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   erst nach neuer Anmeldung). Ohne Window Calls hängt das Skript wie früher in Gorans Fenster an. Auf einen anderen
   Arbeitsbereich verschieben klappte nicht (`MoveToWorkspace` und das GNOME-Kürzel per ydotool blieben ohne
   Wirkung), darum Minimieren.
-- **Windows (HP Elite Mini):** `chrome-anhaengen` kennt nur GNOME und bricht mit `FileNotFoundError` (gdbus) ab.
-  Dort direkt anhängen, ohne Arbeitsfenster; die Tabs der Session liegen in einer Tabgruppe in Gorans Chrome:
-  `$env:PLAYWRIGHT_MCP_EXTENSION_TOKEN = (Get-Content "$env:USERPROFILE\.config\playwright-extension\token" -Raw).Trim();
-  $env:PLAYWRIGHT_MCP_EXECUTABLE_PATH = "C:\Users\g.strainovic\scoop\apps\googlechrome\current\chrome.exe";
-  playwright-cli attach --extension=chrome --session=gchrome`. Ohne `PLAYWRIGHT_MCP_EXECUTABLE_PATH` meldet
-  playwright-cli «"chrome" executable not found», weil es Chrome nur unter `Program Files` und `LOCALAPPDATA` sucht,
-  scoop ihn aber unter `scoop\apps\googlechrome` ablegt. `run-code` lädt Dateien mit `--filename`, nicht `--file`.
+- **Windows (HP Elite Mini):** `python3 ~\projects\tools\chrome_anhaengen.py` (Goran, 03.11.2026): öffnet ein
+  neues Fenster in Gorans laufendem Chrome (es blitzt kurz auf Desktop 1 auf; Chrome kennt keinen Startparameter
+  für einen anderen Desktop, Chromium-Doku `docs/windows_virtual_desktop_handling.md`), verschiebt es sofort auf
+  den virtuellen Desktop 2 (legt ihn an, falls er fehlt) und hängt erst dann an; ein früheres Session-Fenster
+  schliesst es vorher. Fenster-Handle in `~\.config\playwright-extension\fenster-<session>`; `--zeigen` holt das
+  Fenster auf Desktop 1, `--verstecken` schickt es zurück, ein Aufruf bei laufender Session ebenso. Verschieben per
+  MScholtes/VirtualDesktop (`tools/vendor/virtualdesktop/`, MIT), beim ersten Aufruf mit dem csc aus .NET
+  Framework 4 nach `%LOCALAPPDATA%\virtualdesktop\vd.exe` gebaut. Das Skript setzt
+  `PLAYWRIGHT_MCP_EXECUTABLE_PATH` auf die scoop-`chrome.exe`; ohne das meldet playwright-cli «"chrome" executable
+  not found», weil es Chrome nur unter `Program Files` und `LOCALAPPDATA` sucht. Seiten im Fenster auf Desktop 2
+  laufen wie Hintergrund-Tabs (`document.visibilityState` «hidden», `setTimeout` gebremst, `requestAnimationFrame`
+  steht), also wie vorher in der Tabgruppe. `run-code` lädt Dateien mit `--filename`, nicht `--file`. Tests:
+  `python3 -m unittest test_chrome_anhaengen_windows.py`.
 - **Einrichtung:** Erweiterung «Playwright Extension» (Microsoft, ID `mmlmfjhmonkocbjadbfplnigmagldckm`) per
   Chrome-Richtlinie `ExtensionInstallForcelist` in `/etc/opt/chrome/policies/managed/playwright-extension.json`
   (Vorlage `~/projects/tools/chrome-policy/`, dann `chrome://policy` → «Richtlinien neu laden»). Token von
