@@ -9,7 +9,11 @@
   /MoveWindowHandle:<hwnd>` verschiebt das Fenster, `/IsWindowHandleOnDesktop` prüft; Handles der Chrome-Fenster
   per `EnumWindows` (Klasse `Chrome_WidgetWin_1`). Neue Tabs der Session landen dort und laden normal; die Seite
   ist `hidden` wie ein Hintergrund-Tab (setTimeout 100 ms dauert rund 1 s, `requestAnimationFrame` steht), also
-  nicht schlechter als bisher. Offen: als Windows-Zweig von `chrome_anhaengen.py` mit Tests bauen (Quelle in
+  nicht schlechter als bisher. Ein neues Fenster entsteht immer auf dem sichtbaren Desktop (Goran will das nie
+  sehen): Chromium verschiebt Fenster nur beim Wiederherstellen der Sitzung auf ihren alten Desktop und öffnet
+  Links nie in einem Fenster auf einem anderen Desktop (chromium `docs/windows_virtual_desktop_handling.md`);
+  einen Startparameter für einen anderen Desktop nennt keine der gefundenen Quellen (Recherche 03.11.2026: ddgs,
+  Exa, Chromium-Doku). Darum das bestehende Fenster auf Desktop 2 wiederverwenden statt neu öffnen. Offen: als Windows-Zweig von `chrome_anhaengen.py` mit Tests bauen (Quelle in
   `tools/vendor/` samt Lizenz, `--zeigen` holt das Fenster auf Desktop 1, `--verstecken` schickt es zurück,
   Desktop 2 anlegen, falls er fehlt). Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
   per ydotool blieben ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
