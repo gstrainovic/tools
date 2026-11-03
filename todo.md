@@ -2,7 +2,12 @@
 
 - Browser-Session auf eigenem virtuellen Desktop, Linux (Goran, Skill `browser-wahl`, «Ziel: eigener virtueller
   Desktop»; Windows ist umgesetzt): `MoveToWorkspace` über Window Calls und das GNOME-Kürzel per ydotool blieben
-  ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
+  ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren. Nachgeprüft: `MoveToWorkspace <id> 1` auf das
+  minimierte Arbeitsfenster liefert `()`, das Fenster bleibt auf Arbeitsfläche 0 (Monitor 0, Window Calls 21,
+  `dynamic-workspaces` true, `workspaces-only-on-primary` true). Nächste Spur (Vermutung): die aktive Erweiterung
+  `gnome-one-window-wonderland@jqno.nl` holt Fenster zurück; zum Test kurz abschalten und erneut verschieben, auch
+  mit nicht minimiertem Fenster. Headless-Chrome ist keine Alternative: Das Profil ist gesperrt, solange Gorans
+  Chrome läuft, und kopierte Profile sind verboten (Skill `browser-wahl`).
 - `chrome_anhaengen.py`, Linux-Zweig: der Umbau auf `cli_lauf()` (03.11.2026) ist auf dem Windows-PC nicht
   getestet (`test_chrome_anhaengen.py` braucht bash-Fakes); auf dem Laptop einmal laufen lassen.
 
