@@ -46,10 +46,11 @@ fi
 FALSCH_GDBUS = """#!/bin/bash
 echo "gdbus $*" >> "$AUFRUFE"
 [[ -f "$OHNE_WINDOW_CALLS" ]] && { echo "Fehler: GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: Das Objekt existiert nicht" >&2; exit 1; }
-methode="${@: -1}"; [[ "$*" == *Minimize* || "$*" == *Activate* ]] && methode="${@: -2:1}"
-python3 - "$FENSTER" "$*" <<'EOF'
+python3 - "$FENSTER" "$*" "$ANZAHL_ARBEITSFLAECHEN" "$GEWECHSELT" <<'EOF'
 import json, sys
 p = sys.argv[1]; f = json.load(open(p)); args = sys.argv[2].split()
+anzahl = int(open(sys.argv[3]).read().strip())
+for w in f: w.setdefault("workspace", 0)
 if "Windows.List" in args[-1]:
     print("('" + json.dumps(f) + "',)")
 elif "Windows.Minimize" in sys.argv[2]:
@@ -59,10 +60,31 @@ elif "Windows.Minimize" in sys.argv[2]:
 elif "Windows.Activate" in sys.argv[2]:
     for w in f:
         w["focus"] = w["id"] == int(args[-1])
-        if w["focus"]: w["minimized"] = False
+        if w["focus"]:
+            w["minimized"] = False
+            # Aktivieren eines Fensters auf einer anderen Arbeitsfläche wechselt Gorans Ansicht dorthin.
+            if w["workspace"] != 0: open(sys.argv[4], "w").write(str(w["id"]))
+    print("()")
+elif "Windows.MoveToWorkspace" in sys.argv[2]:
+    # Wie Mutter: gibt es die Arbeitsfläche nicht, passiert nichts.
+    ziel = int(args[-1])
+    for w in f:
+        if w["id"] == int(args[-2]) and ziel < anzahl:
+            w["workspace"] = ziel
+            if w["focus"]: w["focus"] = False
     print("()")
 json.dump(f, open(p, "w"))
 EOF
+"""
+
+# dconf liest und schreibt die feste Zahl der Arbeitsflächen (gsettings aus Linuxbrew hat kein dconf-Backend).
+FALSCH_DCONF = """#!/bin/bash
+echo "dconf $*" >> "$AUFRUFE"
+case "$1 $2" in
+  "read /org/gnome/desktop/wm/preferences/num-workspaces") cat "$ANZAHL_ARBEITSFLAECHEN" ;;
+  "read /org/gnome/mutter/dynamic-workspaces") echo false ;;
+  "write /org/gnome/desktop/wm/preferences/num-workspaces") echo "$3" > "$ANZAHL_ARBEITSFLAECHEN" ;;
+esac
 """
 
 FALSCH_CHROME = """#!/bin/bash
@@ -85,7 +107,8 @@ class ChromeAnhaengen(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         (self.tmp / "bin").mkdir()
-        for name, inhalt in [("playwright-cli", FALSCH_CLI), ("gdbus", FALSCH_GDBUS), ("google-chrome", FALSCH_CHROME)]:
+        for name, inhalt in [("playwright-cli", FALSCH_CLI), ("gdbus", FALSCH_GDBUS), ("google-chrome", FALSCH_CHROME),
+                             ("dconf", FALSCH_DCONF)]:
             p = self.tmp / "bin" / name
             p.write_text(inhalt)
             p.chmod(0o755)
@@ -97,7 +120,15 @@ class ChromeAnhaengen(unittest.TestCase):
                             fenster(2, "google-chrome", "Gorans Seite - Google Chrome")])
         self.env = {**os.environ, "PATH": f"{self.tmp / 'bin'}:{os.environ['PATH']}", "HOME": str(self.tmp),
                     "AUFRUFE": str(self.tmp / "aufrufe"), "OFFEN": str(self.tmp / "offen"),
-                    "FENSTER": str(self.fenster_datei), "OHNE_WINDOW_CALLS": str(self.tmp / "ohne-wc")}
+                    "FENSTER": str(self.fenster_datei), "OHNE_WINDOW_CALLS": str(self.tmp / "ohne-wc"),
+                    "ANZAHL_ARBEITSFLAECHEN": str(self.tmp / "anzahl"), "GEWECHSELT": str(self.tmp / "gewechselt")}
+        (self.tmp / "anzahl").write_text("2\n")
+
+    def auf_arbeitsflaeche_2(self, fenster_id):
+        return self.fenster()[fenster_id].get("workspace", 0) == 1
+
+    def ansicht_gewechselt(self):
+        return (self.tmp / "gewechselt").exists()
 
     def setze_fenster(self, liste):
         self.fenster_datei.write_text(json.dumps(liste))
@@ -134,8 +165,9 @@ class ChromeAnhaengen(unittest.TestCase):
         (self.konfig / "fenster-gchrome").write_text("77\n")
         r = self.lauf()
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertTrue(self.fenster()[77]["minimized"], "Arbeitsfenster minimiert")
-        self.assertFalse(self.fenster()[2]["minimized"], "Gorans Fenster unberührt")
+        self.assertTrue(self.auf_arbeitsflaeche_2(77), "Arbeitsfenster auf Arbeitsfläche 2")
+        self.assertFalse(self.auf_arbeitsflaeche_2(2), "Gorans Fenster unberührt")
+        self.assertFalse(self.ansicht_gewechselt(), "Gorans Ansicht bleibt auf Arbeitsfläche 1")
         self.assertFalse(any(z.startswith("attach") for z in self.aufrufe()))
 
     def test_ohne_eigenes_fenster_bekommt_goran_eines_und_behaelt_den_fokus(self):
@@ -151,7 +183,8 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertIn(900, w, "eigenes Fenster für Goran geöffnet")
         self.assertFalse(w[900]["minimized"])
         self.assertTrue(w[1]["focus"], "Fokus zurück beim Terminal")
-        self.assertTrue(w[77]["minimized"])
+        self.assertTrue(self.auf_arbeitsflaeche_2(77))
+        self.assertFalse(self.auf_arbeitsflaeche_2(900), "Gorans neues Fenster bleibt bei ihm")
         self.assertEqual("77", (self.konfig / "fenster-gchrome").read_text().strip(), "Arbeitsfenster bleibt gemerkt")
 
     def test_mit_eigenem_fenster_kein_zusaetzliches(self):
@@ -174,22 +207,23 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertIn("token", r.stderr)
         self.assertFalse((self.tmp / "aufrufe").exists() and any(z.startswith("attach") for z in self.aufrufe()))
 
-    def test_neue_session_bekommt_eigenes_minimiertes_arbeitsfenster(self):
+    def test_neue_session_bekommt_eigenes_arbeitsfenster_auf_arbeitsflaeche_2(self):
         r = self.lauf()
         self.assertEqual(r.returncode, 0, r.stderr)
         a = self.aufrufe()
         self.assertTrue(any(z.startswith("google-chrome --new-window") for z in a))
         self.assertLess(next(i for i, z in enumerate(a) if z.startswith("google-chrome")),
                         next(i for i, z in enumerate(a) if z.startswith("attach")), "Fenster vor dem Anhängen")
-        self.assertTrue(self.fenster()[900]["minimized"], "Arbeitsfenster minimiert")
-        self.assertFalse(self.fenster()[2]["minimized"], "Gorans Fenster unberührt")
+        self.assertTrue(self.auf_arbeitsflaeche_2(900), "Arbeitsfenster auf Arbeitsfläche 2")
+        self.assertFalse(self.auf_arbeitsflaeche_2(2), "Gorans Fenster unberührt")
+        self.assertFalse(self.ansicht_gewechselt())
         self.assertEqual("900", (self.konfig / "fenster-gchrome").read_text().strip())
         self.assertIn("Arbeitsfenster", r.stdout)
 
     def test_bekanntes_arbeitsfenster_wird_aktiviert_statt_neu_geoeffnet(self):
         self.setze_fenster([fenster(1, "org.gnome.Ptyxis", "Terminal", fokus=True),
                             fenster(2, "google-chrome", "Gorans Seite - Google Chrome"),
-                            fenster(77, "google-chrome", "Alt - Google Chrome", minimiert=True)])
+                            {**fenster(77, "google-chrome", "Alt - Google Chrome"), "workspace": 1}])
         (self.konfig / "fenster-gchrome").write_text("77\n")
         r = self.lauf()
         self.assertEqual(r.returncode, 0, r.stderr)
@@ -197,8 +231,9 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertFalse(any(z.startswith("google-chrome") for z in a))
         self.assertTrue(any("Windows.Activate 77" in z for z in a))
         self.assertLess(next(i for i, z in enumerate(a) if "Activate" in z), next(i for i, z in enumerate(a) if z.startswith("attach")))
-        self.assertTrue(self.fenster()[77]["minimized"])
-        self.assertFalse(self.fenster()[2]["minimized"])
+        self.assertFalse(self.ansicht_gewechselt(), "erst herholen, dann aktivieren, sonst springt Gorans Ansicht")
+        self.assertTrue(self.auf_arbeitsflaeche_2(77))
+        self.assertFalse(self.auf_arbeitsflaeche_2(2))
 
     def test_verschwundenes_arbeitsfenster_wird_ersetzt(self):
         (self.konfig / "fenster-gchrome").write_text("77\n")
@@ -207,28 +242,44 @@ class ChromeAnhaengen(unittest.TestCase):
         self.assertTrue(any(z.startswith("google-chrome --new-window") for z in self.aufrufe()))
         self.assertEqual("900", (self.konfig / "fenster-gchrome").read_text().strip())
 
-    def test_tab_in_fremdem_fenster_wird_nicht_minimiert_sondern_gemeldet(self):
+    def test_tab_in_fremdem_fenster_wird_nicht_versteckt_sondern_gemeldet(self):
         # Goran klickt nach dem Öffnen des Arbeitsfensters in sein eigenes Fenster: der Session-Tab entsteht dort.
         (self.tmp / "bin" / "google-chrome").write_text(FALSCH_CHROME.replace('f.append(', 'f[1]["focus"] = True; f.append(')
                                                           .replace('"focus": True, "minimized"', '"focus": False, "minimized"'))
         r = self.lauf()
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertFalse(any("Minimize" in z for z in self.aufrufe()))
+        self.assertFalse(any("Minimize" in z or "MoveToWorkspace" in z for z in self.aufrufe()))
         self.assertFalse(self.fenster()[2]["minimized"])
+        self.assertFalse(self.auf_arbeitsflaeche_2(2))
         self.assertIn("nicht im Arbeitsfenster", r.stdout)
 
-    def test_zeigen_holt_das_arbeitsfenster_hervor_und_verstecken_minimiert_es(self):
+    def test_zeigen_holt_das_arbeitsfenster_zu_goran_und_verstecken_schickt_es_zurueck(self):
         self.setze_fenster([fenster(1, "org.gnome.Ptyxis", "Terminal", fokus=True),
-                            fenster(77, "google-chrome", "Arbeitsfenster gchrome - Google Chrome", minimiert=True)])
+                            {**fenster(77, "google-chrome", "Arbeitsfenster gchrome - Google Chrome"), "workspace": 1}])
         (self.konfig / "fenster-gchrome").write_text("77\n")
         r = self.lauf("--zeigen")
         self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse(self.auf_arbeitsflaeche_2(77))
         self.assertFalse(self.fenster()[77]["minimized"])
         self.assertTrue(self.fenster()[77]["focus"])
+        self.assertFalse(self.ansicht_gewechselt(), "das Fenster kommt zu Goran, nicht Goran zum Fenster")
         self.assertFalse((self.tmp / "offen").exists(), "zeigen hängt nicht an")
         r = self.lauf("--verstecken")
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertTrue(self.fenster()[77]["minimized"])
+        self.assertTrue(self.auf_arbeitsflaeche_2(77))
+
+    def test_nur_eine_arbeitsflaeche_bekommt_eine_zweite(self):
+        (self.tmp / "anzahl").write_text("1\n")
+        r = self.lauf()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("dconf write /org/gnome/desktop/wm/preferences/num-workspaces 2", self.aufrufe())
+        self.assertTrue(self.auf_arbeitsflaeche_2(900))
+
+    def test_mehr_arbeitsflaechen_bleiben_wie_sie_sind(self):
+        (self.tmp / "anzahl").write_text("4\n")
+        self.lauf()
+        self.assertFalse(any(z.startswith("dconf write") for z in self.aufrufe()))
+        self.assertTrue(self.auf_arbeitsflaeche_2(900))
 
     def test_zeigen_ohne_bekanntes_fenster_meldet_es(self):
         r = self.lauf("--zeigen")
