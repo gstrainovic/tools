@@ -6,7 +6,7 @@
   minimierte Arbeitsfenster liefert `()`, das Fenster bleibt auf Arbeitsfläche 0 (Monitor 0, Window Calls 21,
   `dynamic-workspaces` true, `workspaces-only-on-primary` true). Ebenso ohne Wirkung: Fenster vorher einblenden
   (`Unminimize`) und feste zwei Arbeitsflächen (`dynamic-workspaces` false, danach zurückgestellt). One Window
-  Wonderland ruft im Code keinen Arbeitsflächenwechsel auf, ist also kaum die Ursache. Auffällig: `List` liefert
+  Wonderland ist nicht die Ursache (abgeschaltet getestet, gleiches Ergebnis). Auffällig: `List` liefert
   nur 2 Fenster (Arbeitsfenster und Ptyxis), obwohl mehr offen sind; nächste Spur: ob das Arbeitsfenster auf allen
   Arbeitsflächen liegt (`is_on_all_workspaces`) und ob Window Calls 21 unter dieser GNOME-Version die richtigen
   Fenster sieht. Goran will Arbeitsfläche 2 (Entscheid 2a vom 03.11.2026). Headless-Chrome ist keine Alternative: Das Profil ist gesperrt, solange Gorans
