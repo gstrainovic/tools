@@ -5,7 +5,8 @@
   `chrome.exe --new-window`, anhängen, Fenster auf einen zweiten virtuellen Desktop verschieben. Kandidaten,
   beide ungeprüft: die öffentliche Schnittstelle `IVirtualDesktopManager.MoveWindowToDesktop` (ob sie Fenster
   eines fremden Prozesses verschiebt, steht in der Doku-Seite nicht) und MScholtes/VirtualDesktop (V1.21 vom
-  12.08.2025, nicht archiviert; ob es Windows 11 Build 26200 unterstützt, offen). Ebenso offen: ob Chrome Tabs
+  12.08.2025, nicht archiviert, mit eigener Quelle `virtualdesktop11-24h2.cs` und `/MoveWindowHandle`; ob
+  die 24H2-Fassung auf Build 26200 läuft, offen). Ebenso offen: ob Chrome Tabs
   auf einem nicht sichtbaren Desktop drosselt. Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
   per ydotool blieben ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
 
