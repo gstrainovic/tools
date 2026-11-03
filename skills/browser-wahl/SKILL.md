@@ -71,21 +71,22 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 - **`chrome-anhaengen`** (`~/projects/tools/chrome_anhaengen.py`) hängt die Session `gchrome` über die Playwright
   Extension an Gorans laufenden Chrome, ohne Dialog und ohne Maus; eine laufende Session bleibt. Danach
   `playwright-cli -s=gchrome …`. Die Session sieht nur die Tabs ihrer eigenen Tabgruppe, Gorans übrige Tabs nicht.
-- **Ziel: eigener virtueller Desktop (Goran, Windows und Linux):** Die Session arbeitet in einem eigenen
-  Chrome-Fenster auf einem eigenen virtuellen Desktop (GNOME: Arbeitsbereich), nie in Gorans Fenster auf seinem
-  Desktop. Windows macht das (unten, «Windows»); Linux minimiert das Arbeitsfenster nur, weil das Verschieben auf
-  einen Arbeitsbereich nicht gelang (offen in `tools/todo.md`).
+- **Eigener virtueller Desktop (Goran, Windows und Linux):** Die Session arbeitet in einem eigenen Chrome-Fenster
+  auf Desktop bzw. Arbeitsfläche 2, nie in Gorans Fenster auf seinem Desktop (Windows unten, «Windows»).
 - **Arbeitsfenster (Goran nicht stören, Entscheid 6a vom 31.10.2026):** `chrome-anhaengen` legt die Session in ein
-  eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und minimiert es über
+  eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und schiebt es über
   die GNOME-Erweiterung «Window Calls» (D-Bus `org.gnome.Shell.Extensions.Windows`, Methoden List, Activate,
-  Minimize); die Fenster-ID steht in `~/.config/playwright-extension/fenster-<session>`. Alle Tabs der Session
-  entstehen in ihrer Tabgruppe, also im minimierten Fenster, und JavaScript läuft dort ohne Drosselung; nur
-  `requestAnimationFrame` steht still, darum bleiben Oberflächen, die damit zeichnen (Odoo 17+ mit Owl), dort
-  leer. Prüfungen solcher Oberflächen mit `chrome-anhaengen --zeigen` und ausgewähltem Tab oder per Skript gegen
+  MoveToWorkspace) auf Arbeitsfläche 2; die Fenster-ID steht in `~/.config/playwright-extension/fenster-<session>`.
+  Bei fester Zahl Arbeitsflächen unter zwei stellt es per `dconf` zwei ein. Nie `gsettings` für GNOME-Einstellungen:
+  das gsettings aus Linuxbrew steht im PATH vor `/usr/bin/gsettings`, hat kein dconf-Backend und liest bzw.
+  schreibt nur Standardwerte (darum schien `MoveToWorkspace` früher wirkungslos: es gab nur eine Arbeitsfläche).
+  Alle Tabs der Session entstehen in ihrer Tabgruppe, also auf Arbeitsfläche 2; Seiten laden dort, gelten aber als
+  verborgen (`visibilityState` hidden), und `requestAnimationFrame` steht still, darum bleiben Oberflächen, die
+  damit zeichnen (Odoo 17+ mit Owl), dort leer. Prüfungen solcher Oberflächen mit `chrome-anhaengen --zeigen` und ausgewähltem Tab oder per Skript gegen
   einen lokalen Container (am 1.11.2026 hielt eine leere Odoo-Seite im Arbeitsfenster für einen Fehler). Beim
-  Anhängen holt das Skript das Fenster kurz nach vorn (die Erweiterung legt den Session-Tab im zuletzt
-  fokussierten Fenster an), danach ist es wieder weg; auch bei schon laufender Session minimiert jeder Aufruf es
-  wieder. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
+  Anhängen holt das Skript das Fenster kurz auf Gorans Arbeitsfläche und aktiviert es (die Erweiterung legt den
+  Session-Tab im zuletzt fokussierten Fenster an; aktivieren auf Arbeitsfläche 2 würde Gorans Ansicht dorthin
+  wechseln), danach ist es wieder weg; auch bei schon laufender Session schickt jeder Aufruf es zurück. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
   und das Dock holt es hervor; darum öffnet das Skript dann ein eigenes Fenster für Goran und gibt den Fokus zurück.
   Soll Goran etwas klicken (Login, Captcha, 2FA):
   `chrome-anhaengen --zeigen`, danach `chrome-anhaengen --verstecken`. Ein Headless-Chrome scheidet aus: zwei
@@ -94,9 +95,7 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   --timeout 900 --dest org.gnome.Shell --object-path /org/gnome/Shell --method
   org.gnome.Shell.Extensions.InstallRemoteExtension 'window-calls@domandoman.xyz'`, Goran bestätigt den
   GNOME-Dialog (eine von Hand nach `~/.local/share/gnome-shell/extensions` kopierte Erweiterung lädt die Shell
-  erst nach neuer Anmeldung). Ohne Window Calls hängt das Skript wie früher in Gorans Fenster an. Auf einen anderen
-  Arbeitsbereich verschieben klappte nicht (`MoveToWorkspace` und das GNOME-Kürzel per ydotool blieben ohne
-  Wirkung), darum Minimieren.
+  erst nach neuer Anmeldung). Ohne Window Calls hängt das Skript wie früher in Gorans Fenster an.
 - **Windows (HP Elite Mini):** `python3 ~\projects\tools\chrome_anhaengen.py` (Goran, 03.11.2026): öffnet ein
   neues Fenster in Gorans laufendem Chrome (es blitzt kurz auf Desktop 1 auf; Chrome kennt keinen Startparameter
   für einen anderen Desktop, Chromium-Doku `docs/windows_virtual_desktop_handling.md`), verschiebt es sofort auf

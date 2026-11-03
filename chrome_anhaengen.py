@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """playwright-cli an Gorans laufenden Chrome hängen, über die Playwright Extension ohne Freigabedialog, in einem
-eigenen minimierten Chrome-Fenster («Arbeitsfenster»), damit die Browserarbeit Goran nicht stört.
+eigenen Chrome-Fenster («Arbeitsfenster») auf Arbeitsfläche 2, damit die Browserarbeit Goran nicht stört.
 
-Aufruf: chrome-anhaengen [--session gchrome]
+Aufruf: chrome-anhaengen [--session gchrome] [--zeigen | --verstecken]
 
-Läuft die Session schon, bleibt sie (nie schliessen); ihr Arbeitsfenster wird wieder minimiert. Sonst:
+Läuft die Session schon, bleibt sie (nie schliessen); ihr Arbeitsfenster geht wieder auf Arbeitsfläche 2. Sonst:
 1. Arbeitsfenster der Session bereitstellen: die gemerkte Fenster-ID (~/.config/playwright-extension/fenster-<session>)
-   wird per GNOME-Erweiterung «Window Calls» (D-Bus org.gnome.Shell.Extensions.Windows) aktiviert; fehlt das Fenster,
+   wird per GNOME-Erweiterung «Window Calls» (D-Bus org.gnome.Shell.Extensions.Windows) auf Gorans Arbeitsfläche
+   geholt und aktiviert (aktivieren auf Arbeitsfläche 2 würde seine Ansicht dorthin wechseln); fehlt das Fenster,
    öffnet `google-chrome --new-window` ein neues Fenster in Gorans laufendem Chrome (gleiches Profil, gleiche Cookies).
 2. `playwright-cli attach --extension=chrome` mit dem Token aus ~/.config/playwright-extension/token
    (PLAYWRIGHT_MCP_EXTENSION_TOKEN): Die Erweiterung legt den Session-Tab im zuletzt fokussierten Chrome-Fenster an,
    also im Arbeitsfenster, und fokussiert es.
-3. Prüfen, dass der Session-Tab im Arbeitsfenster liegt (Titel des Tabs = Fenstertitel), dann das Fenster minimieren.
-   Alle weiteren Tabs der Session entstehen in ihrer Tabgruppe, also im minimierten Fenster.
+3. Prüfen, dass der Session-Tab im Arbeitsfenster liegt (Titel des Tabs = Fenstertitel), dann das Fenster auf
+   Arbeitsfläche 2 schieben (MoveToWorkspace); bei fester Zahl Arbeitsflächen unter zwei stellt das Skript per dconf
+   zwei ein. Alle weiteren Tabs der Session entstehen in ihrer Tabgruppe, also auf Arbeitsfläche 2.
+   `--zeigen` holt das Fenster auf Gorans Arbeitsfläche, `--verstecken` schickt es zurück.
 4. Hat Goran kein eigenes Chrome-Fenster, eines öffnen (sonst landen Links aus anderen Apps im Arbeitsfenster).
 Ohne Window Calls (anderer Rechner, Erweiterung fehlt) nur anhängen wie früher. Die Session sieht nur die Tabs ihrer
 eigenen Tabgruppe, Gorans übrige Tabs nicht. Einrichtung: Skill browser-wahl, «Gorans Chrome anhängen».
@@ -76,14 +79,43 @@ class Fenster:
     def aktivieren(self, fenster_id: int):
         subprocess.run([*DBUS, "org.gnome.Shell.Extensions.Windows.Activate", str(fenster_id)], capture_output=True)
 
-    def minimieren(self, fenster_id: int):
-        subprocess.run([*DBUS, "org.gnome.Shell.Extensions.Windows.Minimize", str(fenster_id)], capture_output=True)
+    def verschieben(self, fenster_id: int, arbeitsflaeche: int):
+        """Fenster auf eine Arbeitsfläche (nullbasiert) schieben; Mutter tut nichts, wenn es sie nicht gibt."""
+        subprocess.run([*DBUS, "org.gnome.Shell.Extensions.Windows.MoveToWorkspace", str(fenster_id),
+                        str(arbeitsflaeche)], capture_output=True)
+
+    def verstecken(self, fenster_id: int):
+        arbeitsflaechen_sichern()
+        self.verschieben(fenster_id, ARBEITSDESKTOP)
+
+    def herholen(self, fenster_id: int):
+        """Erst auf Gorans Arbeitsfläche holen, dann aktivieren: Aktivieren auf Arbeitsfläche 2 würde seine Ansicht
+        dorthin wechseln."""
+        self.verschieben(fenster_id, 0)
+        self.aktivieren(fenster_id)
 
     def id_mit_titel(self, anfang: str):
         for w in self.liste() or []:
             if w.get("wm_class") == "google-chrome" and w.get("title", "").startswith(anfang):
                 return w["id"]
         return None
+
+
+def arbeitsflaechen_sichern():
+    """Bei fester Zahl Arbeitsflächen mindestens zwei einstellen. Über dconf, nicht gsettings: das gsettings aus
+    Linuxbrew steht im PATH vor /usr/bin und hat kein dconf-Backend, liest und schreibt also ins Leere."""
+    if not shutil.which("dconf"):
+        return
+    def lesen(schluessel):
+        return subprocess.run(["dconf", "read", schluessel], capture_output=True, text=True).stdout.strip()
+    if lesen("/org/gnome/mutter/dynamic-workspaces") == "true":
+        return
+    anzahl = lesen("/org/gnome/desktop/wm/preferences/num-workspaces")
+    if anzahl.isdigit() and int(anzahl) >= ARBEITSDESKTOP + 1:
+        return
+    subprocess.run(["dconf", "write", "/org/gnome/desktop/wm/preferences/num-workspaces", str(ARBEITSDESKTOP + 1)],
+                   capture_output=True)
+    time.sleep(0.5)
 
 
 def arbeitsfenster_bereitstellen(session: str, fenster: Fenster):
@@ -98,7 +130,7 @@ def arbeitsfenster_bereitstellen(session: str, fenster: Fenster):
         except ValueError:
             bekannt = None
         if bekannt in vorher:
-            fenster.aktivieren(bekannt)
+            fenster.herholen(bekannt)
             time.sleep(1)
             return bekannt
     subprocess.Popen(["google-chrome", "--new-window", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -320,11 +352,11 @@ def main() -> int:
             print(f"FEHLER: kein Arbeitsfenster für Session {s} bekannt (erst chrome-anhaengen)", file=sys.stderr)
             return 1
         if args.zeigen:
-            fenster.aktivieren(bekannt)
+            fenster.herholen(bekannt)
             print(f"Arbeitsfenster {bekannt} hervorgeholt")
         else:
-            fenster.minimieren(bekannt)
-            print(f"Arbeitsfenster {bekannt} minimiert")
+            fenster.verstecken(bekannt)
+            print(f"Arbeitsfenster {bekannt} auf Arbeitsfläche {ARBEITSDESKTOP + 1}")
         return 0
     if session_laeuft(s):
         # Ein früherer Lauf oder --zeigen kann das Arbeitsfenster offen gelassen haben: wieder verstecken.
@@ -332,8 +364,8 @@ def main() -> int:
         datei = KONFIG / f"fenster-{s}"
         bekannt = int(datei.read_text().strip()) if datei.is_file() else None
         if bekannt is not None and bekannt in (fenster.chrome_ids() or set()):
-            fenster.minimieren(bekannt)
-            print(f"Session {s} läuft schon, Arbeitsfenster {bekannt} minimiert")
+            fenster.verstecken(bekannt)
+            print(f"Session {s} läuft schon, Arbeitsfenster {bekannt} auf Arbeitsfläche {ARBEITSDESKTOP + 1}")
             eigenes_fenster_sichern(fenster, bekannt)
         else:
             print(f"Session {s} läuft schon")
@@ -353,12 +385,12 @@ def main() -> int:
         print(f"Session {s} angehängt (ohne Window Calls kein eigenes Arbeitsfenster; Tabs liegen in Gorans Fenster)")
         return 0
     if tab_im_fenster(s, fenster, fenster_id):
-        fenster.minimieren(fenster_id)
-        print(f"Session {s} angehängt, Arbeitsfenster {fenster_id} minimiert")
+        fenster.verstecken(fenster_id)
+        print(f"Session {s} angehängt, Arbeitsfenster {fenster_id} auf Arbeitsfläche {ARBEITSDESKTOP + 1}")
         eigenes_fenster_sichern(fenster, fenster_id)
     else:
         print(f"Session {s} angehängt, aber der Session-Tab liegt nicht im Arbeitsfenster {fenster_id} "
-              f"(Goran hat wohl dazwischen geklickt); nichts minimiert")
+              f"(Goran hat wohl dazwischen geklickt); nichts versteckt")
     return 0
 
 
