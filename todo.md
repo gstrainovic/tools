@@ -4,9 +4,12 @@
   Desktop»; Windows ist umgesetzt): `MoveToWorkspace` über Window Calls und das GNOME-Kürzel per ydotool blieben
   ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren. Nachgeprüft: `MoveToWorkspace <id> 1` auf das
   minimierte Arbeitsfenster liefert `()`, das Fenster bleibt auf Arbeitsfläche 0 (Monitor 0, Window Calls 21,
-  `dynamic-workspaces` true, `workspaces-only-on-primary` true). Nächste Spur (Vermutung): die aktive Erweiterung
-  `gnome-one-window-wonderland@jqno.nl` holt Fenster zurück; zum Test kurz abschalten und erneut verschieben, auch
-  mit nicht minimiertem Fenster. Headless-Chrome ist keine Alternative: Das Profil ist gesperrt, solange Gorans
+  `dynamic-workspaces` true, `workspaces-only-on-primary` true). Ebenso ohne Wirkung: Fenster vorher einblenden
+  (`Unminimize`) und feste zwei Arbeitsflächen (`dynamic-workspaces` false, danach zurückgestellt). One Window
+  Wonderland ruft im Code keinen Arbeitsflächenwechsel auf, ist also kaum die Ursache. Auffällig: `List` liefert
+  nur 2 Fenster (Arbeitsfenster und Ptyxis), obwohl mehr offen sind; nächste Spur: ob das Arbeitsfenster auf allen
+  Arbeitsflächen liegt (`is_on_all_workspaces`) und ob Window Calls 21 unter dieser GNOME-Version die richtigen
+  Fenster sieht. Goran will Arbeitsfläche 2 (Entscheid 2a vom 03.11.2026). Headless-Chrome ist keine Alternative: Das Profil ist gesperrt, solange Gorans
   Chrome läuft, und kopierte Profile sind verboten (Skill `browser-wahl`).
 - `chrome_anhaengen.py`, Linux-Zweig: der Umbau auf `cli_lauf()` (03.11.2026) ist auf dem Windows-PC nicht
   getestet (`test_chrome_anhaengen.py` braucht bash-Fakes); auf dem Laptop einmal laufen lassen.
