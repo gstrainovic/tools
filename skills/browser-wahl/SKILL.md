@@ -93,6 +93,13 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   erst nach neuer Anmeldung). Ohne Window Calls hängt das Skript wie früher in Gorans Fenster an. Auf einen anderen
   Arbeitsbereich verschieben klappte nicht (`MoveToWorkspace` und das GNOME-Kürzel per ydotool blieben ohne
   Wirkung), darum Minimieren.
+- **Windows (HP Elite Mini):** `chrome-anhaengen` kennt nur GNOME und bricht mit `FileNotFoundError` (gdbus) ab.
+  Dort direkt anhängen, ohne Arbeitsfenster; die Tabs der Session liegen in einer Tabgruppe in Gorans Chrome:
+  `$env:PLAYWRIGHT_MCP_EXTENSION_TOKEN = (Get-Content "$env:USERPROFILE\.config\playwright-extension\token" -Raw).Trim();
+  $env:PLAYWRIGHT_MCP_EXECUTABLE_PATH = "C:\Users\g.strainovic\scoop\apps\googlechrome\current\chrome.exe";
+  playwright-cli attach --extension=chrome --session=gchrome`. Ohne `PLAYWRIGHT_MCP_EXECUTABLE_PATH` meldet
+  playwright-cli «"chrome" executable not found», weil es Chrome nur unter `Program Files` und `LOCALAPPDATA` sucht,
+  scoop ihn aber unter `scoop\apps\googlechrome` ablegt. `run-code` lädt Dateien mit `--filename`, nicht `--file`.
 - **Einrichtung:** Erweiterung «Playwright Extension» (Microsoft, ID `mmlmfjhmonkocbjadbfplnigmagldckm`) per
   Chrome-Richtlinie `ExtensionInstallForcelist` in `/etc/opt/chrome/policies/managed/playwright-extension.json`
   (Vorlage `~/projects/tools/chrome-policy/`, dann `chrome://policy` → «Richtlinien neu laden»). Token von
