@@ -1,22 +1,10 @@
 # Offene Punkte
 
-- Browser-Session auf eigenem virtuellen Desktop (Goran, Skill `browser-wahl`, «Ziel: eigener virtueller
-  Desktop»). Windows: `chrome_anhaengen.py` um einen Windows-Weg ergänzen: eigenes Fenster per
-  `chrome.exe --new-window about:blank`, `playwright-cli detach`/`attach` (der Session-Tab landet im zuletzt
-  geöffneten Fenster), Fenster per MScholtes/VirtualDesktop auf Desktop 2 verschieben (Goran, Entscheid 1a). Von
-  Hand erprobt auf Build 26200: Quelle `VirtualDesktop11-24H2.cs` vom Tag V1.21 (MIT) mit
-  `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe` kompiliert, `vd.exe /GetDesktop:1
-  /MoveWindowHandle:<hwnd>` verschiebt das Fenster, `/IsWindowHandleOnDesktop` prüft; Handles der Chrome-Fenster
-  per `EnumWindows` (Klasse `Chrome_WidgetWin_1`). Neue Tabs der Session landen dort und laden normal; die Seite
-  ist `hidden` wie ein Hintergrund-Tab (setTimeout 100 ms dauert rund 1 s, `requestAnimationFrame` steht), also
-  nicht schlechter als bisher. Ein neues Fenster entsteht immer auf dem sichtbaren Desktop (Goran will das nie
-  sehen): Chromium verschiebt Fenster nur beim Wiederherstellen der Sitzung auf ihren alten Desktop und öffnet
-  Links nie in einem Fenster auf einem anderen Desktop (chromium `docs/windows_virtual_desktop_handling.md`);
-  einen Startparameter für einen anderen Desktop nennt keine der gefundenen Quellen (Recherche 03.11.2026: ddgs,
-  Exa, Chromium-Doku). Darum das bestehende Fenster auf Desktop 2 wiederverwenden statt neu öffnen. Offen: als Windows-Zweig von `chrome_anhaengen.py` mit Tests bauen (Quelle in
-  `tools/vendor/` samt Lizenz, `--zeigen` holt das Fenster auf Desktop 1, `--verstecken` schickt es zurück,
-  Desktop 2 anlegen, falls er fehlt). Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
-  per ydotool blieben ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
+- Browser-Session auf eigenem virtuellen Desktop, Linux (Goran, Skill `browser-wahl`, «Ziel: eigener virtueller
+  Desktop»; Windows ist umgesetzt): `MoveToWorkspace` über Window Calls und das GNOME-Kürzel per ydotool blieben
+  ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
+- `chrome_anhaengen.py`, Linux-Zweig: der Umbau auf `cli_lauf()` (03.11.2026) ist auf dem Windows-PC nicht
+  getestet (`test_chrome_anhaengen.py` braucht bash-Fakes); auf dem Laptop einmal laufen lassen.
 
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
