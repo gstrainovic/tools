@@ -1,5 +1,13 @@
 # Offene Punkte
 
+- Browser-Session auf eigenem virtuellen Desktop (Goran, Skill `browser-wahl`, «Ziel: eigener virtueller
+  Desktop»). Windows: `chrome_anhaengen.py` um einen Windows-Weg ergänzen: eigenes Fenster per
+  `chrome.exe --new-window`, anhängen, Fenster auf einen zweiten virtuellen Desktop verschieben. Kandidaten,
+  beide ungeprüft: die öffentliche Schnittstelle `IVirtualDesktopManager.MoveWindowToDesktop` (ob sie Fenster
+  eines fremden Prozesses verschiebt, steht in der Doku-Seite nicht) und MScholtes/VirtualDesktop (V1.21 vom
+  12.08.2025, nicht archiviert; ob es Windows 11 Build 26200 unterstützt, offen). Ebenso offen: ob Chrome Tabs
+  auf einem nicht sichtbaren Desktop drosselt. Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
+  per ydotool blieben ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
 
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).

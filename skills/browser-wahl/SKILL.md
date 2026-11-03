@@ -71,6 +71,11 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 - **`chrome-anhaengen`** (`~/projects/tools/chrome_anhaengen.py`) hängt die Session `gchrome` über die Playwright
   Extension an Gorans laufenden Chrome, ohne Dialog und ohne Maus; eine laufende Session bleibt. Danach
   `playwright-cli -s=gchrome …`. Die Session sieht nur die Tabs ihrer eigenen Tabgruppe, Gorans übrige Tabs nicht.
+- **Ziel: eigener virtueller Desktop (Goran, Windows und Linux):** Die Session arbeitet in einem eigenen
+  Chrome-Fenster auf einem eigenen virtuellen Desktop (GNOME: Arbeitsbereich), nie in Gorans Fenster auf seinem
+  Desktop. Stand: Linux minimiert das Arbeitsfenster nur (unten, Verschieben auf einen Arbeitsbereich ging nicht),
+  Windows hängt noch direkt in Gorans Fenster an (unten). Beides ist offen in `tools/todo.md`; bis es umgesetzt
+  ist, gilt das jeweilige Rückfallverhalten.
 - **Arbeitsfenster (Goran nicht stören, Entscheid 6a vom 31.10.2026):** `chrome-anhaengen` legt die Session in ein
   eigenes Chrome-Fenster desselben Profils (`google-chrome --new-window`, gleiche Cookies) und minimiert es über
   die GNOME-Erweiterung «Window Calls» (D-Bus `org.gnome.Shell.Extensions.Windows`, Methoden List, Activate,
