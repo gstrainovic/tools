@@ -3,7 +3,7 @@
 # Aufruf: temu_produkt.sh "<Produktname oder Suchbegriff>" [weitere …]
 #   oder: temu_produkt.sh "<Suchbegriff>=g-<ID>"  (ID aus einem Temu-Link; dann zählt die ID, nicht der Name)
 # Voraussetzung: Gorans Chrome läuft, Session gchrome angehängt (chrome-anhaengen), eigener Tab ist aktiv.
-# Läufe nacheinander, nie parallel: Tastatureingaben kommen nur im sichtbaren Tab an.
+# Läufe nacheinander, nie parallel (ein Tab je Session); läuft im Hintergrund-Tab, holt nichts nach vorne.
 set -u
 hier=$(dirname "$(readlink -f "$0")")
 code=$(cat "$hier/temu_produkt.js")

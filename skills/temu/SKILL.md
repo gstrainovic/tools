@@ -24,7 +24,9 @@ Erarbeitet beim Einkauf für Pink Deko (`~/projects/vesna/action-dupes/`, Preise
   per `tab-new`). Jina, curl und Exa liefern von Temu nur eine JavaScript-Hülle. Es gibt keine Käufer-API; die
   Partner-API (partner.temu.com) ist nur für Verkäufer (geprüft 14.10.2026, Notiz `research_notes/Startplan mit
   belegten Preisankern/globale-suche-und-apis.md` im Repo vesna).
-- **Läufe nacheinander, nie parallel:** Tastatureingaben kommen nur im sichtbaren Tab an.
+- **Läufe nacheinander, nie parallel** (ein Tab je Session). Das Skript arbeitet im Hintergrund-Tab auf
+  Arbeitsfläche 2 (`fill` und `press` gehen über CDP und brauchen keinen Fokus); nie `bringToFront()`, weil
+  GNOME dann Gorans Ansicht auf Arbeitsfläche 2 wechselt.
 - **Preis ist der der vorausgewählten Variante.** Grösse, Menge und Farbe im Warenkorb prüfen, bevor bestellt wird;
   Preise und Bestände ändern sich innert Tagen (Hartschalen-Etui am 25.10. morgens CHF 3.15, nachmittags 6.49).
 

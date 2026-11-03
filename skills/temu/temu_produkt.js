@@ -5,7 +5,6 @@
 async page => {
   const q = '__Q__';
   const captcha = t => /Überprüfung|Sicherheitsüberprüfung|verify you are|Captcha|Schieberegler/i.test(t);
-  await page.bringToFront();
   await page.goto('https://www.temu.com/ch', {waitUntil: 'load', timeout: 90000});
   await page.waitForTimeout(5000);
   let body = (await page.locator('body').innerText()).replace(/​/g, '');
