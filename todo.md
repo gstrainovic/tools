@@ -2,12 +2,16 @@
 
 - Browser-Session auf eigenem virtuellen Desktop (Goran, Skill `browser-wahl`, «Ziel: eigener virtueller
   Desktop»). Windows: `chrome_anhaengen.py` um einen Windows-Weg ergänzen: eigenes Fenster per
-  `chrome.exe --new-window`, anhängen, Fenster auf einen zweiten virtuellen Desktop verschieben. Kandidaten,
-  beide ungeprüft: die öffentliche Schnittstelle `IVirtualDesktopManager.MoveWindowToDesktop` (ob sie Fenster
-  eines fremden Prozesses verschiebt, steht in der Doku-Seite nicht) und MScholtes/VirtualDesktop (V1.21 vom
-  12.08.2025, nicht archiviert, mit eigener Quelle `virtualdesktop11-24h2.cs` und `/MoveWindowHandle`; ob
-  die 24H2-Fassung auf Build 26200 läuft, offen). Ebenso offen: ob Chrome Tabs
-  auf einem nicht sichtbaren Desktop drosselt. Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
+  `chrome.exe --new-window about:blank`, `playwright-cli detach`/`attach` (der Session-Tab landet im zuletzt
+  geöffneten Fenster), Fenster per MScholtes/VirtualDesktop auf Desktop 2 verschieben (Goran, Entscheid 1a). Von
+  Hand erprobt auf Build 26200: Quelle `VirtualDesktop11-24H2.cs` vom Tag V1.21 (MIT) mit
+  `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe` kompiliert, `vd.exe /GetDesktop:1
+  /MoveWindowHandle:<hwnd>` verschiebt das Fenster, `/IsWindowHandleOnDesktop` prüft; Handles der Chrome-Fenster
+  per `EnumWindows` (Klasse `Chrome_WidgetWin_1`). Neue Tabs der Session landen dort und laden normal; die Seite
+  ist `hidden` wie ein Hintergrund-Tab (setTimeout 100 ms dauert rund 1 s, `requestAnimationFrame` steht), also
+  nicht schlechter als bisher. Offen: als Windows-Zweig von `chrome_anhaengen.py` mit Tests bauen (Quelle in
+  `tools/vendor/` samt Lizenz, `--zeigen` holt das Fenster auf Desktop 1, `--verstecken` schickt es zurück,
+  Desktop 2 anlegen, falls er fehlt). Linux: `MoveToWorkspace` über Window Calls und das GNOME-Kürzel
   per ydotool blieben ohne Wirkung; anderen Weg suchen, bis dahin bleibt das Minimieren.
 
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
