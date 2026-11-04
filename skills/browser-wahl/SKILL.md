@@ -100,7 +100,9 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   neues Fenster in Gorans laufendem Chrome (es blitzt kurz auf Desktop 1 auf; Chrome kennt keinen Startparameter
   für einen anderen Desktop, Chromium-Doku `docs/windows_virtual_desktop_handling.md`), verschiebt es sofort auf
   den virtuellen Desktop 2 (legt ihn an, falls er fehlt) und hängt erst dann an; ein früheres Session-Fenster
-  schliesst es vorher. Fenster-Handle in `~\.config\playwright-extension\fenster-<session>`; `--zeigen` holt das
+  schliesst es vorher. Landet der Session-Tab trotzdem in Gorans Fenster auf Desktop 1 (die Erweiterung legt ihn im
+  zuletzt fokussierten Fenster an), löst das Skript die Session wieder (`detach`) und endet mit `FEHLER` und Code 1;
+  dann nichts in der Session tun, auch keine Skripte, sondern Goran melden. Fenster-Handle in `~\.config\playwright-extension\fenster-<session>`; `--zeigen` holt das
   Fenster auf Desktop 1, `--verstecken` schickt es zurück, ein Aufruf bei laufender Session ebenso. Verschieben per
   MScholtes/VirtualDesktop (`tools/vendor/virtualdesktop/`, MIT), beim ersten Aufruf mit dem csc aus .NET
   Framework 4 nach `%LOCALAPPDATA%\virtualdesktop\vd.exe` gebaut. Das Skript setzt

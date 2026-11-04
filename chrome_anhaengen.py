@@ -329,11 +329,13 @@ def main_windows() -> int:
     frist = time.monotonic() + WARTEN_TITEL_S  # der Fenstertitel folgt dem Tab erst nach einigen Sekunden
     while not desktop.fenstertitel(hwnd).startswith(titel) and time.monotonic() < frist:
         time.sleep(0.3)
-    if desktop.fenstertitel(hwnd).startswith(titel):
-        print(f"Session {s} angehängt, Arbeitsfenster {hwnd} auf Desktop {ARBEITSDESKTOP + 1}")
-    else:
-        print(f"Session {s} angehängt, aber der Session-Tab liegt nicht im Arbeitsfenster {hwnd} auf Desktop "
-              f"{ARBEITSDESKTOP + 1} (Goran hat wohl dazwischen geklickt)")
+    if not desktop.fenstertitel(hwnd).startswith(titel):
+        # Session-Tab liegt in Gorans Fenster auf Desktop 1: dort zu arbeiten ist verboten, also wieder lösen.
+        cli_lauf([f"-s={s}", "detach"])
+        print(f"FEHLER: Session-Tab lag nicht im Arbeitsfenster {hwnd} auf Desktop {ARBEITSDESKTOP + 1}, sondern "
+              f"in Gorans Fenster; Session {s} wieder gelöst, nicht angehängt", file=sys.stderr)
+        return 1
+    print(f"Session {s} angehängt, Arbeitsfenster {hwnd} auf Desktop {ARBEITSDESKTOP + 1}")
     return 0
 
 

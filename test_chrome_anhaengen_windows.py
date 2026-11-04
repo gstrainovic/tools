@@ -145,12 +145,16 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         self.assertEqual(self.desktop.fenster[77], 1)
         self.assertIn("läuft schon", text)
 
-    def test_tab_in_fremdem_fenster_wird_gemeldet(self):
-        self.tab_fenster = 2  # Goran hat dazwischen geklickt: Tab in seinem Fenster
+    def test_tab_in_fremdem_fenster_loest_die_session_und_bricht_ab(self):
+        # Session-Tab in Gorans Fenster auf Desktop 1: dort zu arbeiten ist verboten, also wieder lösen.
+        self.tab_fenster = 2
         with mock.patch.object(ca, "WARTEN_TITEL_S", 0.01):
             rc, text, fehler = self.lauf()
-        self.assertEqual(rc, 0, fehler)
-        self.assertIn("nicht im Arbeitsfenster", text)
+        self.assertEqual(rc, 1)
+        self.assertIn("nicht im Arbeitsfenster", fehler)
+        self.assertIn("FEHLER", fehler)
+        self.assertIn("-s=gchrome detach", self.cli_aufrufe)
+        self.assertEqual(self.desktop.fenster[2], 0, "Gorans Fenster unberührt")
 
     def test_fenstertitel_kommt_erst_spaeter_und_wird_trotzdem_erkannt(self):
         # Echter Lauf 03.11.2026: der Fenstertitel folgte dem Tab erst nach mehr als 0,5 s.
