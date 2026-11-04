@@ -2,7 +2,7 @@
 # leerlauf-aus.sh — schaltet eine Dev-Instanz ab, wenn LEERLAUF_MINUTEN lang keine SSH-Verbindung
 # (Shell oder Tunnel) bestand. Läuft auf der Instanz per systemd-Timer alle 10 Minuten
 # (Einrichtung: leerlauf-aus-installieren.sh). Ausgeschaltet zahlt Infomaniak keine CPU/RAM mehr;
-# den Rest (Disk) spart das Zurückstellen durch den Kostenwächter auf dem Laptop.
+# Disk und IPv4 spart das Stilllegen (dev-instanz-stilllegen.sh), das der Kostenwächter auf dem Laptop startet.
 # Aufwecken: dev-instanz-wecken.sh <name>.
 set -euo pipefail
 STAMP=${STAMP:-/var/lib/leerlauf-aus/aktiv}
