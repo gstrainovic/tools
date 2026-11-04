@@ -23,7 +23,8 @@ noch eigenständige Terminal-Scripts.
 | `bing.py` | Microsoft-Advertising-Konto über die Bing Ads API: Kampagnen, Anzeigen, Ziel-URLs, Budget |
 | `fr_po_pruefen.py` | Französische Texte (`.po`, Shopware-Snippets, config.xml, composer.json, REDAXO `.lang`, PHP-Export) nach den Regeln des französischen WordPress-Teams prüfen (SPTE-Typografie, Glossar, Platzhalter), gemeinsame Prüfung der Plugin-Repos |
 | `leerlauf-aus.sh` | Dev-Instanz (Infomaniak) schaltet sich nach 2 h ohne SSH-Verbindung ab; Einrichtung per `leerlauf-aus-installieren.sh user@host` |
-| `dev-instanz-wecken.sh` | Abgeschaltete oder zurückgestellte Dev-Instanz starten, bis SSH antwortet; richtet fehlende Leerlauf-Abschaltung ein |
+| `dev-instanz-wecken.sh` | Dev-Instanz bereitmachen, bis SSH antwortet, letzte Zeile «<name> bereit: <ip>»: stillgelegte aus der neuesten Sicherung `<name>-sicherung-*` neu anlegen (neue IPv4), abgeschaltete starten; richtet fehlende Leerlauf-Abschaltung ein; `--dry-run` zeigt die ändernden openstack-Befehle |
+| `dev-instanz-stilllegen.sh` | Dev-Instanz stilllegen: ausschalten, geschütztes Image `<name>-sicherung-<JJJJMMTT>`, erst dann Instanz löschen, ältere Sicherungen weg; nie ablegen (shelve), abgelegte Instanzen zahlen die IPv4 weiter. Startet der Kostenwächter für abgeschaltete Dev-Instanzen; `--dry-run`; Tests `bash tests/test-dev-instanz.sh` |
 | `setup.sh` | Einrichtung auf einem neuen Rechner |
 | `link.sh` | Scripts nach `~/.local/bin`, Skills nach `~/.claude/skills` und die globalen Dateien aus `skills-privat/claude/` verknüpfen (Teil von `setup.sh`) |
 | `hooks/modellwahl.sh` | Claude-/Codex-Hook vor Agent, Workflow und spawn_agent: Modellhinweis passend zum Programm |

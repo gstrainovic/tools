@@ -16,12 +16,20 @@ IPV4_H=0.00457
 SNAPSHOT_GB_MONTH=0.011
 FLAVORS="a1-ram2-disk20-perf1=0.0064 a2-ram4-disk20-perf1=0.01043 a2-ram4-disk50-perf1=0.01399 a4-ram8-disk50-perf1=0.02798"
 
-# Dev-Instanzen schalten sich nach Leerlauf selbst ab (tools/leerlauf-aus.sh); abgeschaltet zahlen sie
-# noch die Disk, zurückgestellt nur noch Snapshot und IPv4. Aufwecken: tools/dev-instanz-wecken.sh <name>.
+# Dev-Instanzen schalten sich nach Leerlauf selbst ab (tools/leerlauf-aus.sh); abgeschaltet zahlen sie noch Disk
+# und IPv4. Der Wächter legt sie still (tools/dev-instanz-stilllegen.sh: Image, Instanz gelöscht, danach zahlt nur
+# das Image) und startet das im Hintergrund, weil das Image einige Minuten braucht. Nie ablegen (shelve): abgelegte
+# Instanzen zahlen die IPv4 weiter. Zurückholen: tools/dev-instanz-wecken.sh <name>.
+TOOLS_DIR="$(dirname "$(readlink -f "$0")")"
 DEV_INSTANZEN="wartungsheft-dev dms-dev"
 for n in $DEV_INSTANZEN; do
-  [ "$(openstack --os-cloud $CLOUD server show "$n" -f value -c status 2>/dev/null)" = SHUTOFF ] \
-    && openstack --os-cloud $CLOUD server shelve "$n" && echo "$n abgeschaltet, zurückgestellt"
+  st=$(openstack --os-cloud $CLOUD server list --name "^$n\$" -f value -c Status)
+  case "$st" in
+    SHUTOFF|SHELVED|SHELVED_OFFLOADED)
+      mkdir -p "$HOME/.cache"
+      nohup "$TOOLS_DIR/dev-instanz-stilllegen.sh" "$n" >> "$HOME/.cache/dev-instanz-stilllegen.log" 2>&1 &
+      echo "$n ist $st, wird stillgelegt (Protokoll ~/.cache/dev-instanz-stilllegen.log)" ;;
+  esac
 done
 servers=$(openstack --os-cloud $CLOUD server list --long -f json)
 images=$(openstack --os-cloud $CLOUD image list --private --long -f json)
