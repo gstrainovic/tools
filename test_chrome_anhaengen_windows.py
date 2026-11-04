@@ -79,8 +79,10 @@ class ChromeAnhaengenWindows(unittest.TestCase):
                              stdout="- 0: (current) [x](about:blank)" if self.offen else "The browser 'gchrome' is not open", stderr="")
         if args[0] == "attach":
             self.offen = True
-            # Die Erweiterung legt den Session-Tab im zuletzt geöffneten Fenster an
-            self.tab_fenster = self.tab_fenster or max(self.desktop.fenster)
+            # Die Erweiterung legt den Session-Tab im zuletzt fokussierten Fenster an: das neue Fenster nur,
+            # solange es noch auf Desktop 1 liegt; schon verschoben, landet der Tab in Gorans Fenster (2).
+            neuestes = max(self.desktop.fenster)
+            self.tab_fenster = self.tab_fenster or (neuestes if self.desktop.fenster[neuestes] == 0 else 2)
             return mock.Mock(returncode=0, stdout="### Session created", stderr="")
         if "run-code" in args:
             import re
@@ -97,11 +99,12 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         fehler = "".join(str(c.args[0]) for c in err.write.call_args_list)
         return rc, text, fehler
 
-    def test_neues_fenster_wird_sofort_auf_desktop_2_verschoben_und_dann_angehaengt(self):
+    def test_neues_fenster_wird_erst_angehaengt_und_dann_auf_desktop_2_verschoben(self):
         rc, text, fehler = self.lauf()
         self.assertEqual(rc, 0, fehler)
         a = self.desktop.aufrufe
         self.assertEqual(a, ["bereitstellen", "chrome --new-window", "move 900 -> 1"])
+        self.assertEqual(self.tab_fenster, 900, "Session-Tab im neuen Fenster, nicht in Gorans")
         self.assertLess(2, len(self.cli_aufrufe))
         attach = [z for z in self.cli_aufrufe if z.startswith("attach")]
         self.assertEqual(len(attach), 1)
@@ -208,7 +211,7 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("Desktop 2", fehler)
         self.assertIn("close 900", self.desktop.aufrufe, "Fenster auf Desktop 1 nicht stehen lassen")
-        self.assertFalse(any(z.startswith("attach") for z in self.cli_aufrufe))
+        self.assertIn("-s=gchrome detach", self.cli_aufrufe, "Session auf Desktop 1 nicht stehen lassen")
 
 
 if __name__ == "__main__":
