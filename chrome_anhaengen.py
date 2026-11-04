@@ -313,16 +313,13 @@ def main_windows() -> int:
         return 1
     datei.parent.mkdir(parents=True, exist_ok=True)
     datei.write_text(f"{hwnd}\n")
-    desktop.verschieben(hwnd, ARBEITSDESKTOP)
-    if not desktop.auf_desktop(hwnd, ARBEITSDESKTOP):
-        desktop.schliessen(hwnd)
-        print(f"FEHLER: Fenster {hwnd} liess sich nicht auf Desktop {ARBEITSDESKTOP + 1} verschieben; geschlossen, "
-              "nicht angehängt", file=sys.stderr)
-        return 1
+    # Erst anhängen, solange das neue Fenster noch auf Desktop 1 den Fokus hat: die Erweiterung legt den
+    # Session-Tab im zuletzt fokussierten Fenster an. Schon verschoben, landete er in Gorans Fenster.
     env = {**os.environ, "PLAYWRIGHT_MCP_EXTENSION_TOKEN": token.read_text().strip(),
            "PLAYWRIGHT_MCP_EXECUTABLE_PATH": CHROME_EXE}
     r = cli_lauf(["attach", "--extension=chrome", f"--session={s}"], env=env, timeout=120)
     if r.returncode != 0 or not session_laeuft(s):
+        desktop.schliessen(hwnd)
         print(f"FEHLER: Anhängen gescheitert\n{r.stdout[-500:]}{r.stderr[-500:]}", file=sys.stderr)
         return 1
     titel = titel_setzen(s)
@@ -332,8 +329,16 @@ def main_windows() -> int:
     if not desktop.fenstertitel(hwnd).startswith(titel):
         # Session-Tab liegt in Gorans Fenster auf Desktop 1: dort zu arbeiten ist verboten, also wieder lösen.
         cli_lauf([f"-s={s}", "detach"])
-        print(f"FEHLER: Session-Tab lag nicht im Arbeitsfenster {hwnd} auf Desktop {ARBEITSDESKTOP + 1}, sondern "
-              f"in Gorans Fenster; Session {s} wieder gelöst, nicht angehängt", file=sys.stderr)
+        desktop.schliessen(hwnd)
+        print(f"FEHLER: Session-Tab lag nicht im Arbeitsfenster {hwnd}, sondern in Gorans Fenster; Session {s} "
+              "wieder gelöst, nicht angehängt", file=sys.stderr)
+        return 1
+    desktop.verschieben(hwnd, ARBEITSDESKTOP)
+    if not desktop.auf_desktop(hwnd, ARBEITSDESKTOP):
+        cli_lauf([f"-s={s}", "detach"])
+        desktop.schliessen(hwnd)
+        print(f"FEHLER: Fenster {hwnd} liess sich nicht auf Desktop {ARBEITSDESKTOP + 1} verschieben; Session "
+              "gelöst, Fenster geschlossen", file=sys.stderr)
         return 1
     print(f"Session {s} angehängt, Arbeitsfenster {hwnd} auf Desktop {ARBEITSDESKTOP + 1}")
     return 0
