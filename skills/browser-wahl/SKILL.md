@@ -82,8 +82,14 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   schreibt nur Standardwerte (darum schien `MoveToWorkspace` früher wirkungslos: es gab nur eine Arbeitsfläche).
   Alle Tabs der Session entstehen in ihrer Tabgruppe, also auf Arbeitsfläche 2; Seiten laden dort, gelten aber als
   verborgen (`visibilityState` hidden), und `requestAnimationFrame` steht still, darum bleiben Oberflächen, die
-  damit zeichnen (Odoo 17+ mit Owl), dort leer. Prüfungen solcher Oberflächen mit `chrome-anhaengen --zeigen` und ausgewähltem Tab oder per Skript gegen
-  einen lokalen Container (am 1.11.2026 hielt eine leere Odoo-Seite im Arbeitsfenster für einen Fehler). Beim
+  damit zeichnen (Odoo 17+ mit Owl), dort leer. **Oberflächen, die im Hintergrund nicht zeichnen** (Odoo, Menüs
+  und Dialoge in Angular Material wie im Infomaniak-Manager): vor dem Laden im eigenen Tab per
+  `tab.addInitScript` `window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 16)` (dazu
+  `cancelAnimationFrame` per `clearTimeout`) und `document.visibilityState`/`hidden` per `Object.defineProperty`
+  auf «visible»/false setzen; dann öffnen Menüs und Dialoge auch auf Desktop 2. `--zeigen` mit
+  `bringToFront()` reicht dafür nicht, die Seite bleibt `hidden`. Erst wenn der Ersatz nicht hilft:
+  `chrome-anhaengen --zeigen` und ausgewählter Tab oder Skript gegen einen lokalen Container. Kein Aufgeben vor
+  diesem Versuch. Beim
   Anhängen holt das Skript das Fenster kurz auf Gorans Arbeitsfläche und aktiviert es (die Erweiterung legt den
   Session-Tab im zuletzt fokussierten Fenster an; aktivieren auf Arbeitsfläche 2 würde Gorans Ansicht dorthin
   wechseln), danach ist es wieder weg; auch bei schon laufender Session schickt jeder Aufruf es zurück. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
