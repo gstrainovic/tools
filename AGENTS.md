@@ -39,6 +39,7 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `img-proto-test` | Vergleich der drei Terminal-Bildprotokolle via timg |
 | `mailbox.py` | Postfächer per IMAP/SMTP lesen und schreiben, als `~/.local/bin/mailbox` verknüpft |
 | `test_mailbox.py` | Unit-Tests für `mailbox.py` ohne Netz (`python3 -m unittest test_mailbox.py`) |
+| `fragen.py` | Fragen an Goran: `fragen neu` vergibt eindeutige Nummern (ab 310) über alle Repos, `fragen pruefen` listet offene Fragen und meldet `VERALTET`, wo eine Stelle noch auf eine beantwortete Frage wartet; als `~/.local/bin/fragen` verknüpft, Tests `python3 -m unittest test_fragen.py` |
 | `mailbox-accounts.example.toml` | Vorlage für `~/.config/mail/accounts.toml` |
 | `thunderbird_konten.py` | Thunderbird (Flatpak ESR) um fehlende Konten aus `accounts.toml` ergänzen, als `~/.local/bin/thunderbird-konten` verknüpft |
 | `test_thunderbird_konten.py` | Unit-Tests gegen ein Test-Profil im tmp-Ordner, NSS echt (`python3 -m unittest test_thunderbird_konten.py`) |
