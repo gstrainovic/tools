@@ -30,7 +30,12 @@ Die Skripte liegen dort: `ricardo_einstellen.py` (Einzelformular), `ricardo_mehr
 Skill `browser-wahl`, «Gorans Chrome anhängen»: `chrome-anhaengen` (Playwright Extension, ohne Dialog), dann
 `playwright-cli -s=gchrome …`. Nie `attach --cdp`: Es löst in Gorans Chrome den Dialog «Remote-Fehlerbehebung
 zulassen?» aus (der Hook `browser-profil.sh` sperrt es). Meldet ein Skript «The browser 'gchrome' is not open»,
-einmal `chrome-anhaengen`. Login auf login.ricardo.ch macht Goran (Autofill lieferte nichts).
+einmal `chrome-anhaengen`. Login auf login.ricardo.ch macht Goran (Autofill lieferte nichts); er gilt je Rechner,
+das Chrome auf dem Windows-PC ist nicht von selbst angemeldet (`/de/list/?a=<id>` leitet dann auf
+login.ricardo.ch). Im Arbeitsfenster auf Desktop 2 zeigen die Inserat-Seiten (`/de/a/<id>/`) ein Cloudflare-Captcha
+(«One more step», Titel «Nur einen Moment…»), auch mit dem Hintergrund-Ersatz aus `browser-wahl`
+(`requestAnimationFrame`, `visibilityState`); `/de/list/` kam mit dem Ersatz durch. Dann `chrome-anhaengen
+--zeigen`, Goran klickt das Captcha, danach `--verstecken`.
 Konto-E-Mail ist info@pink-deko.ch (`mailbox`-Konto `pink-deko`, Werbefilter aus, Ricardo-Mails im INBOX). Konto-Seite `/de/profile/personal-info/`; E-Mail ändern verlangt erst einen Code an die alte,
 dann an die neue Adresse und meldet danach ab.
 
