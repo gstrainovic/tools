@@ -12,7 +12,8 @@ Monitor (`tail -f`) mitliest und daraus Hinweise gibt. Mikrofon = Goran, Lautspr
 
 ffmpeg schneidet beide Seiten in Stücke von SEGMENT_S Sekunden, die zu Sätzen bis zur nächsten Sprechpause (höchstens
 MAX_S) zusammenkommen; Voxtral Mini Transcribe (Mistral, EU, USD 0.003 je Minute) schreibt jeden Satz mit Sprache «de»
-und Begriffsliste um; Stille geht nicht an Voxtral. Erfahrungen aus
+und Begriffsliste um; Stille geht nicht an Voxtral, kurze Einwürfe unter KURZ_S gehen mit dem nächsten Satz derselben
+Seite. Erfahrungen aus
 ki-tel (plan-sprachbot.md, Schritt 1): Voxtral Batch mit `context_bias` trifft Schweizerdeutsch und Produktnamen,
 faster-whisper `small` nicht. Die Stücke werden nach der Umschrift gelöscht; mit --ton bleibt das ganze Gespräch als
 Stereo-Opus (links Goran, rechts Gegenüber), damit sich Hörfehler später an der Stelle nachhören lassen (Zeit wie im
@@ -41,6 +42,9 @@ SEGMENT_S = 0.5
 PAUSE_S = 1
 MIN_S = 5
 MAX_S = 15
+# Ein Satz unter KURZ_S (ohne die Pause danach) ist ein Einwurf («Mm-hmm», «Ja, okay»): Er wartet und geht mit dem
+# nächsten Satz derselben Seite. Meeting 29.10.2026: einzeln geschickt erfand Voxtral daraus fremde Sprachen
+KURZ_S = 2
 STILLE_DBFS = -50
 SPRACHE_ABSTAND_DB = 15
 URL = "https://api.mistral.ai/v1/audio/transcriptions"
@@ -74,12 +78,31 @@ def zeit(index):
 
 
 class Zustand:
-    """Was zwischen zwei Durchläufen bleibt: die Stücke des angefangenen Satzes je Seite und die schon gesehenen."""
+    """Was zwischen zwei Durchläufen bleibt: die Stücke des angefangenen Satzes je Seite, die wartenden Einwürfe samt
+    ihrer Sprechdauer und die schon gesehenen Stücke."""
 
     def __init__(self):
         self.puffer = {"goran": [], "gegenueber": []}
         self.stille = {"goran": 0, "gegenueber": 0}  # Stücke ohne Sprache am Ende des Satzes
+        self.einwurf = {"goran": [], "gegenueber": []}
+        self.einwurf_s = {"goran": 0.0, "gegenueber": 0.0}
         self.erledigt = set()
+
+    def satz_fertig(self, seite):
+        """Gibt die Stücke zurück, die jetzt an die Umschrift gehen, oder [], wenn der Satz mit den wartenden
+        Einwürfen zusammen kürzer als KURZ_S ist und darum auf den nächsten Satz wartet."""
+        puffer, einwurf = self.puffer[seite], self.einwurf[seite]
+        sprechdauer = self.einwurf_s[seite] + (len(puffer) - self.stille[seite]) * SEGMENT_S
+        self.stille[seite] = 0
+        einwurf.extend(puffer)
+        puffer.clear()
+        if sprechdauer < KURZ_S:
+            self.einwurf_s[seite] = sprechdauer
+            return []
+        self.einwurf_s[seite] = 0.0
+        stuecke = einwurf[:]
+        einwurf.clear()
+        return stuecke
 
 
 def satz_senden(ordner, seite, stuecke, umschreiben):
@@ -111,7 +134,8 @@ def abarbeiten(ordner, ausgabe, umschreiben, zustand, gegenueber="Gegenüber", e
     """Sammelt die fertigen Stücke jeder Seite zu Sätzen und schreibt jeden Satz als «[mm:ss] Sprecher: Text» ans Ende
     von `ausgabe`, geordnet nach Zeit, Goran vor Gegenüber. Ein Satz endet mit dem ersten Stück ohne Sprache (Pause von
     mindestens SEGMENT_S), spätestens nach MAX_S, und mit `ende`. Fertig ist ein Stück, wenn dieselbe Seite schon ein
-    späteres hat oder `ende` gilt; Stücke ohne Sprache ausserhalb eines Satzes gehen nie an die Umschrift."""
+    späteres hat oder `ende` gilt; Stücke ohne Sprache ausserhalb eines Satzes gehen nie an die Umschrift. Einwürfe
+    unter KURZ_S warten und gehen mit dem nächsten Satz derselben Seite, mit `ende` auch allein."""
     teile = {}
     for pfad in ordner.iterdir():
         if m := NAME.match(pfad.name):
@@ -134,11 +158,14 @@ def abarbeiten(ordner, ausgabe, umschreiben, zustand, gegenueber="Gegenüber", e
             pause = zustand.stille[seite] * SEGMENT_S
             if (len(puffer) >= max_stuecke or pause >= PAUSE_S
                     or (pause and len(puffer) * SEGMENT_S >= MIN_S + SEGMENT_S)):
-                saetze.append(satz_senden(ordner, seite, puffer, umschreiben))
-                zustand.stille[seite] = 0
-    if ende:
-        saetze += [satz_senden(ordner, seite, puffer, umschreiben)
-                   for seite, puffer in zustand.puffer.items() if puffer]
+                if stuecke := zustand.satz_fertig(seite):
+                    saetze.append(satz_senden(ordner, seite, stuecke, umschreiben))
+    if ende:  # was noch wartet, auch ein Einwurf ohne folgenden Satz, geht einmal an die Umschrift
+        for seite in zustand.puffer:
+            if stuecke := [*zustand.einwurf[seite], *zustand.puffer[seite]]:
+                saetze.append(satz_senden(ordner, seite, stuecke, umschreiben))
+            zustand.einwurf[seite].clear()
+            zustand.puffer[seite].clear()
     with ausgabe.open("a") as aus:
         for index, seite, text in sorted(saetze, key=lambda s: (s[0], s[1] != "goran")):
             if text:
