@@ -36,7 +36,6 @@ link "$SCRIPT_DIR"/chrome_sitzung.py "$BIN_DIR/chrome-sitzung"
 link "$SCRIPT_DIR"/chrome_anhaengen.py "$BIN_DIR/chrome-anhaengen"
 link "$SCRIPT_DIR"/mithoeren.py      "$BIN_DIR/mithoeren"
 link "$SCRIPT_DIR"/bildschirmaufnahme.py "$BIN_DIR/bildschirmaufnahme"
-link "$SCRIPT_DIR"/umschrift_am_stueck.py "$BIN_DIR/umschrift-am-stueck"
 link "$SCRIPT_DIR"/wartungsheft-cost-watch.sh "$BIN_DIR/wartungsheft-cost-watch"
 
 # Claude-Skills, dazu die aus dem privaten Repo skills-privat, falls es geklont ist

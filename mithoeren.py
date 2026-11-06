@@ -19,6 +19,13 @@ faster-whisper `small` nicht. Die Stücke werden nach der Umschrift gelöscht; m
 Stereo-Opus (links Goran, rechts Gegenüber), damit sich Hörfehler später an der Stelle nachhören lassen (Zeit wie im
 Transkript). Die Tondatei nicht ins Repo legen. Ende mit Strg+C.
 
+Nach dem Meeting dieselbe Tondatei je Kanal am Stück neu umschreiben (trifft mehr als live, vor allem bei kurzen
+Einwürfen): ffmpeg trennt links und rechts in Stücke von STUECK_S, Voxtral schreibt jedes mit
+`timestamp_granularities=segment` um, die Zeilen haben dasselbe Format wie live:
+
+  mithoeren.py ~/projects/<repo>/meeting-batch.txt --nachher ~/Dokumente/aufnahme-kunde.ogg --gegenueber Kunde \
+    --begriffe Firmenname,Produkt
+
 Optionen: --ton Pfad der Tondatei, --begriffe Kommaliste ohne Leerzeichen (ergänzt BEGRIFFE), --mikrofon und --lautsprecher als
 Pulse-Quellen (Standard @DEFAULT_SOURCE@ und @DEFAULT_MONITOR@, Liste mit `pactl list short sources`).
 Schlüssel: MISTRAL_API_KEY oder ~/projects/ki-tel/.secrets/mistral.env.
@@ -31,6 +38,7 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 import wave
 from pathlib import Path
@@ -53,6 +61,10 @@ MODELL = "voxtral-mini-2602"
 BEGRIFFE = "Strainovic,bexio,HubSpot,Make,n8n,QR-Rechnung,Marketplace"
 SCHLUESSEL = Path.home() / "projects/ki-tel/.secrets/mistral.env"
 NAME = re.compile(r"(goran|gegenueber)-(\d+)\.wav$")
+# --nachher: je Kanal Zehn-Minuten-Stücke am Stück an Voxtral; Meeting 29.10.2026 erfand so 3 statt 11 Zeilen in fremden
+# Sprachen auf Gorans Seite, 0 statt 3 beim Gegenüber (Skill meeting-hilfe, «Umschrift: was gilt»)
+STUECK_S = 600
+KANAL = re.compile(r"(goran|gegenueber)-(\d+)\.ogg$")
 
 
 def ist_sprache(pfad):
@@ -72,9 +84,13 @@ def ist_sprache(pfad):
     return oben > STILLE_DBFS and oben - unten >= SPRACHE_ABSTAND_DB
 
 
-def zeit(index):
-    s = int(index * SEGMENT_S)
+def minuten(sekunden):
+    s = int(sekunden)
     return f"{s // 60:02d}:{s % 60:02d}"
+
+
+def zeit(index):
+    return minuten(index * SEGMENT_S)
 
 
 class Zustand:
@@ -182,18 +198,53 @@ def schluessel():
     sys.exit(f"MISTRAL_API_KEY fehlt (Umgebung oder {SCHLUESSEL})")
 
 
-def voxtral(begriffe):
+def voxtral(begriffe, nachher=False):
+    """Live: WAV-Satz hin, Text zurück. `nachher`: Ogg-Stück hin, ganze Antwort mit Segmenten (Zeit je Satz) zurück."""
     import httpx
-    client = httpx.Client(timeout=30, headers={"Authorization": f"Bearer {schluessel()}"})
+    client = httpx.Client(timeout=300 if nachher else 30, headers={"Authorization": f"Bearer {schluessel()}"})
+    data = {"model": MODELL, "language": "de", "context_bias": begriffe}
+    if nachher:
+        data["timestamp_granularities"] = "segment"
 
     def umschreiben(pfad):
-        r = client.post(URL, data={"model": MODELL, "language": "de", "context_bias": begriffe},
-                        files={"file": (pfad.name, pfad.read_bytes(), "audio/wav")})
+        r = client.post(URL, data=data,
+                        files={"file": (pfad.name, pfad.read_bytes(), "audio/ogg" if nachher else "audio/wav")})
         if r.is_error:
             raise RuntimeError(f"Voxtral {r.status_code}: {r.text[:200]}")
-        return r.json()["text"].strip()
+        return r.json() if nachher else r.json()["text"].strip()
 
     return umschreiben
+
+
+def kanaele_trennen(ton, ordner):
+    """Stereo-Tondatei von --ton in `goran-NN.ogg` (links) und `gegenueber-NN.ogg` (rechts) zu je STUECK_S."""
+    stueck = ["-c:a", "libopus", "-b:a", "32k", "-f", "segment", "-segment_time", str(STUECK_S)]
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(ton), "-filter_complex",
+                    "[0:a]pan=mono|c0=c0[g];[0:a]pan=mono|c0=c1[c]",
+                    "-map", "[g]", *stueck, str(ordner / "goran-%02d.ogg"),
+                    "-map", "[c]", *stueck, str(ordner / "gegenueber-%02d.ogg")],
+                   check=True, stdin=subprocess.DEVNULL)
+
+
+def nachher(ton, ausgabe, umschreiben, gegenueber="Gegenüber", trennen=kanaele_trennen):
+    """Schreibt die Tondatei je Kanal am Stück um und `ausgabe` neu, Zeilen wie live, nach Zeit, Goran vor Gegenüber.
+    Die Stücke liegen nur während der Umschrift in einem Temp-Ordner."""
+    zeilen = []
+    with tempfile.TemporaryDirectory() as tmp:
+        ordner = Path(tmp)
+        trennen(ton, ordner)
+        for pfad in sorted(ordner.iterdir()):
+            if not (m := KANAL.match(pfad.name)):
+                continue
+            antwort = umschreiben(pfad)
+            versatz = int(m[2]) * STUECK_S
+            neu = [(versatz + float(s.get("start", 0)), m[1], " ".join(s.get("text", "").split()))
+                   for s in antwort.get("segments") or [{"start": 0, "text": antwort.get("text", "")}]]
+            zeilen += [z for z in neu if z[2]]
+            print(pfad.name, len(neu), "Segmente", file=sys.stderr)
+    zeilen.sort(key=lambda z: (z[0], z[1] != "goran"))
+    ausgabe.write_text("".join(f"[{minuten(t)}] {'Goran' if seite == 'goran' else gegenueber}: {text}\n"
+                               for t, seite, text in zeilen))
 
 
 def aufnahme(ordner, mikrofon, lautsprecher, ton=None, eingabe="pulse"):
@@ -221,10 +272,15 @@ def main():
     p.add_argument("--ton", type=Path)
     p.add_argument("--mikrofon", default="@DEFAULT_SOURCE@")
     p.add_argument("--lautsprecher", default="@DEFAULT_MONITOR@")
+    p.add_argument("--nachher", type=Path, metavar="TON", help="Tondatei von --ton am Stück umschreiben, keine Aufnahme")
     a = p.parse_args()
+    begriffe = ",".join(filter(None, [BEGRIFFE, a.begriffe]))
+    if a.nachher:
+        nachher(a.nachher, a.ausgabe, voxtral(begriffe, nachher=True), a.gegenueber)
+        return
     ordner = a.ausgabe.with_name(a.ausgabe.name + ".teile")
     ordner.mkdir(parents=True, exist_ok=True)
-    umschreiben = voxtral(",".join(filter(None, [BEGRIFFE, a.begriffe])))
+    umschreiben = voxtral(begriffe)
     ffmpeg = aufnahme(ordner, a.mikrofon, a.lautsprecher, a.ton)
     print(f"Umschrift läuft nach {a.ausgabe}, Ende mit Strg+C", file=sys.stderr)
     zustand = Zustand()

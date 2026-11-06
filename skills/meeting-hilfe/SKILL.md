@@ -78,10 +78,10 @@ Begleit-Sitzung liest ihn.
    `mithoeren` beenden, Ton- und Textdatei löschen, weiter mit Chat neben dem Meeting (Goran tippt Stichworte,
    Claude antwortet).
 5. **Danach:** `mithoeren` und `bildschirmaufnahme` beenden (Strg+C bzw. `kill -INT`), Transkript committen,
-   Tondatei je Kanal am Stück neu umschreiben: Kanäle mit ffmpeg trennen und in Zehn-Minuten-Stücke schneiden
-   (`-filter_complex "[0:a]pan=mono|c0=c0[g];[0:a]pan=mono|c0=c1[c]"`, je Kanal `-f segment -segment_time 600`),
-   dann `umschrift-am-stueck <ordner> <transkript-batch.txt>` (Quelle `~/projects/tools/umschrift_am_stueck.py`,
-   Begriffe dort per Kommandozeile ergänzen). Hörfehler an der Tondatei prüfen und die Begriffsliste ergänzen,
+   Tondatei je Kanal am Stück neu umschreiben mit
+   `mithoeren <transkript-batch.txt> --nachher ~/Dokumente/aufnahme-<kunde>-<datum>.ogg --gegenueber <Vorname>
+   --begriffe <Firma>,<Produkte>,<Namen>` (trennt die Kanäle per ffmpeg in Zehn-Minuten-Stücke, die nur während der
+   Umschrift in einem Temp-Ordner liegen). Hörfehler an der Tondatei prüfen und die Begriffsliste ergänzen,
    Auswertung mit Abmachungen und offenen Punkten ins Repo, Zusammenfassung an das Gegenüber als Entwurf zur
    Freigabe. Nur mp4-Stücke und Tondatei bleiben in `~/Dokumente/`, nie im Repo.
 
@@ -97,7 +97,8 @@ Einwilligung vor.
 
 ## Umschrift: was gilt
 
-- **Voxtral** live in Sätzen (Ende nach 1 s Pause, ab 5 s an der ersten kurzen Pause, spätestens nach 15 s): trifft
+- **Voxtral** live in Sätzen (Ende nach 1 s Pause, ab 5 s an der ersten kurzen Pause, spätestens nach 15 s; Sätze
+  unter 2 s gehen mit dem nächsten Satz derselben Seite): trifft
   Schweizerdeutsch und Produktnamen mit Begriffsliste. Feste Stücke schneiden Wörter; Schnitte schon nach 0.5 s Pause
   ergeben Schnipsel, aus denen Voxtral Englisch erfindet. Eine zu starke Begriffsliste zieht ähnliche Wörter zu sich
   («Termin» → Produktname).

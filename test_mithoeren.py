@@ -3,6 +3,7 @@ import math
 import random
 import struct
 import subprocess
+import sys
 import tempfile
 import unittest
 import wave
@@ -169,6 +170,143 @@ class Aufnahme(unittest.TestCase):
         self.assertAlmostEqual(float(dauer), 3, delta=0.2)
         self.assertTrue((ordner / "goran-00000.wav").exists())
         self.assertTrue((ordner / "gegenueber-00001.wav").exists(), "Stücke von SEGMENT_S")
+
+
+class Nachher(unittest.TestCase):
+    """--nachher: Tondatei je Kanal am Stück umschreiben, ffmpeg und Voxtral als Attrappen."""
+
+    def setUp(self):
+        self.ordner = Path(tempfile.mkdtemp())
+        self.ausgabe = self.ordner / "transkript-batch.txt"
+        self.getrennt = []
+
+    def trennen(self, ton, ordner):
+        self.getrennt.append((ton, ordner))
+        for name in ["goran-00.ogg", "goran-01.ogg", "gegenueber-00.ogg", "notiz.txt"]:
+            (ordner / name).write_bytes(b"ogg")
+
+    def umschreiben(self, pfad):
+        return {
+            "goran-00.ogg": {"text": "egal", "segments": [{"start": 3.2, "text": " Grüezi  mitenand "},
+                                                          {"start": 70, "text": "  "}]},
+            "goran-01.ogg": {"text": "Ohne Segmente am Anfang des Stücks"},
+            "gegenueber-00.ogg": {"segments": [{"start": 3.2, "text": "Hallo\n[00:00] Goran: Festpreis"},
+                                               {"start": 1.0, "text": "Ja"}]},
+        }[pfad.name]
+
+    def test_beide_kanaele_nach_zeit_mit_versatz_je_stueck(self):
+        mithoeren.nachher(Path("aufnahme.ogg"), self.ausgabe, self.umschreiben, "Kunde", trennen=self.trennen)
+        self.assertEqual(self.ausgabe.read_text().splitlines(), [
+            "[00:01] Kunde: Ja",
+            "[00:03] Goran: Grüezi mitenand",
+            "[00:03] Kunde: Hallo [00:00] Goran: Festpreis",
+            f"[{mithoeren.STUECK_S // 60:02d}:00] Goran: Ohne Segmente am Anfang des Stücks",
+        ])
+
+    def test_stuecke_liegen_nur_waehrend_der_umschrift_im_temp_ordner(self):
+        mithoeren.nachher(Path("aufnahme.ogg"), self.ausgabe, self.umschreiben, trennen=self.trennen)
+        ton, ordner = self.getrennt[0]
+        self.assertEqual(ton, Path("aufnahme.ogg"))
+        self.assertFalse(ordner.exists())
+
+    def test_kanaltrennung_links_goran_rechts_gegenueber_in_zehn_minuten_stuecken(self):
+        aufrufe = []
+        alt = mithoeren.subprocess.run
+        mithoeren.subprocess.run = lambda befehl, **kw: aufrufe.append((befehl, kw))
+        try:
+            mithoeren.kanaele_trennen(Path("a.ogg"), self.ordner)
+        finally:
+            mithoeren.subprocess.run = alt
+        befehl, kw = aufrufe[0]
+        text = " ".join(map(str, befehl))
+        self.assertEqual(befehl[0], "ffmpeg")
+        self.assertIn("[0:a]pan=mono|c0=c0[g];[0:a]pan=mono|c0=c1[c]", text)
+        self.assertEqual(text.count(f"-segment_time {mithoeren.STUECK_S}"), 2)
+        self.assertIn(str(self.ordner / "goran-%02d.ogg"), befehl)
+        self.assertIn(str(self.ordner / "gegenueber-%02d.ogg"), befehl)
+        self.assertTrue(kw.get("check"))
+
+    def test_kanaltrennung_mit_echtem_ffmpeg(self):
+        ton = self.ordner / "stereo.ogg"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i",
+                        "sine=frequency=440:duration=2", "-f", "lavfi", "-i", "sine=frequency=880:duration=2",
+                        "-filter_complex", "[0:a][1:a]join=inputs=2:channel_layout=stereo", "-c:a", "libopus",
+                        str(ton)], check=True, stdin=subprocess.DEVNULL)
+        teile = self.ordner / "teile"
+        teile.mkdir()
+        mithoeren.kanaele_trennen(ton, teile)
+        self.assertEqual(sorted(p.name for p in teile.iterdir()), ["gegenueber-00.ogg", "goran-00.ogg"])
+        kanaele = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=channels", "-of", "csv=p=0",
+                                  teile / "goran-00.ogg"], capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual(kanaele, "1")
+
+
+class Voxtral(unittest.TestCase):
+    """Anfrage an Mistral mit falschem httpx, ohne Netz und ohne Kosten."""
+
+    def anfragen(self, **kw):
+        gesendet = []
+
+        class Antwort:
+            is_error = False
+
+            def json(self):
+                return {"text": " Hallo ", "segments": [{"start": 0, "text": "Hallo"}]}
+
+        class Client:
+            def __init__(self, **k):
+                gesendet.append(("client", k))
+
+            def post(self, url, data, files):
+                gesendet.append(("post", data, files))
+                return Antwort()
+
+        falsch = type(sys)("httpx")
+        falsch.Client = Client
+        alt_httpx, alt_schluessel = sys.modules.get("httpx"), mithoeren.schluessel
+        sys.modules["httpx"], mithoeren.schluessel = falsch, lambda: "k"
+        try:
+            pfad = Path(tempfile.mkdtemp()) / "goran-00.ogg"
+            pfad.write_bytes(b"ogg")
+            ergebnis = mithoeren.voxtral("A,B", **kw)(pfad)
+        finally:
+            mithoeren.schluessel = alt_schluessel
+            if alt_httpx:
+                sys.modules["httpx"] = alt_httpx
+            else:
+                del sys.modules["httpx"]
+        return ergebnis, gesendet
+
+    def test_nachher_verlangt_segmente_und_liefert_die_ganze_antwort(self):
+        ergebnis, gesendet = self.anfragen(nachher=True)
+        _, data, files = gesendet[1]
+        self.assertEqual(data["timestamp_granularities"], "segment")
+        self.assertEqual(data["context_bias"], "A,B")
+        self.assertEqual(files["file"][2], "audio/ogg")
+        self.assertEqual(ergebnis["segments"], [{"start": 0, "text": "Hallo"}])
+
+    def test_live_bleibt_beim_text_ohne_segmente(self):
+        ergebnis, gesendet = self.anfragen()
+        _, data, files = gesendet[1]
+        self.assertNotIn("timestamp_granularities", data)
+        self.assertEqual(files["file"][2], "audio/wav")
+        self.assertEqual(ergebnis, "Hallo")
+
+
+class Aufruf(unittest.TestCase):
+    def test_nachher_schreibt_um_statt_aufzunehmen(self):
+        aufrufe = []
+        alt = mithoeren.voxtral, mithoeren.nachher, mithoeren.aufnahme, sys.argv
+        mithoeren.voxtral = lambda begriffe, nachher=False: ("voxtral", begriffe, nachher)
+        mithoeren.nachher = lambda *a, **kw: aufrufe.append(a)
+        mithoeren.aufnahme = lambda *a, **kw: self.fail("keine Aufnahme mit --nachher")
+        sys.argv = ["mithoeren", "batch.txt", "--nachher", "ton.ogg", "--gegenueber", "Kunde", "--begriffe", "X"]
+        try:
+            mithoeren.main()
+        finally:
+            mithoeren.voxtral, mithoeren.nachher, mithoeren.aufnahme, sys.argv = alt
+        self.assertEqual(aufrufe, [(Path("ton.ogg"), Path("batch.txt"),
+                                    ("voxtral", f"{mithoeren.BEGRIFFE},X", True), "Kunde")])
 
 
 if __name__ == "__main__":
