@@ -10,3 +10,7 @@
 - ydotool tippt in das Fenster, das gerade vorne ist, nicht in ein bestimmtes: Tastatureingaben sind in eine
   Terminal-Sitzung von Goran geraten. Bevor ydotool tippt, mit `gui-screenshot` prüfen, welches Fenster vorne ist,
   und nur arbeiten, wenn Goran nicht am Rechner ist; gehört in den Skill screenshots.
+- Linux-Laptop: Der Link `~/.local/bin/umschrift-am-stueck` zeigt ins Leere, seit `umschrift_am_stueck.py` in
+  `mithoeren --nachher` aufgegangen ist (`link.sh` entfernt alte Links nicht); dort einmal löschen.
+- `mithoeren`: kurze Einwürfe (unter `KURZ_S`) und `--nachher` sind nur mit Attrappen getestet. Beim nächsten echten
+  Meeting prüfen, ob Voxtral live weniger fremde Sprachen erfindet und ob `--nachher` an der Tondatei durchläuft.
