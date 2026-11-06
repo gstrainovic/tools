@@ -25,6 +25,24 @@ def account(**over):
     return mb.Account(**base)
 
 
+class Zeitlimit(unittest.TestCase):
+    """Eine stehende Verbindung darf den Aufruf nicht endlos blockieren (Gmail-IMAP hing auf dem Server über 50 min)."""
+
+    def test_imap_mit_zeitlimit(self):
+        with mock.patch.object(mb.imaplib, "IMAP4_SSL") as imap, \
+                mock.patch.object(mb.Account, "password", new_callable=mock.PropertyMock, return_value="x"):
+            mb.imap_connect(account())
+        self.assertEqual(imap.call_args.kwargs.get("timeout"), mb.NETZ_TIMEOUT)
+
+    def test_smtp_mit_zeitlimit(self):
+        msg = mb.EmailMessage()
+        msg["To"] = "a@example.com"
+        with mock.patch.object(mb.smtplib, "SMTP_SSL") as smtp, \
+                mock.patch.object(mb.Account, "password", new_callable=mock.PropertyMock, return_value="x"):
+            mb.smtp_send(account(sent_folder=""), msg)
+        self.assertEqual(smtp.call_args.kwargs.get("timeout"), mb.NETZ_TIMEOUT)
+
+
 class Konfiguration(unittest.TestCase):
     def test_liest_konten_aus_toml(self):
         with tempfile.TemporaryDirectory() as tmp:

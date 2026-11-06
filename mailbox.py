@@ -366,8 +366,12 @@ def format_line(account_key: str, uid: str, msg: email.message.Message, unread: 
 
 # ---------- IMAP / SMTP ----------
 
+# Sekunden ohne Antwort je Netzaufruf; ohne Limit blockiert eine stehende Verbindung (Gmail) den Aufruf endlos
+NETZ_TIMEOUT = 60
+
+
 def imap_connect(account: Account) -> imaplib.IMAP4_SSL:
-    conn = imaplib.IMAP4_SSL(account.imap, account.imap_port)
+    conn = imaplib.IMAP4_SSL(account.imap, account.imap_port, timeout=NETZ_TIMEOUT)
     conn.login(account.login, account.password)
     return conn
 
@@ -581,7 +585,7 @@ def smtp_send(acc: Account, msg: EmailMessage) -> None:
     recipients = addresses(msg.get("To"), msg.get("Cc"), msg.get("Bcc"))
     if not recipients:
         raise SystemExit("Keine Empfänger")
-    with smtplib.SMTP_SSL(acc.smtp, acc.smtp_port) as smtp:
+    with smtplib.SMTP_SSL(acc.smtp, acc.smtp_port, timeout=NETZ_TIMEOUT) as smtp:
         smtp.login(acc.login, acc.password)
         smtp.send_message(msg, to_addrs=recipients)
     if acc.sent_folder:
