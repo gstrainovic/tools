@@ -58,10 +58,10 @@ class Abarbeiten(unittest.TestCase):
 
     def test_ein_satz_geht_erst_nach_der_sprechpause_ganz_an_die_umschrift(self):
         # 24.10.: harte Schnitte alle 8 s trennten Wörter, Voxtral verlor sie («Fixpreis», «Fehler reagieren»)
-        self.stuecke("goran", True, True, True)
+        self.stuecke("goran", True, True, True, True)
         self.assertEqual(self.lauf(), [], "Satz läuft noch, nichts senden")
-        self.stuecke("goran", False, False, True, ab=3)  # Pause von PAUSE_S, dann schreibt ffmpeg schon weiter
-        dauer = 5 * mithoeren.SEGMENT_S
+        self.stuecke("goran", False, False, True, ab=4)  # Pause von PAUSE_S, dann schreibt ffmpeg schon weiter
+        dauer = 6 * mithoeren.SEGMENT_S
         self.assertEqual(self.lauf(), [f"[00:00] Goran: {dauer:.1f} s"])
         self.assertEqual(self.gesendet, [dauer], "ein Aufruf für den ganzen Satz samt Pause")
 
@@ -78,12 +78,36 @@ class Abarbeiten(unittest.TestCase):
         self.assertEqual(self.gesendet, [(n + 1) * mithoeren.SEGMENT_S])
 
     def test_beide_seiten_zeitlich_geordnet(self):
-        self.stuecke("gegenueber", True, False, False, True)
-        self.stuecke("goran", False, True, False, False, True)
+        self.stuecke("gegenueber", True, True, True, True, False, False, True)
+        self.stuecke("goran", False, True, True, True, True, False, False, True)
         self.assertEqual(self.lauf(), [
-            f"[00:00] Kunde: {3 * mithoeren.SEGMENT_S:.1f} s",
-            f"[{zeit(1)}] Goran: {3 * mithoeren.SEGMENT_S:.1f} s",
+            f"[00:00] Kunde: {6 * mithoeren.SEGMENT_S:.1f} s",
+            f"[{zeit(1)}] Goran: {6 * mithoeren.SEGMENT_S:.1f} s",
         ])
+
+    def test_kurzer_einwurf_geht_mit_dem_naechsten_satz_derselben_seite(self):
+        # Meeting 29.10.2026: aus einzeln geschickten Einwürfen («Mm-hmm», «Ja, okay») erfand Voxtral fremde Sprachen
+        self.stuecke("goran", True, True, False, False, False, True, True, True, True, False, False, True)
+        # die Stille zwischen Einwurf und Satz über PAUSE_S hinaus fällt weg wie jede Stille ausserhalb eines Satzes
+        self.assertEqual(self.lauf(), [f"[00:00] Goran: {10 * mithoeren.SEGMENT_S:.1f} s"])
+        self.assertEqual(self.gesendet, [10 * mithoeren.SEGMENT_S], "Einwurf, Pause und Satz in einem Aufruf")
+
+    def test_mehrere_einwuerfe_gehen_zusammen_sobald_sie_lang_genug_sind(self):
+        n = round(mithoeren.KURZ_S / mithoeren.SEGMENT_S) // 2
+        self.stuecke("gegenueber", *[True] * n, False, False, *[True] * n, False, False, True)
+        self.lauf()
+        self.assertEqual(self.gesendet, [(2 * n + 4) * mithoeren.SEGMENT_S])
+
+    def test_einwurf_der_anderen_seite_wartet_nicht_auf_goran(self):
+        self.stuecke("gegenueber", True, False, False, True)
+        self.stuecke("goran", True, True, True, True, False, False, True)
+        self.assertEqual(self.lauf(), [f"[00:00] Goran: {6 * mithoeren.SEGMENT_S:.1f} s"])
+
+    def test_einwurf_am_ende_wird_einmal_umgeschrieben(self):
+        self.stuecke("goran", True, False, False, False, False)
+        self.assertEqual(self.lauf(), [])
+        self.assertEqual(self.lauf(ende=True), [f"[00:00] Goran: {3 * mithoeren.SEGMENT_S:.1f} s"])
+        self.assertEqual(sorted(p.name for p in self.ordner.glob("*.wav")), [])
 
     def test_stille_geht_nicht_an_voxtral_und_nicht_ins_transkript(self):
         self.stuecke("goran", False, False, False)
