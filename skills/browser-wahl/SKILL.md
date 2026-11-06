@@ -172,11 +172,13 @@ anmelden und angehängt per CDP weiterarbeiten.
 - Kästchen und Optionen per `element.click()` im Seitenkontext setzen und danach `checked` zurücklesen (Punkt 2
   oben). Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
   `boundingBox()` (belegte Ausnahme). Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404;
-  stattdessen `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `bringToFront()`, das
-  Suchfeld `input[aria-label="Jede URL unter <domain> prüfen"]` per `fill(url, {force: true})` und `press('Enter')`,
-  dann «Indexierung beantragen» per `page.mouse.click()` und bis rund 2 Minuten auf «Indexierung wurde beantragt»
-  warten (meldet die Seite einen Fehler, einmal wiederholen). Am 31.10.2026 öffnete Enter die Prüfung dreimal nicht
-  (Seite blieb auf der Übersicht); dann von Hand in Chrome beantragen, nicht weiter probieren.
+  stattdessen in einem frisch per `tab-new` geöffneten Tab (in einem älteren Tab blieb das Suchfeld unsichtbar)
+  `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `chrome-anhaengen --zeigen`,
+  `bringToFront()`, das Suchfeld `input[aria-label="Jede URL unter <domain> prüfen"]` per `click({force: true})`,
+  `fill(url, {force: true})` und `press('Enter')`, rund 25 s warten (URL wechselt auf `…/inspect?…&id=…`). Den Knopf
+  «INDEXIERUNG BEANTRAGEN» (ein `SPAN`) per `evaluateAll` mit `getBoundingClientRect()` suchen (`getByText(…)
+  .boundingBox()` lief am 06.11.2026 in den Timeout) und `page.mouse.click()` auf seine Mitte; bis rund 2 Minuten
+  auf «Indexierung wurde beantragt» warten, danach `--verstecken`. So am 06.11.2026 geklappt.
 - Schleifen über viele Seiten nie unbeaufsichtigt im Hintergrund starten: zuerst ein Durchgang im Vordergrund mit
   Bildschirmfoto, dann jede weitere Seite einzeln prüfen.
 
