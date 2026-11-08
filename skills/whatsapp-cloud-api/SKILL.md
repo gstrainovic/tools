@@ -95,7 +95,12 @@ Rollennutzern benutzt wird, keine Verifizierung braucht.
 
 WhatsApp-Anrufe (Calling API) verlangen dagegen ein Limit von mindestens 2'000 (Doku «Calling», «Call
 settings»); auf `TIER_250` lehnt `POST /<PHONE_ID>/settings` `{"calling":{"status":"ENABLED"}}` mit Fehler
-138015 ab. Der Weg ohne Massenversand ist die Unternehmensverifizierung.
+138015 ab. Die Unternehmensverifizierung allein reicht nicht: Danach prüft Meta die Nachrichtenqualität (Doku
+«Messaging limits», «Scaling paths») und lehnte bei Strainovic IT trotz Verifizierung ab («Nutze mehrere Tage
+hintereinander aktiv unsere WhatsApp Business Platform …»); der andere Weg sind 2'000 Vorlagen-Nachrichten in 30
+Tagen, also Massenversand. Für einen Bot, der nur antwortet, sind WhatsApp-Anrufe darum vorerst nicht erreichbar;
+beim Kunden vor einem Angebot klären, ob seine Nummer schon `TIER_2K` hat
+(`GET /<PHONE_ID>?fields=messaging_limit_tier`).
 
 **Unternehmensverifizierung (Einzelunternehmen ohne Handelsregister, so eingereicht für Strainovic IT):**
 `business.facebook.com/latest/settings/security_center?business_id=…` → «Verifizierung starten» → Land →
