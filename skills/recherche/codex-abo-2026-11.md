@@ -30,6 +30,11 @@ Frage: Lohnt sich ChatGPT Pro 100 (100 USD im Monat) für Codex, oder reicht Plu
   (help.openai.com/en/articles/9793128).
 - Verhältnis Plus zu Pro 100 nennt OpenAI nicht in Zahlen (ungeprüft, nur geschätzt).
 
+## Gorans Entscheid 886a
+
+Plus statt Pro 100, bei Engpass Credits nachkaufen. Pro 100 ist gekündigt und endet am 14.11.2026, Plus wird
+dann abgeschlossen (Frist in `find-jobs/TODO.md`).
+
 ## Einschätzung
 
 Bei 3–5 % Wochenauslastung von Pro 100 nutzt der heutige Betrieb das Abo zu rund einem Zwanzigstel. Plus reicht
