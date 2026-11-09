@@ -88,14 +88,16 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   `cancelAnimationFrame` per `clearTimeout`) und `document.visibilityState`/`hidden` per `Object.defineProperty`
   auf «visible»/false setzen; dann öffnen Menüs und Dialoge auch auf Desktop 2. `--zeigen` mit
   `bringToFront()` reicht dafür nicht, die Seite bleibt `hidden`. Erst wenn der Ersatz nicht hilft:
-  `chrome-anhaengen --zeigen` und ausgewählter Tab oder Skript gegen einen lokalen Container. Kein Aufgeben vor
+  Skript gegen einen lokalen Container oder Goran fragen, ob `chrome-anhaengen --zeigen` diesmal sein darf. Kein Aufgeben vor
   diesem Versuch. Beim
   Anhängen holt das Skript das Fenster kurz auf Gorans Arbeitsfläche und aktiviert es (die Erweiterung legt den
   Session-Tab im zuletzt fokussierten Fenster an; aktivieren auf Arbeitsfläche 2 würde Gorans Ansicht dorthin
   wechseln), danach ist es wieder weg; auch bei schon laufender Session schickt jeder Aufruf es zurück. Ist das Arbeitsfenster das einzige Chrome-Fenster, öffnet Chrome Links aus anderen Apps unsichtbar darin
   und das Dock holt es hervor; darum öffnet das Skript dann ein eigenes Fenster für Goran und gibt den Fokus zurück.
-  Soll Goran etwas klicken (Login, Captcha, 2FA):
-  `chrome-anhaengen --zeigen`, danach `chrome-anhaengen --verstecken`. Ein Headless-Chrome scheidet aus: zwei
+  Soll Goran etwas klicken (Login, Captcha, Cloudflare-Prüfung, 2FA): **nie `--zeigen` aus eigenem Antrieb**, das
+  Arbeitsfenster bleibt auf Desktop 2 (Goran, verbindlich: es schiebt sich vor seine Arbeit). Stattdessen in einem
+  Satz melden, was er in seinem eigenen Chrome-Fenster tun soll (etwa Upwork öffnen und einloggen); die Cookies
+  gelten danach auch für die Session. `--zeigen` nur, wenn Goran es ausdrücklich verlangt. Ein Headless-Chrome scheidet aus: zwei
   Chrome-Instanzen können kein Profilverzeichnis teilen, ein Zweitprofil hätte keine Cookies
   (`find-jobs/akquise/recherche/headless-chrome-2026-10.md`). Window Calls einrichten: `gdbus call --session
   --timeout 900 --dest org.gnome.Shell --object-path /org/gnome/Shell --method
@@ -173,7 +175,8 @@ anmelden und angehängt per CDP weiterarbeiten.
   oben). Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
   `boundingBox()` (belegte Ausnahme). Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404;
   stattdessen in einem frisch per `tab-new` geöffneten Tab (in einem älteren Tab blieb das Suchfeld unsichtbar)
-  `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `chrome-anhaengen --zeigen`,
+  `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `chrome-anhaengen --zeigen` (nur
+  nach Gorans Ja im selben Gespräch, siehe «Soll Goran etwas klicken»),
   `bringToFront()`, das Suchfeld `input[aria-label="Jede URL unter <domain> prüfen"]` per `click({force: true})`,
   `fill(url, {force: true})` und `press('Enter')`, rund 25 s warten (URL wechselt auf `…/inspect?…&id=…`). Den Knopf
   «INDEXIERUNG BEANTRAGEN» (ein `SPAN`) per `evaluateAll` mit `getBoundingClientRect()` suchen (`getByText(…)
