@@ -599,10 +599,27 @@ def smtp_send(acc: Account, msg: EmailMessage) -> None:
         conn.logout()
 
 
-def save_draft(acc: Account, msg: EmailMessage) -> str:
+def drafts_to(conn, folder: str, recipients: list[str]) -> list[email.message.Message]:
+    """Entwürfe im Ordner, die an einen der Empfänger (To, Cc, Bcc) gehen."""
+    wanted = {a.lower() for a in recipients}
+    if conn.select(imap_folder(folder), readonly=True)[0] != "OK":
+        return []
+    status, data = conn.uid("search", "ALL")
+    found = []
+    for uid in (data[0].split() if status == "OK" and data and data[0] else []):
+        old, _ = fetch(conn, uid.decode(), "(BODY.PEEK[])")
+        if {a.lower() for a in addresses(raw_header(old, "To"), raw_header(old, "Cc"), raw_header(old, "Bcc"))} & wanted:
+            found.append(old)
+    return found
+
+
+def save_draft(acc: Account, msg: EmailMessage, checked: str | None = None) -> str:
     """Legt die Nachricht als Entwurf in den Entwurfsordner, ohne sie zu senden; Thunderbird zeigt sie dort.
     Entwurfsordner: drafts_folder aus der TOML, sonst der Ordner mit \\Drafts (Gmail: «[Gmail]/Entwürfe»), sonst
-    «Drafts» (wird angelegt). Gibt den Ordnernamen lesbar zurück."""
+    «Drafts» (wird angelegt). Gibt den Ordnernamen lesbar zurück.
+    Sperre gegen doppelte Entwürfe: Liegt dort schon ein Entwurf an einen der Empfänger, bricht es mit Code 3 ab
+    (zwei Sitzungen legten denselben Block zweimal ab, Goran sandte alle Entwürfe, jede Firma bekam die Mail
+    zweimal). Erneut nur mit --doppel-geprueft und Grund."""
     conn = imap_connect(acc)
     folder = acc.drafts_folder
     if not folder:
@@ -614,6 +631,21 @@ def save_draft(acc: Account, msg: EmailMessage) -> str:
             conn.create(imap_folder(folder))
         except imaplib.IMAP4.error:
             pass
+    recipients = addresses(msg.get("To"), msg.get("Cc"), msg.get("Bcc"))
+    earlier = [] if checked else drafts_to(conn, folder, recipients)
+    if earlier:
+        conn.logout()
+        out = [f"NICHT GESPEICHERT: im Ordner {folder_name(folder)} liegt schon {len(earlier)} Entwurf an "
+               f"{', '.join(recipients)}; Goran würde beide senden.", ""]
+        for old in earlier:
+            out += [f"--- vorhandener Entwurf an {decode(raw_header(old, 'To'))}, Betreff: "
+                    f"{decode(raw_header(old, 'Subject'))}", ""]
+        out += ["Vorhandenen Entwurf behalten oder ihn zuerst löschen. Nur eine wirklich andere Nachricht erneut "
+                'ablegen, mit --doppel-geprueft "<Grund>".']
+        print("\n".join(out), file=sys.stderr)
+        raise SystemExit(3)
+    if checked:
+        print(f"Doppelter Entwurf geprüft: {checked}", file=sys.stderr)
     conn.append(imap_folder(folder), r"(\Draft \Seen)",
                 imaplib.Time2Internaldate(__import__("time").time()), msg.as_bytes())
     conn.logout()
@@ -694,7 +726,7 @@ def cmd_send(accounts: dict[str, Account], args) -> None:
         print(msg.as_string())
         return
     if args.draft:
-        folder = save_draft(acc, msg)
+        folder = save_draft(acc, msg, args.doppel_geprueft)
         print(f"Entwurf gespeichert in {folder} ({acc.address}): {args.subject}")
         return
     guard_double(acc, msg, args.doppel_geprueft)
@@ -722,7 +754,7 @@ def cmd_reply(accounts: dict[str, Account], args) -> None:
         print(msg.as_string())
         return
     if args.draft:
-        folder = save_draft(acc, msg)
+        folder = save_draft(acc, msg, args.doppel_geprueft)
         print(f"Entwurf gespeichert in {folder} ({acc.address}): {msg['Subject']}")
         return
     guard_double(acc, msg, args.doppel_geprueft)

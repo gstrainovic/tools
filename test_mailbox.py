@@ -671,6 +671,12 @@ class Entwuerfe(unittest.TestCase):
         aufrufe = []
 
         class Conn:
+            def select(self, folder, readonly=False):
+                return "OK", [b"0"]
+
+            def uid(self, cmd, *args):
+                return "OK", [b""]
+
             def create(self, folder):
                 aufrufe.append(("create", folder))
 
@@ -717,6 +723,12 @@ class Entwuerfe(unittest.TestCase):
             def list(self):
                 return "OK", liste
 
+            def select(self, folder, readonly=False):
+                return "OK", [b"0"]
+
+            def uid(self, cmd, *args):
+                return "OK", [b""]
+
             def create(self, folder):
                 aufrufe.append(("create", folder))
 
@@ -734,6 +746,62 @@ class Entwuerfe(unittest.TestCase):
                 mock.patch.object(mb.smtplib, "SMTP_SSL", side_effect=AssertionError("kein SMTP")):
             ordner = mb.save_draft(acc, msg)
         return ordner, aufrufe
+
+    def entwurf_mit_bestand(self, bestand_an, geprueft=None):
+        """Entwurf an kunde@example.ch speichern, während im Entwurfsordner schon einer an bestand_an liegt."""
+        aufrufe = []
+        alt = mb.build_message(account(), [bestand_an], "Alter Entwurf", "Alter Text\n")
+
+        class Conn:
+            def list(self):
+                return "OK", [b'(\\Drafts \\HasNoChildren) "/" "Drafts"']
+
+            def select(self, folder, readonly=False):
+                return "OK", [b"1"]
+
+            def uid(self, cmd, *args):
+                if cmd.lower() == "search":
+                    return "OK", [b"1"]
+                return "OK", [(b"1 (UID 1 FLAGS (\\Draft))", alt.as_bytes())]
+
+            def create(self, folder):
+                aufrufe.append(("create", folder))
+
+            def append(self, folder, flags, date, data):
+                aufrufe.append(("append", folder))
+                return "OK", [None]
+
+            def logout(self):
+                pass
+
+        acc = account(drafts_folder="")
+        msg = mb.build_message(acc, ["kunde@example.ch"], "Betreff", "Text\n")
+        err = io.StringIO()
+        with mock.patch.object(mb, "imap_connect", return_value=Conn()), contextlib.redirect_stderr(err):
+            try:
+                mb.save_draft(acc, msg, geprueft)
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        return code, aufrufe, err.getvalue()
+
+    def test_zweiter_entwurf_an_denselben_empfaenger_wird_abgewiesen(self):
+        # 08.11.2026: Block 7 lag zweimal in Drafts (zwei Sitzungen), Thunderbird sandte jede Mail doppelt
+        code, aufrufe, err = self.entwurf_mit_bestand("Kunde@Example.ch")
+        self.assertEqual(code, 3)
+        self.assertNotIn(("append", "Drafts"), aufrufe)
+        self.assertIn("NICHT GESPEICHERT", err)
+        self.assertIn("Alter Entwurf", err)
+
+    def test_entwurf_an_anderen_empfaenger_geht(self):
+        code, aufrufe, _ = self.entwurf_mit_bestand("andere@example.ch")
+        self.assertEqual(code, 0)
+        self.assertIn(("append", "Drafts"), aufrufe)
+
+    def test_gepruefter_zweiter_entwurf_geht(self):
+        code, aufrufe, _ = self.entwurf_mit_bestand("kunde@example.ch", geprueft="Nachtrag, anderer Inhalt")
+        self.assertEqual(code, 0)
+        self.assertIn(("append", "Drafts"), aufrufe)
 
     def test_gmail_entwurf_landet_im_ordner_mit_drafts_kennzeichen(self):
         # Bisher landete er im Label «Drafts», das Gmail und Thunderbird nicht als Entwürfe zeigen
