@@ -34,8 +34,8 @@ einmal `chrome-anhaengen`. Login auf login.ricardo.ch macht Goran (Autofill lief
 das Chrome auf dem Windows-PC ist nicht von selbst angemeldet (`/de/list/?a=<id>` leitet dann auf
 login.ricardo.ch). Im Arbeitsfenster auf Desktop 2 zeigen die Inserat-Seiten (`/de/a/<id>/`) ein Cloudflare-Captcha
 («One more step», Titel «Nur einen Moment…»), auch mit dem Hintergrund-Ersatz aus `browser-wahl`
-(`requestAnimationFrame`, `visibilityState`); `/de/list/` kam mit dem Ersatz durch. Dann `chrome-anhaengen
---zeigen`, Goran klickt das Captcha, danach `--verstecken`.
+(`requestAnimationFrame`, `visibilityState`); `/de/list/` kam mit dem Ersatz durch. Dann Goran bitten, die Seite in
+seinem eigenen Chrome-Fenster zu öffnen und das Captcha zu lösen; nie selbst `--zeigen` (Skill `browser-wahl`).
 Konto-E-Mail ist info@pink-deko.ch (`mailbox`-Konto `pink-deko`, Werbefilter aus, Ricardo-Mails im INBOX). Konto-Seite `/de/profile/personal-info/`; E-Mail ändern verlangt erst einen Code an die alte,
 dann an die neue Adresse und meldet danach ab.
 
