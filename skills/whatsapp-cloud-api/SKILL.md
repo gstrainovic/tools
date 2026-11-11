@@ -6,7 +6,10 @@ description: WhatsApp-Bot direkt bei Meta (Cloud API, ohne Twilio-Aufpreis) einr
 # WhatsApp über die Meta Cloud API
 
 Referenz: `ki-tel` (Webhook `/meta` in `whatsapp_demo/app.py`, Tests in `tests/test_meta_whatsapp.py`, Einrichtung
-in `deploy/README.md`, Codeleser `deploy/code_aus_aufnahme.py`). Live auf +41 71 539 30 77 seit 17.10.2026.
+in `deploy/README.md`, Codeleser `deploy/code_aus_aufnahme.py`). Live auf +41 71 539 30 77 und, als zweite Nummer
+desselben WhatsApp-Kontos mit eigenem Anzeigenamen und eigenem Profil im Bot, +41 71 539 09 11 (Pink Deko). Eine
+weitere Nummer geht ganz per API (anlegen, Code per Anruf, registrieren), ohne Oberfläche; der Webhook erkennt sie
+an `metadata.phone_number_id`.
 
 ## Was nur in der Oberfläche geht (rund eine Stunde, Facebook-Passwort mehrmals)
 
@@ -39,7 +42,7 @@ Reihenfolge so, dass der Token früh da ist und der Rest per API läuft:
 ```sh
 T=…; WABA=…; PHONE_ID=…; APP_ID=…
 curl -X POST "https://graph.facebook.com/v24.0/$WABA/phone_numbers" -H "Authorization: Bearer $T" \
-  -d cc=41 -d phone_number=715393077 -d verified_name="Strainovic It"        # nicht geprüft, Doku «Phone numbers»
+  -d cc=41 -d phone_number=715393077 -d verified_name="Strainovic It"        # geprüft, liefert die Telefonnummer-ID
 curl -X POST "https://graph.facebook.com/v24.0/$PHONE_ID/request_code" -H "Authorization: Bearer $T" -d code_method=VOICE -d language=de
 curl -X POST "https://graph.facebook.com/v24.0/$PHONE_ID/verify_code" -H "Authorization: Bearer $T" -d code=123456
 curl -X POST "https://graph.facebook.com/v24.0/$PHONE_ID/register" -H "Authorization: Bearer $T" \
