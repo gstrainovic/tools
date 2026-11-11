@@ -14,3 +14,6 @@
   `mithoeren --nachher` aufgegangen ist (`link.sh` entfernt alte Links nicht); dort einmal löschen.
 - `mithoeren`: kurze Einwürfe (unter `KURZ_S`) und `--nachher` sind nur mit Attrappen getestet. Beim nächsten echten
   Meeting prüfen, ob Voxtral live weniger fremde Sprachen erfindet und ob `--nachher` an der Tondatei durchläuft.
+- `fragen pruefen` meldet «VERALTET Frage 312» für `skills-privat/claude/gemeinsam.md:36`: Dort steht «Frage 312» nur als
+  Beispiel für die Form einer Frage. Entweder das Beispiel ohne echte Nummer schreiben (etwa «Frage N») oder
+  `fragen.py` die Regeldateien unter `skills-privat/claude/` überspringen lassen, mit Test.
