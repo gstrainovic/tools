@@ -80,9 +80,11 @@ reicht:
    Gorans Entscheid), Fable nur über Agenten nach Punkt 6. Recherche auf Sonnet (Sammeln) bzw. Opus (Urteil), Code und Tests auf Opus, interne
    Doku (AGENTS.md, TODO.md, Skills, Commit-Nachrichten), Berichte und Rückfragen an Goran im Hauptmodell, auch wenn
    das Opus ist. Fable bleibt damit für die Texte nach Punkt 6 frei. Ausnahme: Die Gegenprüfung solcher Texte
-   (etwa Erstkontakt-Mails, `find-jobs/AGENTS.md` «Ablauf Erstkontakte» Schritt 4) macht eine zweite Fable-Instanz,
-   weil die Wirkung beim Empfänger der heikle Teil ist und das bessere Schreibmodell schwache Stellen besser
-   erkennt; Fakten und Regeln prüfen Skripte und das Nachsehen an der Quelle (Gorans Entscheid 891c).
+   (etwa Partnermails) macht eine zweite Fable-Instanz, weil die Wirkung beim Empfänger der heikle Teil ist und das
+   bessere Schreibmodell schwache Stellen besser erkennt; Fakten und Regeln prüfen Skripte und das Nachsehen an der
+   Quelle (Gorans Entscheid 891c). Erstkontakt-Mails prüft Sonnet gegen (`find-jobs/AGENTS.md` «Ablauf
+   Erstkontakte» Schritt 4, Gorans Entscheid 938a), weil die Gegenprüfung dort je Block so viel Fable kostete wie
+   der Entwurf.
 8. **Geschäftskritisches doppelt prüfen:** Bei Recherchen zu Strafen, Haftung, Risiko, Gesetzen, Steuern, Geld,
    Verträgen und Schulden, und immer bei Zweifel am Ergebnis, nach der Erstrecherche (Opus) Goran eine
    Zweitrecherche mit dem anderen Modell (Fable) vorschlagen, als nummerierte Frage mit Kostenhinweis. Sagt er ja,
