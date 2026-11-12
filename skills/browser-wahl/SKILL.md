@@ -109,7 +109,9 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   für einen anderen Desktop, Chromium-Doku `docs/windows_virtual_desktop_handling.md`), hängt an, solange es dort den
   Fokus hat (die Erweiterung legt den Session-Tab im zuletzt fokussierten Fenster an; ein schon verschobenes
   Fenster hat ihn nicht, der Tab landete in Gorans Fenster), und verschiebt es dann auf den virtuellen Desktop 2
-  (legt ihn an, falls er fehlt); ein früheres Session-Fenster schliesst es vorher. Liegt der Session-Tab trotzdem
+  (legt ihn an, falls er fehlt). Vor dem Verschieben bekommt Gorans zuvor aktives Fenster den Fokus zurück, und
+  wechselt Windows trotzdem auf Desktop 2, schaltet das Skript auf Gorans Desktop zurück: Das Verschieben des
+  Fensters mit Fokus zog sonst seine Ansicht auf Desktop 2 mit; ein früheres Session-Fenster schliesst es vorher. Liegt der Session-Tab trotzdem
   nicht im neuen Fenster, löst das Skript die Session wieder (`detach`), schliesst das Fenster und endet mit
   `FEHLER` und Code 1; dann nichts in der Session tun, auch keine Skripte, sondern Goran melden. Fenster-Handle in `~\.config\playwright-extension\fenster-<session>`; `--zeigen` holt das
   Fenster auf Desktop 1, `--verstecken` schickt es zurück, ein Aufruf bei laufender Session ebenso. Verschieben per

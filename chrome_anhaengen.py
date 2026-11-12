@@ -240,6 +240,30 @@ class WindowsDesktop:
     def verschieben(self, hwnd: int, desktop: int):
         self.vd(f"/GetDesktop:{desktop}", f"/MoveWindowHandle:{hwnd}")
 
+    def aktueller_desktop(self) -> int:
+        # Ausgabe etwa «Current desktop: 'Desktop 1' (desktop number 0)»
+        import re
+        m = re.search(r"desktop number (\d+)", self.vd("/GetCurrentDesktop").stdout)
+        return int(m.group(1)) if m else 0
+
+    def wechseln(self, desktop: int):
+        self.vd(f"/Switch:{desktop}")
+
+    def vordergrund(self) -> int:
+        import ctypes
+        return int(ctypes.windll.user32.GetForegroundWindow() or 0)
+
+    def vordergrund_setzen(self, hwnd: int):
+        # Windows lässt SetForegroundWindow aus einem Hintergrundprozess nur zu, wenn gerade eine Eingabe lief;
+        # ein kurzes Alt (keybd_event) hebt die Sperre auf, ohne ein Menü zu öffnen.
+        import ctypes
+        u = ctypes.windll.user32
+        if not hwnd or not u.IsWindow(hwnd):
+            return
+        u.keybd_event(0x12, 0, 0, 0)
+        u.keybd_event(0x12, 0, 2, 0)
+        u.SetForegroundWindow(hwnd)
+
     def auf_desktop(self, hwnd: int, desktop: int) -> bool:
         return " is on desktop" in self.vd(f"/GetDesktop:{desktop}", f"/IsWindowHandleOnDesktop:{hwnd}").stdout
 
@@ -297,6 +321,10 @@ def main_windows() -> int:
     if bekannt in vorhanden:
         desktop.schliessen(bekannt)
         vorhanden = desktop.chrome_fenster()
+    # Gorans Desktop und Fenster mit Fokus merken: Das neue Fenster muss kurz den Fokus haben (siehe unten), danach
+    # bekommt er beides zurück, sonst zieht das Verschieben seine Ansicht auf Desktop 2 mit.
+    goran_desktop = desktop.aktueller_desktop()
+    goran_fenster = desktop.vordergrund()
     desktop.chrome_starten()
     hwnd = None
     frist = time.monotonic() + WARTEN_FENSTER_S
@@ -333,7 +361,11 @@ def main_windows() -> int:
         print(f"FEHLER: Session-Tab lag nicht im Arbeitsfenster {hwnd}, sondern in Gorans Fenster; Session {s} "
               "wieder gelöst, nicht angehängt", file=sys.stderr)
         return 1
+    if goran_fenster and goran_fenster != hwnd:
+        desktop.vordergrund_setzen(goran_fenster)
     desktop.verschieben(hwnd, ARBEITSDESKTOP)
+    if desktop.aktueller_desktop() != goran_desktop:
+        desktop.wechseln(goran_desktop)
     if not desktop.auf_desktop(hwnd, ARBEITSDESKTOP):
         cli_lauf([f"-s={s}", "detach"])
         desktop.schliessen(hwnd)
