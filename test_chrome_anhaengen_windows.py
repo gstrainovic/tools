@@ -18,6 +18,22 @@ class FalscherDesktop:
         self.titel = {}
         self.aufrufe = []
         self.naechstes = 900
+        self.aktuell = 0  # Desktop, den Goran gerade sieht
+        self.vorne = 2  # Fenster mit Fokus (Gorans Fenster)
+
+    def aktueller_desktop(self):
+        return self.aktuell
+
+    def wechseln(self, desktop):
+        self.aufrufe.append(f"switch {desktop}")
+        self.aktuell = desktop
+
+    def vordergrund(self):
+        return self.vorne
+
+    def vordergrund_setzen(self, hwnd):
+        self.aufrufe.append(f"focus {hwnd}")
+        self.vorne = hwnd
 
     def bereitstellen(self):
         self.aufrufe.append("bereitstellen")
@@ -36,11 +52,14 @@ class FalscherDesktop:
         self.aufrufe.append("chrome --new-window")
         self.fenster[self.naechstes] = 0
         self.titel[self.naechstes] = "about:blank - Google Chrome"
+        self.vorne = self.naechstes  # das neue Fenster bekommt den Fokus
         self.naechstes += 1
 
     def verschieben(self, hwnd, desktop):
         self.aufrufe.append(f"move {hwnd} -> {desktop}")
         self.fenster[hwnd] = desktop
+        if hwnd == self.vorne:  # Windows folgt dem Fenster mit Fokus auf den anderen Desktop
+            self.aktuell = desktop
 
     def auf_desktop(self, hwnd, desktop):
         return self.fenster.get(hwnd) == desktop
@@ -103,7 +122,8 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         rc, text, fehler = self.lauf()
         self.assertEqual(rc, 0, fehler)
         a = self.desktop.aufrufe
-        self.assertEqual(a, ["bereitstellen", "chrome --new-window", "move 900 -> 1"])
+        self.assertEqual([x for x in a if not x.startswith(("focus", "switch"))],
+                         ["bereitstellen", "chrome --new-window", "move 900 -> 1"])
         self.assertEqual(self.tab_fenster, 900, "Session-Tab im neuen Fenster, nicht in Gorans")
         self.assertLess(2, len(self.cli_aufrufe))
         attach = [z for z in self.cli_aufrufe if z.startswith("attach")]
@@ -113,6 +133,22 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         self.assertEqual(self.desktop.fenster[2], 0, "Gorans Fenster unberührt")
         self.assertEqual("900", (self.konfig / "fenster-gchrome").read_text().strip())
         self.assertIn("Desktop 2", text)
+
+    def test_goran_bleibt_auf_seinem_desktop_und_behaelt_den_fokus(self):
+        # Verschieben des Fensters mit Fokus zieht Windows auf Desktop 2 mit und reisst Goran aus seiner Arbeit.
+        rc, _, fehler = self.lauf()
+        self.assertEqual(rc, 0, fehler)
+        self.assertEqual(self.desktop.aktuell, 0, "Ansicht bleibt auf Gorans Desktop 1")
+        self.assertEqual(self.desktop.vorne, 2, "Gorans Fenster hat wieder den Fokus")
+        a = self.desktop.aufrufe
+        self.assertLess(a.index("focus 2"), a.index("move 900 -> 1"), "Fokus zurück, bevor verschoben wird")
+
+    def test_folgt_windows_trotzdem_wird_zurueckgeschaltet(self):
+        self.desktop.vordergrund_setzen = lambda hwnd: self.desktop.aufrufe.append(f"focus {hwnd} (verweigert)")
+        rc, _, fehler = self.lauf()
+        self.assertEqual(rc, 0, fehler)
+        self.assertEqual(self.desktop.aktuell, 0)
+        self.assertIn("switch 0", self.desktop.aufrufe)
 
     def test_attach_setzt_den_chrome_pfad_fuer_playwright(self):
         # Ohne PLAYWRIGHT_MCP_EXECUTABLE_PATH findet playwright-cli den scoop-Chrome nicht («executable not found»).
