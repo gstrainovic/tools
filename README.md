@@ -140,6 +140,7 @@ ads campaigns [--all]                      # ID, Status, Typ, Budget, Name
 ads query "SELECT campaign.name FROM campaign"
 ads remove ID [ID ...] [--dry-run]
 ads create SPEC.json [--validate-only]     # Suchkampagne, immer pausiert, Gesamtbudget mit Enddatum
+ads demandgen SPEC.json [--validate-only]  # Videokampagne Demand Gen nur auf YouTube, pausiert, Orte als Liste
 ads enable ID | ads pause ID
 ```
 
