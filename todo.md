@@ -1,5 +1,10 @@
 # Offene Punkte
 
+- `mailbox send|reply --draft`: Die Sperre prüft nur den Entwurfsordner. Sie soll auch den Gesendet-Ordner
+  prüfen (Mails von heute an denselben Empfänger, wie beim Senden) und dann «NICHT GESPEICHERT» melden. Sonst
+  entsteht ein zweiter Entwurf, wenn Goran den ersten schon aus Thunderbird gesendet hat (so bei den
+  Shop-Erstkontakten in find-jobs, CRM #1880 bis #1882).
+
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
