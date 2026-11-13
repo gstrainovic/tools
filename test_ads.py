@@ -86,6 +86,54 @@ class CheckDemandGen(unittest.TestCase):
         self.assertTrue(ads.check_demand_gen({**DG, "status": "ENABLED"}))
 
 
+class DemandGenOperationen(unittest.TestCase):
+    """Operationen ohne Netz: GoogleAdsClient baut die Typen auch ohne Zugangsdaten."""
+
+    @classmethod
+    def setUpClass(cls):
+        from google.ads.googleads.client import GoogleAdsClient
+        cls.c = GoogleAdsClient(credentials=None, developer_token="test", use_proto_plus=True)
+        spec = {**DG, "geo_target_constant": ["geoTargetConstants/1", "geoTargetConstants/2"]}
+        cls.ops = ads.demand_gen_operations(cls.c, "123", spec, b"PNG")
+
+    def teil(self, art):
+        return [getattr(o, art).create for o in self.ops if o._pb.HasField(art)]
+
+    def test_kampagne_demand_gen_pausiert_mit_klickgebot(self):
+        (k,) = self.teil("campaign_operation")
+        self.assertEqual(k.advertising_channel_type, self.c.enums.AdvertisingChannelTypeEnum.DEMAND_GEN)
+        self.assertEqual(k.status, self.c.enums.CampaignStatusEnum.PAUSED)
+        # Demand Gen nimmt bei target_spend keine Obergrenze an; max_cpc_chf wird zum Ziel-CPC
+        self.assertEqual(k.target_cpc.target_cpc_micros, 1_000_000)
+
+    def test_gesamtbudget_ueber_den_zeitraum(self):
+        (b,) = self.teil("campaign_budget_operation")
+        self.assertEqual(b.total_amount_micros, 50_000_000)
+        self.assertFalse(b.explicitly_shared)
+
+    def test_nur_youtube_ohne_discover_gmail_display_maps(self):
+        (g,) = self.teil("ad_group_operation")
+        kanaele = g.demand_gen_ad_group_settings.channel_controls.selected_channels
+        self.assertTrue(kanaele.youtube_in_stream and kanaele.youtube_in_feed and kanaele.youtube_shorts)
+        self.assertFalse(kanaele.discover or kanaele.gmail or kanaele.display or kanaele.maps)
+
+    def test_jeder_ort_und_die_sprache_auf_der_anzeigengruppe(self):
+        kriterien = self.teil("ad_group_criterion_operation")
+        orte = [k.location.geo_target_constant for k in kriterien if k.location.geo_target_constant]
+        self.assertEqual(orte, ["geoTargetConstants/1", "geoTargetConstants/2"])
+        self.assertIn("languageConstants/1001", [k.language.language_constant for k in kriterien])
+
+    def test_videoanzeige_mit_video_logo_und_texten(self):
+        assets = self.teil("asset_operation")
+        self.assertIn("abc123", [a.youtube_video_asset.youtube_video_id for a in assets])
+        self.assertIn(b"PNG", [a.image_asset.data for a in assets])
+        (ad,) = self.teil("ad_group_ad_operation")
+        v = ad.ad.demand_gen_video_responsive_ad
+        self.assertEqual(v.business_name.text, "Wartungsheft")
+        self.assertEqual([h.text for h in v.headlines], ["Rechnung fotografieren"])
+        self.assertEqual(ad.ad.final_urls[0], "https://wartungsheft.ch/youtube")
+
+
 class KeywordLines(unittest.TestCase):
     def test_leere_zeilen_und_kommentare_fallen_weg(self):
         self.assertEqual(ads.keyword_lines(["serviceheft app\n", "\n", "# Kommentar\n", "  mfk app  \n"]),

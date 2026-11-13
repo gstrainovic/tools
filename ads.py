@@ -19,6 +19,8 @@ Befehle:
     ads query "SELECT ... FROM ..."              beliebige GAQL-Abfrage, eine Zeile pro Ergebnis
     ads remove ID [ID ...] [--dry-run]           Kampagnen entfernen (endgültig, Statistik bleibt)
     ads create SPEC.json [--validate-only]       Suchkampagne anlegen, immer pausiert, Gesamtbudget mit Enddatum
+    ads demandgen SPEC.json [--validate-only]    Demand-Gen-Videokampagne nur auf YouTube (samt Shorts), pausiert,
+                                                 Orte als Liste geoTargetConstants (kein Umkreis bei Demand Gen)
     ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
     ads keywords DATEI|-                         Suchvolumen und Klickpreise (Schweiz, Deutsch), braucht Basic
     ads keywords DATEI|- --verlauf [MONATE]      Monatswerte, letzte 12 Monate gegen Vorjahr (Trend messen)
@@ -190,6 +192,115 @@ def create_operations(c, customer_id: str, spec: dict) -> list:
         asset.text = text
         ad.ad.responsive_search_ad.descriptions.append(asset)
     return ops
+
+
+def demand_gen_operations(c, customer_id: str, spec: dict, logo: bytes) -> list:
+    """Demand-Gen-Videokampagne als eine Transaktion: Budget, Kampagne (pausiert, Klickgebot), Anzeigengruppe nur
+    auf YouTube (In-Stream, In-Feed, Shorts) mit Orten und Sprache, Video- und Logo-Asset, Videoanzeige.
+    Demand Gen kennt Orte nur auf der Anzeigengruppe und ohne Umkreis: geo_target_constant ist eine Liste von
+    Orten oder Postleitzahlen (ein einzelner Wert geht auch)."""
+    ops = []
+
+    def op(kind: str):
+        o = c.get_type("MutateOperation")
+        ops.append(o)
+        return getattr(o, kind).create
+
+    # Temporäre Ressourcennamen von Hand (get_service bräuchte Zugangsdaten, so bleibt die Funktion offline testbar)
+    budget_rn = f"customers/{customer_id}/campaignBudgets/-1"
+    campaign_rn = f"customers/{customer_id}/campaigns/-2"
+    group_rn = f"customers/{customer_id}/adGroups/-3"
+    video_rn = f"customers/{customer_id}/assets/-4"
+    logo_rn = f"customers/{customer_id}/assets/-5"
+
+    b = op("campaign_budget_operation")
+    b.resource_name = budget_rn
+    b.name = f"{spec['campaign']} Gesamtbudget"
+    b.period = c.enums.BudgetPeriodEnum.CUSTOM_PERIOD
+    b.total_amount_micros = micros(spec["total_budget_chf"])
+    b.explicitly_shared = False
+
+    k = op("campaign_operation")
+    k.resource_name = campaign_rn
+    k.name = spec["campaign"]
+    k.status = c.enums.CampaignStatusEnum.PAUSED
+    k.advertising_channel_type = c.enums.AdvertisingChannelTypeEnum.DEMAND_GEN
+    k.campaign_budget = budget_rn
+    k.start_date_time = spec["start"]
+    k.end_date_time = spec["end"]
+    # Ziel-CPC: Demand Gen lehnt bei target_spend eine Obergrenze ab (OPERATION_NOT_PERMITTED_FOR_CONTEXT)
+    k.target_cpc.target_cpc_micros = micros(spec["max_cpc_chf"])
+    k.contains_eu_political_advertising = c.enums.EuPoliticalAdvertisingStatusEnum.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
+
+    g = op("ad_group_operation")
+    g.resource_name = group_rn
+    g.name = spec["ad_group"]
+    g.campaign = campaign_rn
+    g.status = c.enums.AdGroupStatusEnum.ENABLED
+    kanaele = g.demand_gen_ad_group_settings.channel_controls.selected_channels
+    kanaele.youtube_in_stream = kanaele.youtube_in_feed = kanaele.youtube_shorts = True
+    kanaele.discover = kanaele.gmail = kanaele.display = kanaele.maps = False
+
+    orte = spec["geo_target_constant"]
+    for ort in [orte] if isinstance(orte, str) else orte:
+        kr = op("ad_group_criterion_operation")
+        kr.ad_group = group_rn
+        kr.location.geo_target_constant = ort
+    kr = op("ad_group_criterion_operation")
+    kr.ad_group = group_rn
+    kr.language.language_constant = spec["language_constant"]
+
+    v = op("asset_operation")
+    v.resource_name = video_rn
+    v.name = f"{spec['campaign']} Video {spec['video_id']}"
+    v.type_ = c.enums.AssetTypeEnum.YOUTUBE_VIDEO
+    v.youtube_video_asset.youtube_video_id = spec["video_id"]
+    lg = op("asset_operation")
+    lg.resource_name = logo_rn
+    lg.name = f"{spec['campaign']} Logo"
+    lg.type_ = c.enums.AssetTypeEnum.IMAGE
+    lg.image_asset.data = logo
+
+    ad = op("ad_group_ad_operation")
+    ad.ad_group = group_rn
+    ad.status = c.enums.AdGroupAdStatusEnum.ENABLED
+    ad.ad.name = spec["campaign"]
+    ad.ad.final_urls.append(spec["final_url"])
+    info = ad.ad.demand_gen_video_responsive_ad
+    info.business_name.text = spec["business_name"]
+    video = c.get_type("AdVideoAsset")
+    video.asset = video_rn
+    info.videos.append(video)
+    bild = c.get_type("AdImageAsset")
+    bild.asset = logo_rn
+    info.logo_images.append(bild)
+    for feld in ("headlines", "long_headlines", "descriptions"):
+        for text in spec[feld]:
+            t = c.get_type("AdTextAsset")
+            t.text = text
+            getattr(info, feld).append(t)
+    return ops
+
+
+def cmd_demandgen(args) -> None:
+    spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
+    errors = check_demand_gen(spec)
+    if errors:
+        sys.exit("Kampagnenbeschreibung ungültig:\n  " + "\n  ".join(errors))
+    logo = (Path(args.spec).parent / spec["logo"]).read_bytes()
+    c = client()
+    request = c.get_type("MutateGoogleAdsRequest")
+    request.customer_id = args.customer
+    request.mutate_operations.extend(demand_gen_operations(c, args.customer, spec, logo))
+    request.validate_only = args.validate_only
+    response = c.get_service("GoogleAdsService").mutate(request=request)
+    if args.validate_only:
+        print(f"gültig: {len(request.mutate_operations)} Operationen, nichts angelegt")
+        return
+    for r in response.mutate_operation_responses:
+        for field in ("campaign_result", "ad_group_result", "ad_group_ad_result"):
+            if r._pb.HasField(field):
+                print(f"angelegt: {getattr(r, field).resource_name}")
 
 
 def cmd_create(args) -> None:
@@ -372,6 +483,10 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("spec", help="JSON-Datei mit Kampagne, Budget, Keywords und Anzeige")
     s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
     s.set_defaults(fn=cmd_create)
+    s = sub.add_parser("demandgen")
+    s.add_argument("spec", help="JSON-Datei der Videokampagne; logo als Pfad relativ zu dieser Datei")
+    s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
+    s.set_defaults(fn=cmd_demandgen)
     s = sub.add_parser("keywords")
     s.add_argument("file", help="Datei mit einem Keyword pro Zeile, - für stdin")
     s.add_argument("--geo", default="geoTargetConstants/2756", help="Standard Schweiz")
