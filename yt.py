@@ -18,7 +18,8 @@ Befehle:
     yt stats [--days 28]                            Aufrufe, Wiedergabeminuten, Ø Dauer, neue Abos je Video (Analytics API)
     yt update VIDEO-ID [--title …] [--description-file DATEI] [--tags "a,b,c"] [--language de] [--privacy private|unlisted|public]
     yt upload DATEI --title … [--description-file DATEI] [--tags …] [--language de] [--privacy private] [--thumbnail BILD]
-Kanal: --channel oder Umgebungsvariable YT_CHANNEL, Standard strainovic-it (UCejZg-WBrGzth2W-sLYCNzA). Der Login
+Kanal: --channel oder Umgebungsvariable YT_CHANNEL, Standard strainovic-it (UCejZg-WBrGzth2W-sLYCNzA); ein anderer
+Kanal braucht einen eigenen Login mit YT_TOKEN=<datei> (Pink Deko: ~/.config/youtube/pink-deko.json). Der Login
 läuft über Gorans Google-Konto; die API wählt den Kanal über `onBehalfOfContentOwner` nicht, darum beim Hochladen
 prüfen, dass der Kanal stimmt (`yt videos` zeigt den Kanal der Liste).
 """
@@ -32,7 +33,9 @@ from pathlib import Path
 
 CLIENT_SECRET = Path.home() / ".config" / "google-ads" / "client_secret.json"
 CONFIG_DIR = Path.home() / ".config" / "youtube"
-TOKEN = CONFIG_DIR / "token.json"
+# Je Brand-Konto ein eigener Token (die Auswahl des Kanals geschieht beim Login): YT_TOKEN zeigt auf eine andere
+# Datei, etwa ~/.config/youtube/pink-deko.json für den Kanal Pink Deko.
+TOKEN = Path(os.environ["YT_TOKEN"]) if os.environ.get("YT_TOKEN") else CONFIG_DIR / "token.json"
 SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
 # Statistik je Video (yt stats) über die YouTube Analytics API; ändert sich die Liste, braucht es `yt login`
 SCOPES = [SCOPE, "https://www.googleapis.com/auth/yt-analytics.readonly"]
@@ -43,7 +46,7 @@ def cmd_login(args) -> None:
     from google_auth_oauthlib.flow import InstalledAppFlow
     flow = InstalledAppFlow.from_client_secrets_file(str(CLIENT_SECRET), scopes=SCOPES)
     creds = flow.run_local_server(port=0, prompt="consent", access_type="offline", open_browser=not args.no_browser)
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    TOKEN.parent.mkdir(parents=True, exist_ok=True)
     old = os.umask(0o077)
     try:
         TOKEN.write_text(creds.to_json())

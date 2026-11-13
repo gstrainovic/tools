@@ -23,6 +23,22 @@ class Scopes(unittest.TestCase):
         self.assertIn("https://www.googleapis.com/auth/yt-analytics.readonly", yt.SCOPES)
 
 
+class TokenJeKanal(unittest.TestCase):
+    def test_yt_token_waehlt_eigene_token_datei_fuer_einen_anderen_kanal(self):
+        with mock.patch.dict("os.environ", {"YT_TOKEN": "/tmp/pink-deko.json"}):
+            modul = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(modul)
+        self.assertEqual(modul.TOKEN, Path("/tmp/pink-deko.json"))
+
+    def test_ohne_yt_token_bleibt_der_standard(self):
+        with mock.patch.dict("os.environ", {}, clear=False):
+            import os
+            os.environ.pop("YT_TOKEN", None)
+            modul = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(modul)
+        self.assertEqual(modul.TOKEN, Path.home() / ".config" / "youtube" / "token.json")
+
+
 class Stats(unittest.TestCase):
     def test_zeigt_aufrufe_je_video_mit_titel(self):
         analytics = mock.MagicMock()
