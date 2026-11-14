@@ -141,6 +141,10 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 - Klicks per Ref hängen in einem Tab im Hintergrund («waiting for element to be visible, enabled and stable»):
   darum alle Aktionen per JavaScript im Seitenkontext (oben, Punkt 2), auch Dateifelder per
   `page.setInputFiles('<selector>', '<pfad>')` statt Dateidialog.
+- **Nie einen Knopf klicken, der den Datei-Auswahldialog öffnet** («Dateien auswählen», «Durchsuchen»): Der
+  Dialog des Systems springt auf Gorans Bildschirm (verboten, Goran). Über die Playwright Extension scheitern
+  `setInputFiles` und `fileChooser.setFiles` zudem mit «Not allowed» (Google Ads, 14.11.2026). Uploads darum per
+  API des Systems; geht das nicht, Goran um den Upload bitten, statt im Browser zu probieren.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
   App-Geheimcodes) kann playwright-cli nicht ausfüllen: in einem Satz melden, Goran tippt es
   im offenen Dialog, danach weiterarbeiten.
