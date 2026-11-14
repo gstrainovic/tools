@@ -24,6 +24,14 @@ Bezug: `codex-abo-2026-11.md` (Nutzung von Codex, Gorans Entscheid 886a: ab 15.1
 Das Abo enthält kein Guthaben für die Gemini API: Die Clips per Skript (`vesna/action-dupes/werbung/youtube/omni_clips.py`)
 brauchen weiterhin die Abrechnung im Google-Cloud-Projekt.
 
+## Weitere Abos
+
+| Abo | Preis | Inhalt | Quelle |
+|---|---|---|---|
+| xAI Premium (SuperGrok) | USD 30 im Monat | Chat, Bilder, Videos (erst ab Premium), Grok-API und Build aus einem gemeinsamen Wochenkontingent ohne veröffentlichte Zahlen | x.ai/pricing; troiana.net/guides/grok |
+| xAI Plus | USD 8 im Monat | Bilder, keine Videos | genativity.com/guides/grok-imagine-pricing |
+| MiniMax M Plan Go | USD 264 im Jahr | Text, Bild, Sprache, Websuche, Agent MiniMax Code (CLI); Video erst in höheren Stufen laut Planseite (nicht eindeutig) | minimax.io/m-plan; platform.minimax.io/docs/m-plan/faq |
+
 ## Ungeprüft
 
 - Gleiche Qualität wie Codex bei Produktfotos (Etikett unverändert) und bei der Recherche-Gegenprobe: nur durch
