@@ -12,6 +12,10 @@ description: Allgemeine Arbeitsregeln für alle Repos - Hintergrundprozesse und 
   ihrer Befehlszeile, findet sich und endet nie. Wenn `pgrep -f` unvermeidbar ist, das Muster mit Klammer
   brechen (`pgrep -f "[r]endern.sh de"`).
 - Dieselbe Vorgabe gehört in jeden Agenten-Auftrag mit Hintergrundprozessen.
+- **Lange Aufrufe nie durch `grep`, `tail` oder `head` filtern** (Goran): Der Filter hält die Ausgabe bis zum Ende
+  zurück, ein hängender Aufruf bleibt so unsichtbar. Ausgabe in eine Datei schreiben, Python mit `-u`, und jedem
+  Netzaufruf ein Zeitlimit geben (`timeout 300 …` und `timeout=` im Client); bei API-Aufträgen, die Minuten
+  dauern, den Hintergrundmodus der API mit Abfrage nutzen statt einer offenen Verbindung.
 - In jeden Agenten-Auftrag: kein `rm` mit Platzhaltern und kein `cd …;` vor Befehlen, Zwischendateien je
   Durchgang in einen neuen Ordner mit absolutem Pfad im Scratchpad, nichts löschen. Grund: Die Rechteprüfung
   kann `cd x; rm -f q/*` nicht auflösen und fragt Goran bei jedem Aufruf.
