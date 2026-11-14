@@ -30,7 +30,9 @@ brauchen weiterhin die Abrechnung im Google-Cloud-Projekt.
 |---|---|---|---|
 | xAI Premium (SuperGrok) | USD 30 im Monat | Chat, Bilder, Videos (erst ab Premium), Grok-API und Build aus einem gemeinsamen Wochenkontingent ohne veröffentlichte Zahlen | x.ai/pricing; troiana.net/guides/grok |
 | xAI Plus | USD 8 im Monat | Bilder, keine Videos | genativity.com/guides/grok-imagine-pricing |
-| MiniMax M Plan Go | USD 264 im Jahr | Text, Bild, Sprache, Websuche, Agent MiniMax Code (CLI); Video erst in höheren Stufen laut Planseite (nicht eindeutig) | minimax.io/m-plan; platform.minimax.io/docs/m-plan/faq |
+| MiniMax M Plan Go | USD 22 im Monat (USD 220 bei Jahreszahlung) | Text, Bilder (H3 Image), Sprache, Websuche, Agent MiniMax Code samt TUI, API-Schlüssel für Agenten; **kein Video** | minimax.io/m-plan; platform.minimax.io/docs/m-plan/faq («Explore and Build also support the H3 video model») |
+| MiniMax M Plan Explore | USD 55 im Monat (USD 550 im Jahr) | wie Go mit dreifachem Kontingent und Video H3; Bild- und Videokontingent mit 5-Stunden- und Wochenfenster | ebenso |
+| MiniMax ohne Abo | je Aufruf vom Guthaben (Standard-API-Schlüssel), H3-Video USD 0.08 je s bei 768p | Abo-Schlüssel und Standard-Schlüssel sind getrennt und nicht austauschbar | platform.minimax.io/docs/m-plan/faq; wireflow.ai/blog/hailuo-pricing |
 
 ## Ungeprüft
 
