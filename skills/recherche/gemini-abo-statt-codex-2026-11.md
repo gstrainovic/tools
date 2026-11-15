@@ -31,7 +31,7 @@ Ein Forumsbeitrag nennt im Kaufdialog eine Mindestvorauszahlung von EUR 30 statt
 (discuss.ai.google.dev/t/…/189625); für die Schweiz ungeprüft. Ältere Forenberichte: Gutschrift im Projekt mit
 Vorauszahlung nicht nutzbar, nur über Vertex AI (discuss.ai.google.dev/t/…/170841, vor der Änderung vom 13.11.).
 
-## Abo oder Einzelabrechnung, mit Videos (Frage 1007)
+## Abo oder Einzelabrechnung, mit Videos (Gorans Entscheid 1007a: Gemini API ohne Abo)
 
 | Weg | Monatlich | Einmalig | Recherche, Bilder | Video per Skript |
 |---|---|---|---|---|
@@ -57,8 +57,9 @@ Eine Grounding-Anfrage ist ein einzelner Aufruf, Codex sucht und liest dagegen m
 Gegenprobe wäre also eher flacher. Etikett-Treue der API-Bilder ungeprüft.
 
 Omni veränderte im Fremdtest von Voyager die Form eines Produkts; die Etikett-Treue für unsere Flakons ist erst mit
-einem Probeclip geklärt. Das Abrechnungskonto unter g.strainovic@gmail.com ist geschlossen (Frage 1006); ob der neue
-Ablauf in AI Studio ein neues Konto anlegt, ungeprüft.
+einem Probeclip geklärt. Die Gemini API rechnet per Vorauszahlung in AI Studio ab:
+Ein offenes Abrechnungskonto mit Karte allein reicht nicht, ohne eingezahltes Guthaben antwortet sie mit 402
+«Your prepayment credits are depleted» (geprüft mit dem Schlüssel `~/.config/gemini/key`).
 
 ## Weitere Abos
 
