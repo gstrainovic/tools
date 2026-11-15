@@ -21,7 +21,28 @@ Bezug: `codex-abo-2026-11.md` (Nutzung von Codex, Gorans Entscheid 886a: ab 15.1
 | Videos (fehlt bei Codex ganz) | In der Gemini-App und in Flow (1'000 Flow-Credits im Monat zusätzlich zu 50 am Tag), Gemini Omni 1.2 Flash; nur Oberfläche. agy hat kein Videowerkzeug: Die Doku nennt als eingebautes Bildmodell nur Nano Banana 2 für das Bildwerkzeug, Videos gehen nur über einen MCP-Server mit kostenpflichtigem Gemini-API-Schlüssel oder Drittanbieter; im Forum steht eine offene Anfrage nach Veo im Abo | antigravity.google/docs/models; discuss.ai.google.dev (Feature Request «Native Imagen & Veo Tool Integration»); aifeatures.ai/does/google-antigravity-have-video-generation |
 | Kontingent | Keine veröffentlichten Zahlen: Erneuerung alle 5 Stunden bis zu einer Wochengrenze, bei Engpass AI-Credits kaufbar | antigravity.google/docs/plans; toolcolumn.com (10.11.2026) |
 
-Das Abo enthält kein Guthaben für die Gemini API: Clips per Skript brauchen weiterhin die Abrechnung im Google-Cloud-Projekt.
+Das Abo enthält USD 10 im Monat Guthaben für die Gemini API (je Gutschrift 12 Monate gültig, nur für den
+Hauptabonnenten), einzulösen in Google AI Studio. Es wird nur verbraucht, solange auf dem Abrechnungskonto eigenes
+Vorauszahlungsguthaben über 0 liegt: mindestens USD 5 einzahlen, die liegen bleiben (verfällt nach 12 Monaten, nicht
+erstattbar). Bei Gemini Omni 1.2 Flash (rund USD 1.04 je 15-s-Clip) reichen USD 10 für etwa neun Clips im Monat per
+Skript. Quellen: aistudio.google.com/learn/claim-google-ai-plan-credits-in-ai-studio; blog.google (13.11.2026,
+«Claim your Google Cloud Credits in Google AI Studio»); yuphora.com/news/google-ai-studio-cloud-credits-ai-pro-ultra.
+Ein Forumsbeitrag nennt im Kaufdialog eine Mindestvorauszahlung von EUR 30 statt USD 5
+(discuss.ai.google.dev/t/…/189625); für die Schweiz ungeprüft. Ältere Forenberichte: Gutschrift im Projekt mit
+Vorauszahlung nicht nutzbar, nur über Vertex AI (discuss.ai.google.dev/t/…/170841, vor der Änderung vom 13.11.).
+
+## Abo oder Einzelabrechnung, mit Videos (Frage 1007)
+
+| Weg | Monatlich | Einmalig | Recherche, Bilder | Video per Skript |
+|---|---|---|---|---|
+| ChatGPT Plus und Gemini API | CHF 20 | USD 5 (oder EUR 30) Vorauszahlung, rund USD 1 je Clip | Codex wie bisher | ja, Omni |
+| ChatGPT Plus und MiniMax API | CHF 20 | USD 25 Mindestaufladung (Drittquelle agento.host), USD 0.08 je s | Codex wie bisher | ja, H3 |
+| Google AI Pro allein | CHF 17 | USD 5 Einlage | agy statt Codex, Skripte umbauen, Qualität ungeprüft | ja, etwa neun Omni-Clips im Monat inbegriffen |
+| beide Abos | CHF 37 | USD 5 | Codex | ja |
+
+Omni veränderte im Fremdtest von Voyager die Form eines Produkts; die Etikett-Treue für unsere Flakons ist erst mit
+einem Probeclip geklärt. Das Abrechnungskonto unter g.strainovic@gmail.com ist geschlossen (Frage 1006); ob der neue
+Ablauf in AI Studio ein neues Konto anlegt, ungeprüft.
 
 ## Weitere Abos
 
