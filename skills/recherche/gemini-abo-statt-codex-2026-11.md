@@ -39,6 +39,22 @@ Vorauszahlung nicht nutzbar, nur über Vertex AI (discuss.ai.google.dev/t/…/17
 | ChatGPT Plus und MiniMax API | CHF 20 | USD 25 Mindestaufladung (Drittquelle agento.host), USD 0.08 je s | Codex wie bisher | ja, H3 |
 | Google AI Pro allein | CHF 17 | USD 5 Einlage | agy statt Codex, Skripte umbauen, Qualität ungeprüft | ja, etwa neun Omni-Clips im Monat inbegriffen |
 | beide Abos | CHF 37 | USD 5 | Codex | ja |
+| Gemini API allein, ohne Abo | geschätzt USD 5–15 nach Verbrauch | USD 5 Vorauszahlung | per Skript über die API, Codex-Aufrufe ersetzen | ja |
+| MiniMax API allein, ohne Abo | geschätzt USD 3–10 nach Verbrauch | USD 25 | per Skript über die API | ja |
+
+Die API-Preise einzeln (ai.google.dev/gemini-api/docs/pricing und platform.minimax.io/docs/pricing/overview, beide
+am 15.11.2026 nachgelesen):
+
+| | Gemini API | MiniMax API |
+|---|---|---|
+| Bild | Nano Banana 2.1 USD 0.034 (1K), Nano Banana Pro USD 0.134 | image-01 USD 0.0035, H3 Image ohne Preis in der Liste |
+| Recherche | Websuche (Grounding) 5'000 Anfragen im Monat gratis, dann USD 14 je 1'000; Gemini 4 Hydrogen USD 1.50 je Million Eingabe-Tokens | `web_search` USD 0.01 je Anfrage plus Tokens |
+| Video | Omni 1.2 Flash rund USD 0.07 je s (720p) | H3 USD 0.08 je s (768p), Lite USD 0.04 |
+
+Schätzung je Monat beim heutigen Verbrauch (75 Codex-Bilder vom 15.10. bis 14.11., `codex-abo-2026-11.md`),
+dazu angenommen 30 Gegenproben und 3 Clips: Gemini rund USD 2.50 Bilder (Pro 10), 1–2 Recherche, 3 Video. Ungeprüft:
+Eine Grounding-Anfrage ist ein einzelner Aufruf, Codex sucht und liest dagegen mehrere Seiten selbständig; die
+Gegenprobe wäre also eher flacher. Etikett-Treue der API-Bilder ungeprüft.
 
 Omni veränderte im Fremdtest von Voyager die Form eines Produkts; die Etikett-Treue für unsere Flakons ist erst mit
 einem Probeclip geklärt. Das Abrechnungskonto unter g.strainovic@gmail.com ist geschlossen (Frage 1006); ob der neue
