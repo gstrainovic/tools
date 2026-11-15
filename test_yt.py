@@ -25,10 +25,10 @@ class Scopes(unittest.TestCase):
 
 class TokenJeKanal(unittest.TestCase):
     def test_yt_token_waehlt_eigene_token_datei_fuer_einen_anderen_kanal(self):
-        with mock.patch.dict("os.environ", {"YT_TOKEN": "/tmp/Shop.json"}):
+        with mock.patch.dict("os.environ", {"YT_TOKEN": "/tmp/shop.json"}):
             modul = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(modul)
-        self.assertEqual(modul.TOKEN, Path("/tmp/Shop.json"))
+        self.assertEqual(modul.TOKEN, Path("/tmp/shop.json"))
 
     def test_ohne_yt_token_bleibt_der_standard(self):
         with mock.patch.dict("os.environ", {}, clear=False):

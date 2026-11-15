@@ -4,8 +4,8 @@
 # dependencies = ["faster-whisper>=1.2", "av<19"]
 # ///
 """
-sprachnachricht: Telegram-Sprachnachricht lokal mit faster-whisper umschreiben, nur Deutsch (Goran) oder Serbisch
-(shop). Gibt «de: …» oder «sr: …» aus.
+sprachnachricht: Telegram-Sprachnachricht lokal mit faster-whisper umschreiben, nur Deutsch oder Serbisch.
+Gibt «de: …» oder «sr: …» aus.
 
   sprachnachricht.py ~/.claude/channels/telegram/inbox/<datei>.oga [--genau]
 

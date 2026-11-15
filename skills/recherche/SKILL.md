@@ -73,9 +73,9 @@ Sonnet (Lesen und Vorsortieren) oder Haiku (reines Sammeln in festem Format), ni
 «Keine Claude-in-Chrome-Werkzeuge und kein Playwright; was so nicht lesbar ist, als ‹nicht geprüft›
 markieren.», sonst greifen sie zu den verfügbaren Chrome-Werkzeugen. Jede für das Ergebnis wichtige Stelle, die
 ein Agent als «nicht geprüft» oder «nicht lesbar» meldet, liest die Hauptsitzung vor dem Bericht selbst nach, auf
-dem Weg oben (curl, Jina, bei Bot-Schutz playwright-cli an Gorans Chrome). Grund: Bei der Herstellersuche für
-Shop blieb shop.example «nicht lesbar» liegen, und der Schweizer Vertrieb von Hersteller mit Händlerpreisen
-(vertrieb.example) wurde erst durch die Antwort des Herstellers bekannt.
+dem Weg oben (curl, Jina, bei Bot-Schutz playwright-cli an Gorans Chrome). Grund: Bei einer Herstellersuche
+blieb ein Shop «nicht lesbar» liegen, und der Schweizer Vertrieb mit Händlerpreisen wurde erst durch die Antwort des
+Herstellers bekannt.
 
 ## «Gibt es X irgendwo?»
 

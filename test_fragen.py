@@ -52,9 +52,9 @@ class Pruefen(unittest.TestCase):
         self.wurzel = Path(tempfile.mkdtemp())
 
     def test_verweis_auf_offene_frage_ist_veraltet_wenn_anderswo_entschieden(self):
-        # Fall Artikel-Set: Antwort beim Flakon eingetragen, das Set verweist weiter auf «offen in Frage»
+        # Antwort beim Einzelartikel eingetragen, das Set verweist weiter auf «offen in Frage»
         repo(self.wurzel, "shop", {"sortiment/todo.md": "- [ ] Set nicht veröffentlichen, offen in Frage 320\n",
-                                    "sortiment/AGENTS.md": "Flakon als Artikel verkaufen (Gorans Entscheid 320b)\n"})
+                                   "sortiment/AGENTS.md": "Einzelartikel verkaufen (Gorans Entscheid 320b)\n"})
         bericht = fragen.pruefen(self.wurzel)
         self.assertEqual([(b.datei.name, b.zeile, b.nummer) for b in bericht.veraltet], [("todo.md", 1, 320)])
 

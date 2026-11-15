@@ -7,7 +7,7 @@ Frage: Lohnt sich ChatGPT Pro 100 (100 USD im Monat) für Codex, oder reicht Plu
 - **Recherche-Gegenprobe:** `codex --search exec` im Hintergrund (Skill `recherche`, Stufe 3), kostet keine
   Claude-Tokens und findet kleine Anbieter aus Verzeichnissen, die ddgs und Exa nicht liefern (Beleg:
   `vergleich-2026-10.md`, virtuelle Mobilnummer nur von Codex gefunden).
-- **Bilder:** Produktfotos für Shop.ch (`shop/sortiment/fotos/ki-bild.sh`, `ki-set-bild.sh`) und
+- **Bilder:** Produktfotos für einen Onlineshop (Skripte in einem privaten Repo) und
   Bilder für Berichte (`codex exec … -i`).
 - **Chrome-Aufgaben in Codex:** nur GPT-6 Astra (find-jobs/AGENTS.md), seit Mitte Oktober in den Protokollen
   nicht genutzt.

@@ -32,8 +32,8 @@ Reihenfolge, das erste passende nehmen:
    Nach jedem Schritt den Zustand als Text zurückgeben (unten «Seitenzustand als Text») und Feldwerte zurücklesen
    (nur Längen bei Kennwörtern). Einzige Ausnahmen, je im Skill des Systems belegt: Chrome-Autofill fürs Kennwort
    (unten «Selbst einloggen») und Oberflächen, die JavaScript-Events nachweislich verwerfen (Upwork-Proposal-Textfelder,
-   Googles Search Console); dort gilt der dort beschriebene Weg. Vorbild: `find-jobs/kunden/kunde/strato_login.js`
-   und `strato_sftp_anlegen.js`.
+   Googles Search Console); dort gilt der dort beschriebene Weg. Vorbild: `strato_login.js` und
+   `strato_sftp_anlegen.js` im Kundenordner von find-jobs.
 3. **Skript** (Playwright mit `playwright-core`, `channel: 'chrome'`) nur für fertige, wiederholte Abläufe ohne
    Login und ohne fremde Website: E2E-Tests und Screenshots gegen localhost oder die eigene Website.
 **Claude in Chrome ist verboten** (Gorans Regel), auch als Rückfall: keine `mcp__claude-in-chrome__*`-Werkzeuge.

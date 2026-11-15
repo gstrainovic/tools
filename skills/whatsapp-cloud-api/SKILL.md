@@ -7,7 +7,7 @@ description: WhatsApp-Bot direkt bei Meta (Cloud API, ohne Twilio-Aufpreis) einr
 
 Referenz: `ki-tel` (Webhook `/meta` in `whatsapp_demo/app.py`, Tests in `tests/test_meta_whatsapp.py`, Einrichtung
 in `deploy/README.md`, Codeleser `deploy/code_aus_aufnahme.py`). Live auf +41 71 539 30 77 und, als zweite Nummer
-desselben WhatsApp-Kontos mit eigenem Anzeigenamen und eigenem Profil im Bot, +41 71 539 09 11 (Shop). Eine
+desselben WhatsApp-Kontos mit eigenem Anzeigenamen und eigenem Profil im Bot, eine zweite Nummer für einen Onlineshop. Eine
 weitere Nummer geht ganz per API (anlegen, Code per Anruf, registrieren), ohne Oberfläche; der Webhook erkennt sie
 an `metadata.phone_number_id`.
 

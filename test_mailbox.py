@@ -909,7 +909,7 @@ class Doppelversand(unittest.TestCase):
 
     FRUEHER = (b"From: Goran <info@strainovic-it.ch>\r\nTo: Info <INFO@shop.example>\r\n"
                b"Subject: Nachfolgemodul Zahlung\r\nDate: Fri, 16 Oct 2026 08:56:12 +0200\r\n"
-               b"User-Agent: Mozilla Thunderbird\r\n\r\nZwei Wege sehe ich: Zahlung anpassen.\r\n")
+               b"User-Agent: Mozilla Thunderbird\r\n\r\nZwei Wege sehe ich: Modul anpassen.\r\n")
 
     def conn(self, gesendet: dict[str, bytes], ordner=b'(\\HasNoChildren \\Sent) "/" "Sent"'):
         aufrufe = self.aufrufe = []
@@ -961,19 +961,19 @@ class Doppelversand(unittest.TestCase):
     SEND = ["send", "x", "--to", "info@shop.example", "--subject", "Nachfolgemodul", "--body-file", "BODY"]
 
     def test_neues_postfach_ohne_gesendet_ordner_sendet(self):
-        # info@Shop.ch, 21.10.2026: «Sent» entsteht erst beim ersten APPEND, SELECT antwortet NO
+        # info@neu.example, 21.10.2026: «Sent» entsteht erst beim ersten APPEND, SELECT antwortet NO
         conn = self.conn({})
         conn.select = lambda folder, readonly=False: ("NO", [b"Mailbox doesn't exist: Sent"])
         conn.uid = lambda *a: (_ for _ in ()).throw(AssertionError("SEARCH ohne SELECT"))
         with mock.patch.object(mb, "imap_connect", return_value=conn):
-            self.assertEqual(mb.sent_today(account(address="info@Shop.ch"), ["info@shop.example"]), [])
+            self.assertEqual(mb.sent_today(account(address="info@neu.example"), ["info@shop.example"]), [])
 
     def test_heute_schon_an_dieselbe_adresse_gesendet_sperrt_und_zeigt_beide_mails(self):
         code, smtp, out = self.senden(self.SEND, {"1367": self.FRUEHER})
         smtp.assert_not_called()
         self.assertNotEqual(code, 0)
         self.assertIn("Nachfolgemodul Zahlung", out)  # Betreff der früheren Mail
-        self.assertIn("Zwei Wege sehe ich: Zahlung anpassen.", out)  # Text der früheren Mail
+        self.assertIn("Zwei Wege sehe ich: Modul anpassen.", out)  # Text der früheren Mail
         self.assertIn("Neuer Entwurf: Zwei Wege sehe ich.", out)  # Text der neuen Mail
         self.assertIn("--doppel-geprueft", out)
         self.assertIn(("uid", "search", "SINCE " + mb.imap_date(mb.date.today())), self.aufrufe)
@@ -1000,7 +1000,7 @@ class Doppelversand(unittest.TestCase):
         code, smtp, out = self.senden(["reply", "x", "7", "--body-file", "BODY"], {"1367": self.FRUEHER})
         self.assertNotEqual(code, 0)
         smtp.assert_not_called()
-        self.assertIn("Zwei Wege sehe ich: Zahlung anpassen.", out)
+        self.assertIn("Zwei Wege sehe ich: Modul anpassen.", out)
 
     def test_gmail_sucht_im_gekennzeichneten_gesendet_ordner(self):
         # Gmail legt Gesendetes selbst ab (sent_folder = ""), der Ordner heisst je Sprache anders

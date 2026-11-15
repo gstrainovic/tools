@@ -51,7 +51,7 @@ class WindowsKonsole(unittest.TestCase):
         # Windows-Konsole ohne PYTHONUTF8: stdout kodiert cp1252, «→» und «ć» gibt es dort nicht
         roh = io.BytesIO()
         konsole = io.TextIOWrapper(roh, encoding="cp1252")
-        treffer = [("https://x.ch", "shop Đurić → Studio", "Auszug")]
+        treffer = [("https://x.ch", "Ana Đurić → Studio", "Auszug")]
         with mock.patch.object(recherche, "exa_suche", return_value=(treffer, 0.0)), \
                 mock.patch.object(recherche, "seite_holen", return_value=""), \
                 mock.patch.object(sys, "argv", ["recherche.py", "-q", "x", "--ohne-ddgs"]), \

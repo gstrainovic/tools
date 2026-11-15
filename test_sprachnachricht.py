@@ -45,7 +45,7 @@ class Umschrift(unittest.TestCase):
         (sprache, text), modell, _ = self.umschreiben({"de": 0.9, "sr": 0.05})
         self.assertEqual((sprache, modell.sprache, text), ("de", "de", "Hallo"))
 
-    def test_shop_spricht_serbisch_auch_wenn_whisper_kroatisch_meint(self):
+    def test_serbisch_auch_wenn_whisper_kroatisch_meint(self):
         (sprache, _), modell, _ = self.umschreiben({"hr": 0.5, "bs": 0.2, "sr": 0.1, "de": 0.15})
         self.assertEqual((sprache, modell.sprache), ("sr", "sr"))
 
