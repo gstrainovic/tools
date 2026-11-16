@@ -48,7 +48,11 @@ Neue oder geänderte Codex-Hookdefinitionen unter `/hooks` prüfen und freigeben
 Windows-PC: Die Skripte laufen in Git Bash und brauchen `jq` aus scoop (`scoop install jq`). Der scoop-Ordner steht
 dort nicht immer im PATH, darum setzt der Hookbefehl ihn selbst, etwa
 `PATH="/c/Users/g.strainovic/scoop/shims:$PATH" bash "C:/Users/g.strainovic/projects/tools/hooks/befunde-eingetragen.sh"`.
-Eingerichtet ist dort bisher nur `befunde-eingetragen.sh` (Stop).
+Eingerichtet sind dort alle Hooks aus `hooks/` ausser den Codex-Adaptern: PreToolUse für Bash (`browser-profil`,
+`lange-aufrufe-filter`, `bash-bearbeiten`, `skill-hinweis`), für Edit, Write und Claude in Chrome
+(`skill-hinweis`), für WebSearch und WebFetch (`erst-lokal`, `skill-hinweis`), für Agent und Workflow
+(`agent-auftrag`, `erst-lokal`, `modellwahl`), dazu UserPromptSubmit (`skill-hinweis`), PreCompact
+(`transkript-sichern`) und Stop (`befunde-eingetragen`). Das PowerShell-Werkzeug sehen die Bash-Hooks nicht.
 
 Codex meldet Shellbefehle als `Bash` mit `tool_input.command` und Patches als `apply_patch`
 mit dem Patch in demselben Feld. Die Matcher `Edit|Write` treffen auch Codex-Patches;
