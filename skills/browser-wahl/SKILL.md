@@ -179,7 +179,10 @@ anmelden und angehängt per CDP weiterarbeiten.
   weg (Bailaho, 18.10.2026).
 - Kästchen und Optionen per `element.click()` im Seitenkontext setzen und danach `checked` zurücklesen (Punkt 2
   oben). Knöpfe in Googles Oberflächen (Search Console) reagieren nur auf `page.mouse.click()` auf die Mitte der
-  `boundingBox()` (belegte Ausnahme). Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404;
+  `boundingBox()` (belegte Ausnahme). **Indexierung beantragen: fertiges Skript** `~/projects/tools/gsc_indexierung.ps1
+  -Domain <domain> -Url <url>, …` (nach `chrome-anhaengen --zeigen`, im Vordergrund, meldet je URL die Bestätigung
+  und bricht bei der ersten ohne ab); der folgende Ablauf ist darin umgesetzt.
+  Search-Console-URL-Prüfung: `…/search-console/inspect?…` direkt liefert 404;
   stattdessen in einem frisch per `tab-new` geöffneten Tab (in einem älteren Tab blieb das Suchfeld unsichtbar)
   `search.google.com/search-console?resource_id=sc-domain%3A<domain>` laden, `chrome-anhaengen --zeigen` (nur
   nach Gorans Ja im selben Gespräch, siehe «Soll Goran etwas klicken»),
