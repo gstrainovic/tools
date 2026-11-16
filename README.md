@@ -45,6 +45,11 @@ und `~/.codex/hooks.json`; projektspezifische Hooks kommen im jeweiligen Repo da
 Einstellungsdateien enthalten auch Zugangsdaten: nur den Schlüssel `hooks` lesen oder übertragen.
 Neue oder geänderte Codex-Hookdefinitionen unter `/hooks` prüfen und freigeben.
 
+Windows-PC: Die Skripte laufen in Git Bash und brauchen `jq` aus scoop (`scoop install jq`). Der scoop-Ordner steht
+dort nicht immer im PATH, darum setzt der Hookbefehl ihn selbst, etwa
+`PATH="/c/Users/g.strainovic/scoop/shims:$PATH" bash "C:/Users/g.strainovic/projects/tools/hooks/befunde-eingetragen.sh"`.
+Eingerichtet ist dort bisher nur `befunde-eingetragen.sh` (Stop).
+
 Codex meldet Shellbefehle als `Bash` mit `tool_input.command` und Patches als `apply_patch`
 mit dem Patch in demselben Feld. Die Matcher `Edit|Write` treffen auch Codex-Patches;
 die Skripte behandeln trotzdem den tatsächlichen Namen `apply_patch`. Agenten verwenden
