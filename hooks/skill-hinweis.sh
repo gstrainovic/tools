@@ -33,7 +33,7 @@ geladen() {
         | ($raw | if type == "string" then . as $x | (fromjson? // {command:$x}) else . end) as $i
         | ($n == "Skill" and $i.skill == $s)
           or ($n == "Read" and (($i.file_path // "") | endswith("/skills/" + $s + "/SKILL.md")))
-          or (($n | IN("Bash", "exec_command", "shell", "shell_command", "exec"))
+          or (($n | IN("Bash", "PowerShell", "exec_command", "shell", "shell_command", "exec"))
               and (($i.command // $i.cmd // "") | test("(^|[;&|(\\s\"])(cat|head|tail|bat|sed)\\s"))
               and (($i.command // $i.cmd // "") | contains("/skills/" + $s + "/SKILL.md"))))
     ' "$p" >/dev/null 2>&1 && return 0
@@ -49,7 +49,7 @@ hinzu() {
 }
 
 case "$werkzeug" in
-Bash)
+Bash | PowerShell)
   bevor="dieser Befehl läuft"
   cmd=$(jq -r '.tool_input.command // .tool_input.cmd // empty' <<<"$ein")
   # Wie bash-bearbeiten.sh: Heredoc-Inhalt und Text in Anführungszeichen (Commit-Nachrichten, Mailtexte) fallen weg.

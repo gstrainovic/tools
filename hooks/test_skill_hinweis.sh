@@ -29,4 +29,12 @@ fall "Subagent mit geladenem Skill schweigt" still a1 "" "$skill"
 fall "Subagent mit per Read gelesener SKILL.md schweigt" still a1 "" "$gelesen"
 fall "Subagent ohne Skill mahnt" hinweis a1 "" ""
 fall "Skill nur in fremdem Subagenten zählt nicht für die Hauptsitzung" hinweis "" "" "$skill"
+
+# Windows: dasselbe über das PowerShell-Werkzeug
+printf '\n' >"$tmp/leer.jsonl"
+aus=$(jq -n --arg t "$tmp/leer.jsonl" \
+  '{hook_event_name:"PreToolUse", tool_name:"PowerShell", tool_input:{command:"python3 suche/karriereseiten.py"},
+    transcript_path:$t}' | "$hier/skill-hinweis.sh")
+if grep -q "Skill stellenboersen-api laden" <<<"$aus"; then echo "ok   PowerShell-Werkzeug mahnt wie Bash"
+else echo "FAIL PowerShell-Werkzeug mahnt wie Bash"; fehler=1; fi
 exit $fehler
