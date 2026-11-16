@@ -1,5 +1,10 @@
 # Offene Punkte
 
+- Windows-PC: Die Hooks unter `hooks/` sehen nur das Bash-Werkzeug. Claude nutzt dort auch das PowerShell-Werkzeug
+  (`CLAUDE_CODE_USE_POWERSHELL_TOOL=1`); Befehle darüber laufen an `browser-profil`, `lange-aufrufe-filter`,
+  `bash-bearbeiten` und `skill-hinweis` vorbei. Prüfen, ob die Skripte `tool_input.command` des Werkzeugs
+  PowerShell sinnvoll lesen, dann den Matcher in `~/.claude/settings.json` auf `Bash|PowerShell` erweitern.
+
 - Windows-PC: Die Historie dieses Repos wurde neu geschrieben (Gorans Entscheid 1011a, Shop- und Kundenangaben
   entfernt). Dort `git fetch` und `git reset --hard origin/master` (vorher Uncommittetes sichern), dann `link.ps1`,
   damit die Skills temu und ricardo aus skills-privat verknüpft sind.
