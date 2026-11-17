@@ -50,6 +50,7 @@ CSC = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 ARBEITSDESKTOP = 1  # nullbasiert: «Desktop 2»
 WARTEN_FENSTER_S = 10
 WARTEN_TITEL_S = 5
+WARTEN_ERWEITERUNG_S = 5  # Windows: nach einem Kaltstart von Chrome, bis die Playwright Extension bereit ist
 
 
 def cli_lauf(args, env=None, timeout=None):
@@ -237,6 +238,9 @@ class WindowsDesktop:
     def chrome_starten(self):
         subprocess.Popen([CHROME_EXE, "--new-window", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    def chrome_hochfahren(self):
+        subprocess.Popen([CHROME_EXE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     def verschieben(self, hwnd: int, desktop: int):
         self.vd(f"/GetDesktop:{desktop}", f"/MoveWindowHandle:{hwnd}")
 
@@ -315,6 +319,18 @@ def main_windows() -> int:
     if not token.is_file():
         print(f"FEHLER: kein token in {token} (Skill browser-wahl, «Gorans Chrome anhängen»)", file=sys.stderr)
         return 1
+    if not vorhanden:
+        # Chrome läuft nicht: erst normal starten (Gorans Profil, seine Startseiten), sonst wäre das Arbeitsfenster
+        # sein einziges Fenster; dann warten, bis die Playwright Extension geladen ist.
+        desktop.chrome_hochfahren()
+        frist = time.monotonic() + WARTEN_FENSTER_S
+        while not desktop.chrome_fenster() and time.monotonic() < frist:
+            time.sleep(0.2)
+        vorhanden = desktop.chrome_fenster()
+        if not vorhanden:
+            print("FEHLER: Chrome startet nicht, kein Fenster erschienen, nicht angehängt", file=sys.stderr)
+            return 1
+        time.sleep(WARTEN_ERWEITERUNG_S)
     desktop.bereitstellen()
     if desktop.anzahl_desktops() < ARBEITSDESKTOP + 1:
         desktop.desktop_anlegen()

@@ -55,6 +55,12 @@ class FalscherDesktop:
         self.vorne = self.naechstes  # das neue Fenster bekommt den Fokus
         self.naechstes += 1
 
+    def chrome_hochfahren(self):
+        self.aufrufe.append("chrome hochfahren")
+        self.fenster[500] = 0  # Gorans wiederhergestelltes Fenster
+        self.titel[500] = "Neuer Tab - Google Chrome"
+        self.vorne = 500
+
     def verschieben(self, hwnd, desktop):
         self.aufrufe.append(f"move {hwnd} -> {desktop}")
         self.fenster[hwnd] = desktop
@@ -232,6 +238,26 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("token", fehler)
         self.assertNotIn("chrome --new-window", self.desktop.aufrufe)
+
+    def test_chrome_laeuft_nicht_wird_erst_gestartet_dann_angehaengt(self):
+        # Ohne laufenden Chrome öffnete --new-window das einzige Fenster; danach erst das Arbeitsfenster.
+        self.desktop.fenster.clear()
+        with mock.patch.object(ca, "WARTEN_ERWEITERUNG_S", 0):
+            rc, text, fehler = self.lauf()
+        self.assertEqual(rc, 0, fehler)
+        a = [x for x in self.desktop.aufrufe if not x.startswith(("focus", "switch"))]
+        self.assertEqual(a, ["chrome hochfahren", "bereitstellen", "chrome --new-window", "move 900 -> 1"])
+        self.assertEqual(self.desktop.fenster[500], 0, "Gorans Fenster bleibt auf Desktop 1")
+        self.assertEqual(self.tab_fenster, 900)
+
+    def test_chrome_startet_nicht_bricht_ab(self):
+        self.desktop.fenster.clear()
+        self.desktop.chrome_hochfahren = lambda: self.desktop.aufrufe.append("chrome hochfahren")
+        with mock.patch.object(ca, "WARTEN_FENSTER_S", 0.01):
+            rc, text, fehler = self.lauf()
+        self.assertEqual(rc, 1)
+        self.assertIn("Chrome startet nicht", fehler)
+        self.assertFalse(any(z.startswith("attach") for z in self.cli_aufrufe))
 
     def test_kein_neues_fenster_erschienen_bricht_ab(self):
         self.desktop.chrome_starten = lambda: self.desktop.aufrufe.append("chrome --new-window")
