@@ -106,6 +106,15 @@ class DemandGenOperationen(unittest.TestCase):
         # Demand Gen nimmt bei target_spend keine Obergrenze an; max_cpc_chf wird zum Ziel-CPC
         self.assertEqual(k.target_cpc.target_cpc_micros, 1_000_000)
 
+    def test_ohne_klickpreis_bietet_google_selbst(self):
+        # max_cpc_chf null: Klicks maximieren ohne Ziel, nur das Gesamtbudget begrenzt (Gorans Entscheid 1097a)
+        self.assertEqual(ads.check_demand_gen({**DG, "max_cpc_chf": None}), [])
+        ops = ads.demand_gen_operations(self.c, "123", {**DG, "max_cpc_chf": None}, b"PNG")
+        (k,) = [o.campaign_operation.create for o in ops if o._pb.HasField("campaign_operation")]
+        self.assertTrue(k._pb.HasField("target_spend"))
+        self.assertFalse(k._pb.HasField("target_cpc"))
+        self.assertEqual(k.target_spend.cpc_bid_ceiling_micros, 0)
+
     def test_gesamtbudget_ueber_den_zeitraum(self):
         (b,) = self.teil("campaign_budget_operation")
         self.assertEqual(b.total_amount_micros, 50_000_000)

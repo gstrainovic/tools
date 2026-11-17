@@ -228,8 +228,12 @@ def demand_gen_operations(c, customer_id: str, spec: dict, logo: bytes) -> list:
     k.campaign_budget = budget_rn
     k.start_date_time = spec["start"]
     k.end_date_time = spec["end"]
-    # Ziel-CPC: Demand Gen lehnt bei target_spend eine Obergrenze ab (OPERATION_NOT_PERMITTED_FOR_CONTEXT)
-    k.target_cpc.target_cpc_micros = micros(spec["max_cpc_chf"])
+    # Ziel-CPC: Demand Gen lehnt bei target_spend eine Obergrenze ab (OPERATION_NOT_PERMITTED_FOR_CONTEXT).
+    # max_cpc_chf null: Klicks maximieren ohne Ziel, Google bietet selbst, nur das Gesamtbudget begrenzt.
+    if spec["max_cpc_chf"] is None:
+        k.target_spend._pb.SetInParent()  # Klicks maximieren; target_cpc verlangt einen Wert (REQUIRED)
+    else:
+        k.target_cpc.target_cpc_micros = micros(spec["max_cpc_chf"])
     k.contains_eu_political_advertising = c.enums.EuPoliticalAdvertisingStatusEnum.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
 
     g = op("ad_group_operation")
