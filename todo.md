@@ -1,5 +1,10 @@
 # Offene Punkte
 
+- **Session `gchrome` holt das Arbeitsfenster auf Gorans Desktop (Befund 17.11.):** Bei der Meta-Einrichtung per
+  `run-code` zog Chrome das Fenster von Arbeitsfläche 2 mehrfach nach vorne. Vermutete, ungeprüfte Ursache: neue
+  Tabs per `page.context().newPage()` bzw. `tab-new` aktivieren das Fenster. Prüfen, welcher Aufruf es auslöst
+  (Fenster-ID aus `~/.config/playwright-extension/fenster-gchrome`, Window Calls `List` vor und nach je einem Aufruf),
+  dann im Skill `browser-wahl` festhalten bzw. in `chrome_anhaengen.py` abfangen.
 
 - Linux-Laptop: Die Historie dieses Repos wurde am 17.11. auf dem Windows-PC erneut neu geschrieben (nach Gorans
   Entscheid 1011a auch für Frage 1085: Repo-Name der Produktfotos und Shop-Domain entfernt). Dort `git fetch` und
