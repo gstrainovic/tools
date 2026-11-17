@@ -55,11 +55,12 @@ für `npx skills`); eine vorhandene echte Datei wird als `<ziel>.vor-link-<Zeit>
 | `mithoeren.py` | Live-Umschrift eines Online-Meetings (Mikrofon = Goran, Lautsprecher = Gegenüber) mit Voxtral in eine wachsende Textdatei, die Claude Code per Monitor mitliest; mit `--ton` bleibt das Gespräch als Stereo-Opus zum Nachhören von Hörfehlern; mit `--nachher <ton>` schreibt es diese Tondatei nach dem Meeting je Kanal am Stück neu um (trifft mehr als live; Ablauf im Skill meeting-hilfe); als `~/.local/bin/mithoeren` verknüpft. Namen von Kunden nur beim Aufruf per `--begriffe`, nie hier im öffentlichen Repo |
 | `test_mithoeren.py` | Tests mit erzeugten WAV-Stücken, falscher Umschrift und Attrappen für ffmpeg und httpx (`uv run --python 3.13 python -m unittest test_mithoeren`) |
 | `bildschirmaufnahme.py` | Bildschirm während eines Meetings in mp4-Stücken aufnehmen (GNOME Shell per D-Bus, kein Dialog, ohne Ton), damit Claude Code Standbilder von geteilten Bildschirmen ziehen kann; neben `mithoeren` starten, als `~/.local/bin/bildschirmaufnahme` verknüpft; Details im Skill screenshots |
-| `wartungsheft-cost-watch.sh` | Kostenwächter für das OpenStack-Projekt bei Infomaniak (schätzt Monatskosten, mailt über Limit, legt abgeschaltete Dev-Instanzen per `dev-instanz-stilllegen.sh` still), als `~/.local/bin/wartungsheft-cost-watch` verknüpft; Aufruf im Tagescheck von find-jobs, Details im Skill infomaniak |
+| `wartungsheft-cost-watch.sh` | Kostenwächter für das OpenStack-Projekt bei Infomaniak (schätzt Monatskosten, mailt über Limit, legt abgeschaltete Dev-Instanzen per `dev-instanz-stilllegen.sh` still), als `~/.local/bin/wartungsheft-cost-watch` verknüpft; Aufruf im Tagescheck von find-jobs, Details im Skill infomaniak. Darf Git-Bash `curl` nicht ausführen (Windows-Firmen-PC), mailt es über `curl.exe` von Windows; Tests `bash tests/test-cost-watch.sh` |
 | `chrome-policy/` | Chrome-Richtlinie, die die Playwright Extension ohne Klick installiert (nach `/etc/opt/chrome/policies/managed/`) |
 | `.bashrc` | Shell-Aliase, wird von `~/.bashrc` gesourced |
 | `setup.sh` | Einrichtungs-Script für neuen PC |
 | `link.sh` | Verknüpfungen für Scripts und Skills |
+| `link.ps1` | Windows: Skills als Junction, dazu Starter für Git-Bash in `~\.local\bin` (`gsc`, `ads`, `bing`, `fragen`, `chrome-anhaengen`, `wartungsheft-cost-watch`, `mailbox` über `find-jobs\.secrets\mailbox`); nur aus Git-Bash aufrufbar, Python findet sie per `subprocess` nicht |
 | `skills/` | User-Skills für Claude Code, je Ordner eine `SKILL.md` |
 | `mcps.json` | MCP-Server-Konfigurationen (aus `~/.claude.json`) |
 | `tests/` | Konsistenz-Tests für Doku, Scripts und Skills |
