@@ -83,3 +83,8 @@ Ein offenes Abrechnungskonto mit Karte allein reicht nicht, ohne eingezahltes Gu
 
 Codex-Aufrufe stehen in drei Bildskripten eines privaten Repos, im Skill
 `recherche` (SKILL.md, Stufe 3) und in den Hooks `befunde-eingetragen.sh` (lässt `codex exec` durch) samt Tests.
+
+Umgesetzt am 17.11.2026: Bilder über `gemini-nano-banana-2.1` (2K, rund USD 0.065 je Bild; Etiketten so treu wie
+Codex, Ergänzungen freier, Probe im privaten Repo der Produktfotos), Gegenprobe per
+`recherche.py --gegenprobe` mit Gemini 3.8 Flash und Google-Suche (rund USD 0.02 je Frage), Ausnahme für
+`codex exec` im Hook entfernt.

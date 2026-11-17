@@ -54,10 +54,11 @@ letzte="Fertig. Was nicht aufgeht: 130 statt 100."
 fall "Schlussbericht «nicht aufgeht» mit todo.md-Änderung läuft durch" frei false "$nutzer" "$todo_edit" "$ohne"
 letzte="Fertig. **Befunde** - Der Export ist kaputt."
 fall "Codex-Protokoll erkennt TODO-Änderung seit Nutzernachricht" frei false "$codex_nutzer" "$codex_todo_edit" "$codex_bericht"
-# codex exec (Recherche mit «nichts eintragen», Entscheid 4a): sonst landet nur die Meta-Antwort in der -o-Datei
+# Die Recherche-Gegenprobe läuft über die Gemini API (recherche.py --gegenprobe, Gorans Entscheid 1007a), nicht mehr
+# als codex exec; keine Ausnahme mehr für codex exec, Befunde ohne todo.md blockieren in jeder Codex-Sitzung.
 codex_exec_meta='{"type":"session_meta","payload":{"originator":"codex_exec","source":"exec"}}'
 codex_cli_meta='{"type":"session_meta","payload":{"originator":"codex_cli_rs","source":"cli"}}'
-fall "codex exec mit Befund läuft durch" frei false "$codex_exec_meta" "$codex_nutzer" "$codex_bericht"
+fall "codex exec mit Befund blockiert wie jede Sitzung" block false "$codex_exec_meta" "$codex_nutzer" "$codex_bericht"
 fall "interaktives Codex mit Befund blockiert weiterhin" block false "$codex_cli_meta" "$codex_nutzer" "$codex_bericht"
 
 for eingabe in '{}' "{\"transcript_path\":\"$tmp/fehlt.jsonl\"}"; do

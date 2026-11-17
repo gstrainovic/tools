@@ -46,6 +46,51 @@ class Exa(unittest.TestCase):
         self.assertEqual(kosten, 0.007)
 
 
+GEMINI = {
+    "candidates": [{
+        "content": {"parts": [{"text": "Anbieter A in 9000 St. Gallen bietet es an [1]."}]},
+        "groundingMetadata": {
+            "webSearchQueries": ["spray tanning st. gallen", "sprühbräune ostschweiz"],
+            "groundingChunks": [{"web": {"uri": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/x",
+                                         "title": "anbieter-a.ch"}}]}}],
+    "usageMetadata": {"promptTokenCount": 1000, "candidatesTokenCount": 400, "thoughtsTokenCount": 600}}
+
+
+class Gegenprobe(unittest.TestCase):
+    """Stufe 3 im Skill recherche: Gemini mit Google-Suche statt Codex (Gorans Entscheid 1007a)."""
+
+    def test_anfrage_sucht_bei_google_und_verlangt_quellen(self):
+        a = recherche.gemini_anfrage("Gibt es Spray-Tanning in St. Gallen?")
+        self.assertEqual(a["tools"], [{"google_search": {}}])
+        text = a["contents"][0]["parts"][0]["text"]
+        self.assertIn("Gibt es Spray-Tanning in St. Gallen?", text)
+        self.assertIn("Quelle", text)
+
+    def test_antwort_quellen_suchanfragen_und_kosten(self):
+        g = recherche.gemini_auslesen(GEMINI)
+        self.assertEqual(g["text"], "Anbieter A in 9000 St. Gallen bietet es an [1].")
+        self.assertEqual(g["quellen"], [("anbieter-a.ch", "https://vertexaisearch.cloud.google.com/grounding-api-redirect/x")])
+        self.assertEqual(g["suchen"], 2)
+        # 1000 × 0.75 + (400 + 600) × 3.75, je pro Million Tokens (Gemini 3.8 Flash bis 31.12.2026)
+        self.assertAlmostEqual(g["kosten"], 0.00075 + 0.00375)
+
+    def test_gegenprobe_allein_ohne_ddgs_und_exa(self):
+        roh = io.BytesIO()
+        aus = io.TextIOWrapper(roh, encoding="utf-8")
+        with mock.patch.object(recherche, "gemini_gegenprobe", return_value=recherche.gemini_auslesen(GEMINI)) as gp, \
+                mock.patch.object(recherche, "exa_suche", side_effect=AssertionError("Exa aufgerufen")), \
+                mock.patch.object(recherche, "ddgs_suche", side_effect=AssertionError("ddgs aufgerufen")), \
+                mock.patch.object(sys, "argv", ["recherche.py", "--gegenprobe", "Gibt es X?"]), \
+                mock.patch.object(sys, "stdout", aus), \
+                mock.patch.object(sys, "stderr", io.StringIO()):
+            recherche.main()
+            aus.flush()
+        gp.assert_called_once_with("Gibt es X?")
+        ausgabe = roh.getvalue().decode("utf-8")
+        self.assertIn("Anbieter A", ausgabe)
+        self.assertIn("[1] anbieter-a.ch https://vertexaisearch", ausgabe)
+
+
 class WindowsKonsole(unittest.TestCase):
     def test_tabelle_auf_cp1252_konsole_bricht_nicht_ab(self):
         # Windows-Konsole ohne PYTHONUTF8: stdout kodiert cp1252, «→» und «ć» gibt es dort nicht

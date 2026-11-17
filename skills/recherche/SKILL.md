@@ -1,6 +1,6 @@
 ---
 name: recherche
-description: Webrecherche günstig und belegt - Suche per Skript (ddgs, Exa) mit Auswertung per Skript, Codex mit Websuche als Gegenprobe, Jina Reader für Einzelseiten, wann ein Recherche-Agent (Sonnet) und mit welchem Auftrag, «Gibt es X irgendwo?», ganze Websites und Listen durchsuchen. Laden, bevor recherchiert, nachgeschlagen (Anbieter, Preise, Konkurrenz, Vorschriften, Doku), WebSearch oder WebFetch benutzt oder ein Recherche-Agent gestartet wird.
+description: Webrecherche günstig und belegt - Suche per Skript (ddgs, Exa) mit Auswertung per Skript, Gemini mit Google-Suche als Gegenprobe, Jina Reader für Einzelseiten, wann ein Recherche-Agent (Sonnet) und mit welchem Auftrag, «Gibt es X irgendwo?», ganze Websites und Listen durchsuchen. Laden, bevor recherchiert, nachgeschlagen (Anbieter, Preise, Konkurrenz, Vorschriften, Doku), WebSearch oder WebFetch benutzt oder ein Recherche-Agent gestartet wird.
 ---
 
 # Recherche
@@ -24,18 +24,21 @@ ganze Seiten im Modell:
    Rohausgabe in eine Datei im Scratchpad schreiben und mit `rg`/`awk` nur die Zeilen mit Preisen lesen; das
    Ergebnis kommt ins Repo (Abschnitt «Ergebnis speichern»).
 2. **Exa-Stufe `deep`** (12 USD je 1000 Anfragen, `deep-reasoning` 15, `instant` 4, `fast`/`auto` 7; Doku
-   https://docs.exa.ai/reference/search) für Fragen, die `auto`, ddgs und Codex nicht beantworten: Sie liest den
+   https://docs.exa.ai/reference/search) für Fragen, die `auto`, ddgs und die Gegenprobe nicht beantworten: Sie liest den
    Inhalt der Seiten und findet Einträge, die nur im Seitentext stehen (Moneyhouse-Löschungen, Inserattexte,
    Anbieter ohne Stichwort im Titel). Mit `"contents":{"text":{"maxCharacters":1500}}` liefert sie gleich den
    Seitentext, auch bei Seiten, die Jina und curl nicht lesen (immobilier.ch, lozart.ch). `deep-reasoning` brachte
    im Test dieselben Seiten wie `deep` für mehr Geld; `deep-lite` steht in der Doku, nicht in der Preistabelle.
    **Exa `/contents`** (1 USD je 1000 Seiten) holt den Text bekannter URLs, die Jina nicht lesen kann
    (ricardo, kleinanzeigen, moneyhouse); tutti und laendleanzeiger kann auch Exa nicht.
-3. **Codex mit Websuche** parallel im Hintergrund: läuft über Gorans ChatGPT-Abo, kostet keine Claude-Tokens und
-   findet kleine Anbieter über Verzeichnisse (local.ch, search.ch), die ddgs und Exa nicht liefern. Im Auftrag
-   «Nur lesen, nichts in Dateien eintragen, keine TODO-Einträge, keine Commits» schreiben. Der Stop-Hook
-   `befunde-eingetragen.sh` lässt `codex exec` durch, die Antwort steht also in der `-o`-Datei. Enthält sie
-   nur eine Meta-Antwort, steht die eigentliche im stdout-Log im `codex`-Block vor `hook: Stop Blocked`.
+3. **Gegenprobe per Gemini mit Google-Suche** parallel im Hintergrund (Gorans Entscheid 1007a, ersetzt Codex):
+   `recherche.py --gegenprobe "<Frage>"` schickt die Frage an Gemini 3.8 Flash mit Grounding über die Gemini API;
+   die Antwort nennt je Aussage die Quelle und markiert Ungeprüftes, darunter die Quellen als Liste (Titel ist die
+   Domain, die URL eine Weiterleitung von Google). Kostet keine Claude-Tokens: rund USD 0.02 je Frage an Tokens,
+   die Google-Suchen sind bis 5000 im Monat gratis (aistudio.google.com/docs/pricing). Schlüssel
+   `~/.config/gemini/key`, Vorauszahlung in AI Studio. Sie findet kleine Anbieter, die ddgs und Exa nicht liefern;
+   sucht aber in einem Aufruf statt Seiten selbständig zu lesen, darum Funde der Hauptaussage selbst an der Seite
+   prüfen (Abschnitt «Gibt es X irgendwo?»).
 
 Grund: Im Vergleichstest (`vergleich-2026-10.md` neben dieser Datei, dort auch geprüfte Such-APIs und
 GitHub-Werkzeuge) belegten Exa und ddgs mit Skript vier Preise für rund 8000 Tokens, ein Sonnet-Agent mit WebSearch
@@ -46,8 +49,9 @@ Befehle:
   -d '{"query":"…","type":"deep","numResults":10,"userLocation":"CH","contents":{"highlights":{"numSentences":3}}}'`;
   die Antwort nennt die Kosten in `costDollars`. Inhalte: `https://api.exa.ai/contents` mit
   `{"urls":["…"],"text":{"maxCharacters":4000}}`.
-- Codex: `codex --search exec --skip-git-repo-check -s read-only "<Frage, Quelle je Aussage, Ungeprüftes
-  markieren>" -o <scratchpad>/codex.md`.
+- Gegenprobe: `~/projects/tools/recherche.py --gegenprobe "<Frage>" > <scratchpad>/gegenprobe.md` (unter Windows
+  `uv run --script …`); Suchanfragen und Kosten stehen auf stderr. Zusammen mit `-q` laufen beide Stufen in einem
+  Aufruf.
 
 ## Ergebnis speichern
 
@@ -80,9 +84,10 @@ Herstellers bekannt.
 ## «Gibt es X irgendwo?»
 
 Bei Anbietern, Angeboten oder Produkten, die es vielleicht nicht gibt: nie aus einer Quelle allein «gibt es nicht»
-schliessen, immer ddgs, Exa (mehrere Formulierungen und Sprachen) und Codex. Funde der Hauptaussage selbst an der
-Anbieterseite prüfen (curl, Jina), bevor sie gemeldet werden. Grund: Bei der Suche nach einer virtuellen Schweizer
-Mobilnummer mit Sprache fanden WebSearch und Exa nichts, Codex das Angebot.
+schliessen, immer ddgs, Exa (mehrere Formulierungen und Sprachen) und die Gegenprobe. Funde der Hauptaussage selbst
+an der Anbieterseite prüfen (curl, Jina), bevor sie gemeldet werden. Grund: Bei der Suche nach einer virtuellen
+Schweizer Mobilnummer mit Sprache fanden WebSearch und Exa nichts, Codex ein Angebot; die Gemini-Gegenprobe fand
+dazu Zadarma (+41 78, Probelauf 17.11.2026).
 
 ## Ganze Websites und Listen
 

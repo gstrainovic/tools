@@ -11,6 +11,11 @@ Stichwortstellen ausgeben, damit das Modell keine ganzen Seiten liest (Skill rec
 
 Optionen: -r Region für ddgs (Standard ch-de), -m Treffer je Anfrage und Quelle, --ohne-exa, --ohne-ddgs,
 --stellen Anzahl Stichwortstellen je Seite (Standard 3), --json für die Rohdaten. Exa-Schlüssel in ~/.config/exa/key.
+
+  recherche.py --gegenprobe "Gibt es Spray-Tanning in St. Gallen? Anbieter mit Preis"
+
+Gegenprobe (Stufe 3): Gemini 3.8 Flash mit Google-Suche beantwortet die Frage mit Quelle je Aussage; allein oder
+zusammen mit -q. Schlüssel in ~/.config/gemini/key, Vorauszahlung in AI Studio.
 """
 import argparse
 import html
@@ -90,6 +95,49 @@ def ddgs_suche(frage: str, anzahl: int, region: str) -> list[tuple[str, str, str
         return []
 
 
+GEMINI_MODELL = "gemini-3.8-flash"
+# USD je Million Tokens bis 31.12.2026 (ab 2027: 1.50 und 7.50); Google-Suche 5000 Anfragen im Monat gratis, dann
+# USD 14 je 1000 (aistudio.google.com/docs/pricing).
+GEMINI_PREIS_EIN, GEMINI_PREIS_AUS = 0.75, 3.75
+GEGENPROBE = ("{frage}\n\nSuche im Web und antworte auf Deutsch. Nenne zu jeder Aussage die Quelle (Anbieter, Seite) "
+              "und markiere, was du nicht an einer Quelle prüfen konntest, als ungeprüft. Nur Fakten aus der Suche, "
+              "keine Vermutungen als Tatsache.")
+
+
+def gemini_anfrage(frage: str) -> dict:
+    return {"contents": [{"role": "user", "parts": [{"text": GEGENPROBE.format(frage=frage)}]}],
+            "tools": [{"google_search": {}}]}
+
+
+def gemini_auslesen(antwort: dict) -> dict:
+    kandidat = (antwort.get("candidates") or [{}])[0]
+    text = "".join(t.get("text", "") for t in kandidat.get("content", {}).get("parts", []) if not t.get("thought"))
+    meta = kandidat.get("groundingMetadata", {})
+    quellen = [(c["web"].get("title", ""), c["web"].get("uri", "")) for c in meta.get("groundingChunks", []) if "web" in c]
+    n = antwort.get("usageMetadata", {})
+    aus = n.get("candidatesTokenCount", 0) + n.get("thoughtsTokenCount", 0)
+    kosten = (n.get("promptTokenCount", 0) * GEMINI_PREIS_EIN + aus * GEMINI_PREIS_AUS) / 1e6
+    return {"text": text, "quellen": quellen, "suchen": len(meta.get("webSearchQueries", [])), "kosten": kosten}
+
+
+def gemini_gegenprobe(frage: str) -> dict:
+    """Gegenprobe per Gemini mit Google-Suche (Grounding), ersetzt `codex --search exec` (Gorans Entscheid 1007a)."""
+    schluessel = (Path.home() / ".config/gemini/key").read_text().strip()
+    req = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODELL}:generateContent",
+        data=json.dumps(gemini_anfrage(frage)).encode(),
+        headers={"x-goog-api-key": schluessel, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=300) as r:
+        return gemini_auslesen(json.load(r))
+
+
+def gegenprobe_ausgeben(g: dict) -> None:
+    print(g["text"].strip() + "\n\nQuellen (Weiterleitungen von Google, Titel = Domain):")
+    for i, (titel, url) in enumerate(g["quellen"], 1):
+        print(f"[{i}] {titel} {url}")
+    print(f"\nGemini: {g['suchen']} Suchanfragen, rund {g['kosten']:.4f} USD Tokens", file=sys.stderr)
+
+
 def seite_holen(url: str) -> str:
     try:
         r = subprocess.run(["curl", "-sL", "--max-time", "20", "-A", "Mozilla/5.0 (X11; Linux x86_64) Chrome/130",
@@ -101,7 +149,8 @@ def seite_holen(url: str) -> str:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("-q", "--frage", action="append", required=True)
+    p.add_argument("-q", "--frage", action="append")
+    p.add_argument("--gegenprobe")
     p.add_argument("-r", "--region", default="ch-de")
     p.add_argument("-m", "--max", type=int, default=8)
     p.add_argument("--muster")
@@ -112,6 +161,12 @@ def main() -> None:
     a = p.parse_args()
     # Windows-Konsole ohne PYTHONUTF8 kodiert cp1252; Zeichen ausserhalb davon dürfen die Ausgabe nicht abbrechen
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if a.gegenprobe:
+        gegenprobe_ausgeben(gemini_gegenprobe(a.gegenprobe))
+    if not a.frage:
+        if not a.gegenprobe:
+            p.error("-q oder --gegenprobe angeben")
+        return
 
     gefunden: dict[str, dict] = {}
     kosten = 0.0
