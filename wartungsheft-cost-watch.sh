@@ -7,6 +7,11 @@
 # Preise CHF/Stunde laut Infomaniak-Preisliste (September 2026); unbekannte Flavors lösen einen Alarm aus.
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
+# Windows-Firmen-PC: Git-Bash darf sein curl nicht ausführen (Exit 126), dort curl.exe von Windows
+WINDOWS_CURL=${WINDOWS_CURL:-/c/Windows/System32/curl.exe}
+if ! curl --version >/dev/null 2>&1 && [ -x "$WINDOWS_CURL" ]; then
+  curl() { "$WINDOWS_CURL" "$@"; }
+fi
 CLOUD=PCP-CTPZLR8-dc3-a
 LIMIT_CHF=${LIMIT_CHF:-60}  # Produktion und Dev-Instanzen wartungsheft-dev und dms-dev (je rund 13.5 CHF laufend) plus Suchlauf find-jobs-lauf (a2-ram4-disk20, rund 11 CHF mit IPv4); Reserve für Snapshots und IPv4
 MAIL_TO=${MAIL_TO:-g.strainovic@gmail.com}
