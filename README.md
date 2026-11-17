@@ -34,6 +34,7 @@ noch eigenständige Terminal-Scripts.
 | `hooks/browser-profil.sh` | Claude-Hook vor Bash: sperrt frische oder kopierte Browser-Profile (`playwright-cli … open`, `state-load`, `chrome-sitzung`); erlaubt ist nur das Anhängen an Gorans Chrome (`chrome-anhaengen`). Tests `bash hooks/test_browser_profil.sh` |
 | `hooks/skill-hinweis.sh` | Claude-/Codex-Hook vor Shellbefehlen, Dateiänderungen, Browserarbeit und bei jedem Prompt: erinnert an passende, noch nicht gelesene Skills |
 | `hooks/befunde-eingetragen.sh` | Stop-Hook für beide Programme: verlangt bei Befunden eine TODO-Änderung seit der letzten Nutzernachricht, liefert auch bei Freigabe JSON |
+| `hooks/fragen-nummer.sh` | Stop-Hook für beide Programme: lehnt eine Frage an Goran ohne Nummer aus `fragen neu` ab («**Frage:**» oder Optionen «- a)» ohne «Frage <Nummer>»). Tests `bash hooks/test_fragen_nummer.sh` |
 | `hooks/transkript-sichern.sh` | PreCompact-Hook für beide Programme: sichert `transcript_path` aus der JSON-Eingabe unter einem eindeutigen Namen |
 | `hooks/security-guidance-codex.py` | Zusätzlicher Codex-PostToolUse-Hook für `^apply_patch$`: reicht jede Patchdatei als Edit/Write an die Regeln des aktivierten Plugins security-guidance weiter |
 | `hooks/codex-hook-ausgabe.py` | Entfernt die in Codex unzulässigen Claude-Telemetriefelder `metrics` und `rewakeSummary`; richtet den Adapter in den Codex-Startskripten von security-guidance und claude-security ein |
@@ -52,7 +53,7 @@ Eingerichtet sind dort alle Hooks aus `hooks/` ausser den Codex-Adaptern: PreToo
 `lange-aufrufe-filter`, `rekursive-suche`, `bash-bearbeiten`, `skill-hinweis`), für Edit, Write und Claude in Chrome
 (`skill-hinweis`), für WebSearch und WebFetch (`erst-lokal`, `skill-hinweis`), für Agent und Workflow
 (`agent-auftrag`, `erst-lokal`, `modellwahl`), dazu UserPromptSubmit (`skill-hinweis`), PreCompact
-(`transkript-sichern`) und Stop (`befunde-eingetragen`). Die Shell-Hooks lesen `tool_input.command` beider
+(`transkript-sichern`) und Stop (`befunde-eingetragen`, `fragen-nummer`). Die Shell-Hooks lesen `tool_input.command` beider
 Werkzeuge gleich; `skill-hinweis` behandelt `PowerShell` wie `Bash`.
 
 Codex meldet Shellbefehle als `Bash` mit `tool_input.command` und Patches als `apply_patch`
@@ -94,6 +95,7 @@ uv run --no-project python -m unittest discover -s tests -p 'test_hook_kompatibi
 uv run --no-project python -m unittest discover -s tests -p 'test_security_guidance_codex.py'
 uv run --no-project python -m unittest discover -s tests -p 'test_codex_hook_ausgabe.py'
 bash hooks/test_befunde_eingetragen.sh
+bash hooks/test_fragen_nummer.sh
 ```
 
 Die Prüfung des installierten Stop-Hooks verwendet den Ausgabevertrag der tatsächlich installierten
