@@ -10,6 +10,11 @@
   entsteht ein zweiter Entwurf, wenn Goran den ersten schon aus Thunderbird gesendet hat (so bei den
   Shop-Erstkontakten in find-jobs, CRM #1880 bis #1882).
 
+- Commit 46d51da nennt in `skills/recherche/gemini-abo-statt-codex-2026-11.md` Namen und Pfad des privaten Repos der
+  Produktfotos; 6af5ae2 hat es entfernt, in der öffentlichen Historie steht es noch. Offene Frage 1085: (a) so
+  lassen, (b) Historie neu schreiben und erzwungen hochladen wie bei Entscheid 1011a (Empfehlung, weil der Name
+  eine Person nennt), danach auf dem anderen Rechner `git fetch` und `git reset --hard origin/master`.
+
 - `sprachnachricht.py`: die Grenze `av<19` aufheben, sobald faster-whisper nach 1.2.1 erscheint (Fix in
   SYSTRAN/faster-whisper#1589).
 - Chrome: Goran will die «Playwright-Gruppen» in den Favoriten löschen. In den Sync-Daten stehen aber nur 31
