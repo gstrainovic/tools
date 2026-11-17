@@ -49,7 +49,7 @@ Windows-PC: Die Skripte laufen in Git Bash und brauchen `jq` aus scoop (`scoop i
 dort nicht immer im PATH, darum setzt der Hookbefehl ihn selbst, etwa
 `PATH="/c/Users/g.strainovic/scoop/shims:$PATH" bash "C:/Users/g.strainovic/projects/tools/hooks/befunde-eingetragen.sh"`.
 Eingerichtet sind dort alle Hooks aus `hooks/` ausser den Codex-Adaptern: PreToolUse für Bash und PowerShell (`browser-profil`,
-`lange-aufrufe-filter`, `bash-bearbeiten`, `skill-hinweis`), für Edit, Write und Claude in Chrome
+`lange-aufrufe-filter`, `rekursive-suche`, `bash-bearbeiten`, `skill-hinweis`), für Edit, Write und Claude in Chrome
 (`skill-hinweis`), für WebSearch und WebFetch (`erst-lokal`, `skill-hinweis`), für Agent und Workflow
 (`agent-auftrag`, `erst-lokal`, `modellwahl`), dazu UserPromptSubmit (`skill-hinweis`), PreCompact
 (`transkript-sichern`) und Stop (`befunde-eingetragen`). Die Shell-Hooks lesen `tool_input.command` beider
