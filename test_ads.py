@@ -57,6 +57,39 @@ class CheckSpec(unittest.TestCase):
         self.assertTrue(ads.check_spec({**SPEC, "status": "ENABLED"}))
 
 
+class SuchOperationen(unittest.TestCase):
+    """Suchkampagne ohne Netz: mehrere Orte und «nur Personen am Ort» (Gorans Entscheid 1098a)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from google.ads.googleads.client import GoogleAdsClient
+        cls.c = GoogleAdsClient(credentials=None, developer_token="test", use_proto_plus=True)
+
+    def kampagne_und_orte(self, spec):
+        ops = ads.create_operations(self.c, "123", spec)
+        (k,) = [o.campaign_operation.create for o in ops if o._pb.HasField("campaign_operation")]
+        kriterien = [o.campaign_criterion_operation.create for o in ops if o._pb.HasField("campaign_criterion_operation")]
+        orte = [kr.location.geo_target_constant for kr in kriterien if kr.location.geo_target_constant]
+        return k, orte
+
+    def test_jeder_ort_einzeln(self):
+        _, orte = self.kampagne_und_orte({**SPEC, "geo_target_constant": ["geoTargetConstants/1", "geoTargetConstants/2"]})
+        self.assertEqual(orte, ["geoTargetConstants/1", "geoTargetConstants/2"])
+
+    def test_einzelner_ort_geht_weiter(self):
+        _, orte = self.kampagne_und_orte(SPEC)
+        self.assertEqual(orte, ["geoTargetConstants/2756"])
+
+    def test_nur_personen_am_ort(self):
+        k, _ = self.kampagne_und_orte({**SPEC, "nur_am_ort": True})
+        self.assertEqual(k.geo_target_type_setting.positive_geo_target_type,
+                         self.c.enums.PositiveGeoTargetTypeEnum.PRESENCE)
+
+    def test_ohne_angabe_googles_standard(self):
+        k, _ = self.kampagne_und_orte(SPEC)
+        self.assertFalse(k._pb.HasField("geo_target_type_setting"))
+
+
 DG = {
     "campaign": "T", "start": "2026-09-24 00:00:00", "end": "2026-10-23 23:59:59", "total_budget_chf": 50,
     "max_cpc_chf": 1, "ad_group": "G", "final_url": "https://wartungsheft.ch/youtube",

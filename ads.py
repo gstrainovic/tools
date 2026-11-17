@@ -125,9 +125,10 @@ def create_operations(c, customer_id: str, spec: dict) -> list:
         ops.append(o)
         return getattr(o, kind).create
 
-    budget_rn = c.get_service("CampaignBudgetService").campaign_budget_path(customer_id, "-1")
-    campaign_rn = c.get_service("CampaignService").campaign_path(customer_id, "-2")
-    group_rn = c.get_service("AdGroupService").ad_group_path(customer_id, "-3")
+    # Temporäre Ressourcennamen von Hand (get_service bräuchte Zugangsdaten, so bleibt die Funktion offline testbar)
+    budget_rn = f"customers/{customer_id}/campaignBudgets/-1"
+    campaign_rn = f"customers/{customer_id}/campaigns/-2"
+    group_rn = f"customers/{customer_id}/adGroups/-3"
 
     b = op("campaign_budget_operation")
     b.resource_name = budget_rn
@@ -150,11 +151,17 @@ def create_operations(c, customer_id: str, spec: dict) -> list:
     k.network_settings.target_content_network = False
     k.network_settings.target_partner_search_network = False
     k.contains_eu_political_advertising = c.enums.EuPoliticalAdvertisingStatusEnum.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
+    if spec.get("nur_am_ort"):  # nur Personen, die sich dort befinden, nicht wer sich für den Ort interessiert
+        k.geo_target_type_setting.positive_geo_target_type = c.enums.PositiveGeoTargetTypeEnum.PRESENCE
 
-    for field, value in (("location", spec["geo_target_constant"]), ("language", spec["language_constant"])):
+    orte = spec["geo_target_constant"]
+    for ort in [orte] if isinstance(orte, str) else orte:
         cc = op("campaign_criterion_operation")
         cc.campaign = campaign_rn
-        getattr(cc, field).__setattr__("geo_target_constant" if field == "location" else "language_constant", value)
+        cc.location.geo_target_constant = ort
+    cc = op("campaign_criterion_operation")
+    cc.campaign = campaign_rn
+    cc.language.language_constant = spec["language_constant"]
 
     # Ausschliessende Keywords auf Kampagnenebene (Wortgruppe): Suchen, die mehr wollen als das Produkt bietet
     for text in spec.get("negative_keywords", []):
