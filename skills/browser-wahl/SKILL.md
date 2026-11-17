@@ -60,8 +60,8 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
   `waitForLoadState` und ein paar Sekunden warten, sonst reisst eine noch laufende Weiterleitung alle folgenden
   Aufrufe mit («interrupted by another navigation»). Fehlt ein Login-Indikator (find-jobs: Skill `portal-login`):
   Seite in Gorans Chrome per Autofill anmelden, dann weiter.
-- Für jede Aufgabe einen eigenen Tab (`tab-new`) und ihn bis zum Ende nicht für anderes benutzen; ein Formular, auf
-  das Goran wartet (Captcha, Freigabe), bleibt in seinem Tab stehen.
+- Je Aufgabe einen vorhandenen Session-Tab weiterverwenden (unten «Keine neuen Tabs»); ein Formular, auf das Goran
+  wartet (Captcha, Freigabe), bleibt in seinem Tab stehen, die nächste Aufgabe nimmt dann einen anderen Session-Tab.
 - Cookies reichen für die Logins aller find-jobs-Portale (Stand der Prüfung: LinkedIn, Upwork, freelancermap,
   freelance.de, Freelancer.com, Wellfound). Local Storage wird nicht übernommen; braucht eine Seite ihn, die
   Werte per `localstorage-set` nachtragen oder anhängen (unten).
@@ -148,13 +148,17 @@ Formulare vorbereiten, darum nie playwright-cli verbieten, nur Claude in Chrome.
 - Passwort-Rückfragen von Meta («Bitte gib dein Passwort erneut ein» beim Anlegen einer App, beim Anzeigen des
   App-Geheimcodes) kann playwright-cli nicht ausfüllen: in einem Satz melden, Goran tippt es
   im offenen Dialog, danach weiterarbeiten.
-- Eigene Arbeit in einem eigenen Tab (`tab-new <URL>`), Gorans offene Tabs nicht anfassen, eigene Tabs am Schluss
-  schliessen (`tab-close`). Popups öffnen sich als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
+- **Keine neuen Tabs, solange Goran am Gerät ist** (kein `tab-new`, kein `page.context().newPage()`): Playwright
+  schickt dafür `chrome.tabs.create({ url })` an die Erweiterung (`createTarget` in
+  `playwright-core/lib/coreBundle.js`), ohne Fenster und ohne `active: false`. Chrome öffnet den Tab darum im
+  zuletzt benutzten Fenster, also in Gorans Fenster auf Desktop 1, und macht ihn dort aktiv. Stattdessen in einem
+  Tab arbeiten, der schon in der Session ist: nach `tab-list` den Tab «Arbeitsfenster gchrome» (Anker im
+  Arbeitsfenster) oder einen früheren eigenen Tab per `tab-select` wählen und mit `goto` weiterverwenden; in
+  `run-code` `page` bzw. einen Tab aus `page.context().pages()` nehmen, dessen Adresse zur eigenen Arbeit gehört.
+  Gorans Tabs nicht anfassen. Popups öffnen sich ohnehin als neuer Tab: `tab-list`, dann `tab-select <Nummer>`.
 - **Vor jedem `goto`, `run-code` oder Skript zuerst `tab-list`:** `page` in `run-code` zeigt auf den aktiven Tab
-  der Session (nach dem Anhängen der Tab «Arbeitsfenster gchrome», den das Skript als Anker im Fenster lässt; ohne
-  Window Calls einer von Gorans Tabs), und ein `page.goto` überschreibt ihn. Darum erst einen
-  eigenen Tab öffnen (`tab-new`) und prüfen, dass er `(current)` ist; Skripte öffnen ihren Tab selbst
-  (`const tab = await page.context().newPage()`, am Ende `tab.close()`, Muster `find-jobs/linkedin/suche_cli.py`).
+  der Session (nach dem Anhängen der Anker «Arbeitsfenster gchrome»; ohne Window Calls einer von Gorans Tabs, dann
+  nicht navigieren, sondern Goran fragen).
 - Ref-Namen ändern sich nach einem Seitenwechsel (`e123` wird `f2e123`): vor jedem Klick frischen Snapshot nehmen,
   nicht alte Refs wiederverwenden.
 - In Popups (OAuth, Facebook-Einrichtung) nie Escape drücken: Es schliesst das ganze Fenster, alle Schritte samt

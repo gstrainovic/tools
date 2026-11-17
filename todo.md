@@ -1,10 +1,13 @@
 # Offene Punkte
 
-- **Session `gchrome` holt das Arbeitsfenster auf Gorans Desktop (Befund 17.11.):** Bei der Meta-Einrichtung per
-  `run-code` zog Chrome das Fenster von Arbeitsfläche 2 mehrfach nach vorne. Vermutete, ungeprüfte Ursache: neue
-  Tabs per `page.context().newPage()` bzw. `tab-new` aktivieren das Fenster. Prüfen, welcher Aufruf es auslöst
-  (Fenster-ID aus `~/.config/playwright-extension/fenster-gchrome`, Window Calls `List` vor und nach je einem Aufruf),
-  dann im Skill `browser-wahl` festhalten bzw. in `chrome_anhaengen.py` abfangen.
+- **Skripte an der Session `gchrome` öffnen neue Tabs in Gorans Fenster:** `newPage()` bzw. `tab-new` wird zu
+  `chrome.tabs.create({ url })` ohne Fenster und ohne `active: false` (Skill `browser-wahl`, «Keine neuen Tabs»).
+  Umstellen auf einen vorhandenen Session-Tab, je Skript mit Test: `find-jobs/linkedin/suche_cli.py` (jeder
+  Laptop-Lauf), `find-jobs/automation/php_versionen.py`, `find-jobs/automation/kleinanzeigen_senden.py`
+  (Windows-PC, alle 15 Minuten, nur ohne vorhandenen Kleinanzeigen-Tab), `tools/gsc_indexierung.js`,
+  `myfactory-anbindung/myfactory/cli_login.sh`, `vesna/action-dupes/mallz/gshop_dz.js`,
+  `vesna/action-dupes/konkurrenz_kanaele.sh`, `find-jobs/akquise/verzeichnisse/omr-nachfrage-*.js` und
+  `provenexpert_login.sh`. Die Video-Aufnahmen starten einen eigenen Browser und sind nicht betroffen.
 
 - Linux-Laptop: Die Historie dieses Repos wurde am 17.11. auf dem Windows-PC erneut neu geschrieben (nach Gorans
   Entscheid 1011a auch für Frage 1085: Repo-Name der Produktfotos und Shop-Domain entfernt). Dort `git fetch` und
