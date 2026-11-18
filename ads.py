@@ -335,11 +335,14 @@ def display_operations(c, customer_id: str, spec: dict, quer: bytes, quadrat: by
     quer_rn = f"customers/{customer_id}/assets/-4"
     quadrat_rn = f"customers/{customer_id}/assets/-5"
 
+    # Display lehnt ein Gesamtbudget ab (INVALID_PERIOD): gleichmässig auf die Tage verteilt, auf Rappen abgerundet
+    import datetime
+    tage = (datetime.date.fromisoformat(spec["end"][:10]) - datetime.date.fromisoformat(spec["start"][:10])).days + 1
     b = op("campaign_budget_operation")
     b.resource_name = budget_rn
-    b.name = f"{spec['campaign']} Gesamtbudget"
-    b.period = c.enums.BudgetPeriodEnum.CUSTOM_PERIOD
-    b.total_amount_micros = micros(spec["total_budget_chf"])
+    b.name = f"{spec['campaign']} Tagesbudget"
+    b.period = c.enums.BudgetPeriodEnum.DAILY
+    b.amount_micros = int(spec["total_budget_chf"] * 100 // tage) * 10_000
     b.explicitly_shared = False
 
     k = op("campaign_operation")

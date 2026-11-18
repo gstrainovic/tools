@@ -230,9 +230,12 @@ class DisplayOperationen(unittest.TestCase):
         self.assertTrue(k._pb.HasField("target_spend"))
         self.assertEqual(k.target_spend.cpc_bid_ceiling_micros, 0)
 
-    def test_gesamtbudget(self):
+    def test_gesamtbudget_als_tagesbudget_ueber_die_laufzeit(self):
+        # Display lehnt CUSTOM_PERIOD ab (INVALID_PERIOD): 30 CHF auf 44 Tage (18.11.–31.12.) = 0.68 je Tag
         (b,) = self.teil("campaign_budget_operation")
-        self.assertEqual(b.total_amount_micros, 30_000_000)
+        self.assertEqual(b.period, self.c.enums.BudgetPeriodEnum.DAILY)
+        self.assertEqual(b.amount_micros, 680_000)
+        self.assertEqual(b.total_amount_micros, 0)
 
     def test_orte_nur_personen_am_ort(self):
         (k,) = self.teil("campaign_operation")
