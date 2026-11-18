@@ -358,7 +358,11 @@ def main_windows() -> int:
     datei.parent.mkdir(parents=True, exist_ok=True)
     datei.write_text(f"{hwnd}\n")
     # Erst anhängen, solange das neue Fenster noch auf Desktop 1 den Fokus hat: die Erweiterung legt den
-    # Session-Tab im zuletzt fokussierten Fenster an. Schon verschoben, landete er in Gorans Fenster.
+    # Session-Tab im zuletzt fokussierten Fenster an. Schon verschoben, landete er in Gorans Fenster. Windows gibt
+    # einem aus dem Hintergrund gestarteten Fenster den Fokus oft nicht von selbst, darum ausdrücklich setzen.
+    if desktop.vordergrund() != hwnd:
+        desktop.vordergrund_setzen(hwnd)
+        time.sleep(0.5)
     env = {**os.environ, "PLAYWRIGHT_MCP_EXTENSION_TOKEN": token.read_text().strip(),
            "PLAYWRIGHT_MCP_EXECUTABLE_PATH": CHROME_EXE}
     r = cli_lauf(["attach", "--extension=chrome", f"--session={s}"], env=env, timeout=120)

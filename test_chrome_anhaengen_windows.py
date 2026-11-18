@@ -107,6 +107,8 @@ class ChromeAnhaengenWindows(unittest.TestCase):
             # Die Erweiterung legt den Session-Tab im zuletzt fokussierten Fenster an: das neue Fenster nur,
             # solange es noch auf Desktop 1 liegt; schon verschoben, landet der Tab in Gorans Fenster (2).
             neuestes = max(self.desktop.fenster)
+            if getattr(self, "tab_im_fokus", False):
+                self.tab_fenster = self.tab_fenster or self.desktop.vorne
             self.tab_fenster = self.tab_fenster or (neuestes if self.desktop.fenster[neuestes] == 0 else 2)
             return mock.Mock(returncode=0, stdout="### Session created", stderr="")
         if "run-code" in args:
@@ -139,6 +141,23 @@ class ChromeAnhaengenWindows(unittest.TestCase):
         self.assertEqual(self.desktop.fenster[2], 0, "Gorans Fenster unberührt")
         self.assertEqual("900", (self.konfig / "fenster-gchrome").read_text().strip())
         self.assertIn("Desktop 2", text)
+
+    def test_neues_fenster_ohne_fokus_bekommt_ihn_vor_dem_anhaengen(self):
+        # Windows gibt einem aus dem Hintergrund gestarteten Fenster oft keinen Fokus; die Erweiterung legt den
+        # Session-Tab im fokussierten Fenster an (18.11.2026: Tab landete in Gorans Fenster).
+        self.tab_im_fokus = True
+        starten = self.desktop.chrome_starten
+
+        def ohne_fokus():
+            vorne = self.desktop.vorne
+            starten()
+            self.desktop.vorne = vorne
+
+        self.desktop.chrome_starten = ohne_fokus
+        rc, _, fehler = self.lauf()
+        self.assertEqual(rc, 0, fehler)
+        self.assertEqual(self.tab_fenster, 900, "Session-Tab im neuen Fenster")
+        self.assertEqual(self.desktop.vorne, 2, "Gorans Fenster hat danach wieder den Fokus")
 
     def test_goran_bleibt_auf_seinem_desktop_und_behaelt_den_fokus(self):
         # Verschieben des Fensters mit Fokus zieht Windows auf Desktop 2 mit und reisst Goran aus seiner Arbeit.

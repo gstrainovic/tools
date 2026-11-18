@@ -1,10 +1,5 @@
 # Offene Punkte
 
-- **`chrome_anhaengen.py` scheitert auf dem Windows-PC:** Es meldet «FEHLER: Session-Tab lag nicht im
-  Arbeitsfenster …, sondern in Gorans Fenster» und löst die Session. Laptop-Lauf ohne Browser (LinkedIn, Wellfound,
-  Portal-Postfächer, 9am-Sitzung) bleibt offen. Ursache ungeprüft (Fokus beim Anhängen); nächster Versuch, nachdem
-  Goran kurz in ein Chrome-Fenster geklickt hat.
-
 - **`test_fragen.py::test_ausgabe_nennt_datei_zeile_und_text` ist auf Windows rot:** erwartet `a/todo.md:1`,
   `ausgabe()` liefert `a\todo.md:1`. Pfad in `ausgabe()` mit `as_posix()` ausgeben oder den Test anpassen.
 
