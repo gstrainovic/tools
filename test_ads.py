@@ -176,6 +176,84 @@ class DemandGenOperationen(unittest.TestCase):
         self.assertEqual(ad.ad.final_urls[0], "https://wartungsheft.ch/youtube")
 
 
+DISPLAY = {
+    "campaign": "D", "start": "2026-11-18 00:00:00", "end": "2026-12-31 23:59:59", "total_budget_chf": 30,
+    "max_cpc_chf": None, "ad_group": "G", "final_url": "https://pink-deko.ch/?utm_source=google-display",
+    "geo_target_constant": ["geoTargetConstants/1", "geoTargetConstants/2"], "nur_am_ort": True,
+    "language_constant": "languageConstants/1001", "business_name": "Pink Deko",
+    "marketing_image": "quer.jpg", "square_image": "quadrat.jpg",
+    "headlines": ["Geschenksets ab CHF 9.90"], "long_headline": "Weihnachtsgeschenke aus Steinach",
+    "descriptions": ["Gratis abholen in 9323 Steinach"],
+}
+
+
+class CheckDisplay(unittest.TestCase):
+    def test_gueltig(self):
+        self.assertEqual(ads.check_display(DISPLAY), [])
+
+    def test_titel_hoechstens_30(self):
+        self.assertTrue(any("30" in e for e in ads.check_display({**DISPLAY, "headlines": ["x" * 31]})))
+
+    def test_langer_titel_hoechstens_90(self):
+        self.assertTrue(any("90" in e for e in ads.check_display({**DISPLAY, "long_headline": "x" * 91})))
+
+    def test_bilder_pflicht(self):
+        spec = dict(DISPLAY)
+        del spec["square_image"]
+        self.assertTrue(any("square_image" in e for e in ads.check_display(spec)))
+
+    def test_startet_nie_aktiv(self):
+        self.assertTrue(ads.check_display({**DISPLAY, "status": "ENABLED"}))
+
+
+class DisplayOperationen(unittest.TestCase):
+    """Bildanzeigen auf fremden Websites (Gorans Entscheid 1100b): nur Displaynetzwerk, nur Personen am Ort."""
+
+    @classmethod
+    def setUpClass(cls):
+        from google.ads.googleads.client import GoogleAdsClient
+        cls.c = GoogleAdsClient(credentials=None, developer_token="test", use_proto_plus=True)
+        cls.ops = ads.display_operations(cls.c, "123", DISPLAY, b"QUER", b"QUADRAT")
+
+    def teil(self, art):
+        return [getattr(o, art).create for o in self.ops if o._pb.HasField(art)]
+
+    def test_kampagne_nur_im_displaynetzwerk_pausiert(self):
+        (k,) = self.teil("campaign_operation")
+        self.assertEqual(k.advertising_channel_type, self.c.enums.AdvertisingChannelTypeEnum.DISPLAY)
+        self.assertEqual(k.status, self.c.enums.CampaignStatusEnum.PAUSED)
+        self.assertTrue(k.network_settings.target_content_network)
+        self.assertFalse(k.network_settings.target_google_search or k.network_settings.target_search_network)
+
+    def test_klicks_maximieren_ohne_obergrenze(self):
+        (k,) = self.teil("campaign_operation")
+        self.assertTrue(k._pb.HasField("target_spend"))
+        self.assertEqual(k.target_spend.cpc_bid_ceiling_micros, 0)
+
+    def test_gesamtbudget(self):
+        (b,) = self.teil("campaign_budget_operation")
+        self.assertEqual(b.total_amount_micros, 30_000_000)
+
+    def test_orte_nur_personen_am_ort(self):
+        (k,) = self.teil("campaign_operation")
+        self.assertEqual(k.geo_target_type_setting.positive_geo_target_type,
+                         self.c.enums.PositiveGeoTargetTypeEnum.PRESENCE)
+        orte = [kr.location.geo_target_constant for kr in self.teil("campaign_criterion_operation")
+                if kr.location.geo_target_constant]
+        self.assertEqual(orte, ["geoTargetConstants/1", "geoTargetConstants/2"])
+
+    def test_anzeige_mit_beiden_bildern_und_texten(self):
+        assets = self.teil("asset_operation")
+        self.assertEqual(sorted(a.image_asset.data for a in assets), [b"QUADRAT", b"QUER"])
+        (ad,) = self.teil("ad_group_ad_operation")
+        r = ad.ad.responsive_display_ad
+        self.assertEqual(r.business_name, "Pink Deko")
+        self.assertEqual(r.long_headline.text, "Weihnachtsgeschenke aus Steinach")
+        self.assertEqual(len(r.marketing_images), 1)
+        self.assertEqual(len(r.square_marketing_images), 1)
+        self.assertEqual(ad.ad.final_urls[0], "https://pink-deko.ch/?utm_source=google-display")
+
+
 class KeywordLines(unittest.TestCase):
     def test_leere_zeilen_und_kommentare_fallen_weg(self):
         self.assertEqual(ads.keyword_lines(["serviceheft app\n", "\n", "# Kommentar\n", "  mfk app  \n"]),

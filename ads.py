@@ -21,6 +21,8 @@ Befehle:
     ads create SPEC.json [--validate-only]       Suchkampagne anlegen, immer pausiert, Gesamtbudget mit Enddatum
     ads demandgen SPEC.json [--validate-only]    Demand-Gen-Videokampagne nur auf YouTube (samt Shorts), pausiert,
                                                  Orte als Liste geoTargetConstants (kein Umkreis bei Demand Gen)
+    ads display SPEC.json [--validate-only]      Display-Kampagne (Bildanzeige auf fremden Websites), pausiert,
+                                                 Bilder quer 1.91:1 und quadratisch, max_cpc_chf null = ohne Obergrenze
     ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
     ads keywords DATEI|-                         Suchvolumen und Klickpreise (Schweiz, Deutsch), braucht Basic
     ads keywords DATEI|- --verlauf [MONATE]      Monatswerte, letzte 12 Monate gegen Vorjahr (Trend messen)
@@ -293,6 +295,137 @@ def demand_gen_operations(c, customer_id: str, spec: dict, logo: bytes) -> list:
     return ops
 
 
+DISPLAY_REQUIRED = ("campaign", "start", "end", "total_budget_chf", "max_cpc_chf", "ad_group", "final_url",
+                    "geo_target_constant", "language_constant", "business_name", "marketing_image", "square_image",
+                    "headlines", "long_headline", "descriptions")
+
+
+def check_display(spec: dict) -> list[str]:
+    """Fehler in einer Display-Kampagne (responsive Bildanzeige), leer wenn gültig. Startet immer pausiert."""
+    errors = [f"{key} fehlt" for key in DISPLAY_REQUIRED if key not in spec]
+    if errors:
+        return errors
+    if spec.get("status", "PAUSED") != "PAUSED":
+        errors.append("status muss PAUSED sein, aktiviert wird erst nach Freigabe mit `ads enable`")
+    for key, name in (("headlines", "Titel"), ("descriptions", "Beschreibungen")):
+        if not 1 <= len(spec[key]) <= 5:
+            errors.append(f"1 bis 5 {name} nötig")
+    errors += [f"Titel über 30 Zeichen: {h}" for h in spec["headlines"] if len(h) > 30]
+    errors += [f"Beschreibung über 90 Zeichen: {d}" for d in spec["descriptions"] if len(d) > 90]
+    if len(spec["long_headline"]) > 90:
+        errors.append(f"langer Titel über 90 Zeichen: {spec['long_headline']}")
+    if len(spec["business_name"]) > 25:
+        errors.append(f"Firmenname über 25 Zeichen: {spec['business_name']}")
+    return errors
+
+
+def display_operations(c, customer_id: str, spec: dict, quer: bytes, quadrat: bytes) -> list:
+    """Display-Kampagne als eine Transaktion: Budget, Kampagne nur im Displaynetzwerk (pausiert, Klicks maximieren),
+    Orte und Sprache, Anzeigengruppe, Bild-Assets (quer 1.91:1, quadratisch 1:1) und responsive Bildanzeige."""
+    ops = []
+
+    def op(kind: str):
+        o = c.get_type("MutateOperation")
+        ops.append(o)
+        return getattr(o, kind).create
+
+    budget_rn = f"customers/{customer_id}/campaignBudgets/-1"
+    campaign_rn = f"customers/{customer_id}/campaigns/-2"
+    group_rn = f"customers/{customer_id}/adGroups/-3"
+    quer_rn = f"customers/{customer_id}/assets/-4"
+    quadrat_rn = f"customers/{customer_id}/assets/-5"
+
+    b = op("campaign_budget_operation")
+    b.resource_name = budget_rn
+    b.name = f"{spec['campaign']} Gesamtbudget"
+    b.period = c.enums.BudgetPeriodEnum.CUSTOM_PERIOD
+    b.total_amount_micros = micros(spec["total_budget_chf"])
+    b.explicitly_shared = False
+
+    k = op("campaign_operation")
+    k.resource_name = campaign_rn
+    k.name = spec["campaign"]
+    k.status = c.enums.CampaignStatusEnum.PAUSED
+    k.advertising_channel_type = c.enums.AdvertisingChannelTypeEnum.DISPLAY
+    k.campaign_budget = budget_rn
+    k.start_date_time = spec["start"]
+    k.end_date_time = spec["end"]
+    k.target_spend._pb.SetInParent()  # Klicks maximieren
+    if spec["max_cpc_chf"] is not None:
+        k.target_spend.cpc_bid_ceiling_micros = micros(spec["max_cpc_chf"])
+    k.network_settings.target_google_search = False
+    k.network_settings.target_search_network = False
+    k.network_settings.target_content_network = True
+    k.network_settings.target_partner_search_network = False
+    k.contains_eu_political_advertising = c.enums.EuPoliticalAdvertisingStatusEnum.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
+    if spec.get("nur_am_ort"):
+        k.geo_target_type_setting.positive_geo_target_type = c.enums.PositiveGeoTargetTypeEnum.PRESENCE
+
+    orte = spec["geo_target_constant"]
+    for ort in [orte] if isinstance(orte, str) else orte:
+        cc = op("campaign_criterion_operation")
+        cc.campaign = campaign_rn
+        cc.location.geo_target_constant = ort
+    cc = op("campaign_criterion_operation")
+    cc.campaign = campaign_rn
+    cc.language.language_constant = spec["language_constant"]
+
+    g = op("ad_group_operation")
+    g.resource_name = group_rn
+    g.name = spec["ad_group"]
+    g.campaign = campaign_rn
+    g.status = c.enums.AdGroupStatusEnum.ENABLED
+    g.type_ = c.enums.AdGroupTypeEnum.DISPLAY_STANDARD
+
+    for rn, name, daten in ((quer_rn, "quer", quer), (quadrat_rn, "quadratisch", quadrat)):
+        a = op("asset_operation")
+        a.resource_name = rn
+        a.name = f"{spec['campaign']} Bild {name}"
+        a.type_ = c.enums.AssetTypeEnum.IMAGE
+        a.image_asset.data = daten
+
+    ad = op("ad_group_ad_operation")
+    ad.ad_group = group_rn
+    ad.status = c.enums.AdGroupAdStatusEnum.ENABLED
+    ad.ad.final_urls.append(spec["final_url"])
+    r = ad.ad.responsive_display_ad
+    r.business_name = spec["business_name"]
+    r.long_headline.text = spec["long_headline"]
+    for rn, feld in ((quer_rn, r.marketing_images), (quadrat_rn, r.square_marketing_images)):
+        bild = c.get_type("AdImageAsset")
+        bild.asset = rn
+        feld.append(bild)
+    for feld in ("headlines", "descriptions"):
+        for text in spec[feld]:
+            t = c.get_type("AdTextAsset")
+            t.text = text
+            getattr(r, feld).append(t)
+    return ops
+
+
+def cmd_display(args) -> None:
+    spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
+    errors = check_display(spec)
+    if errors:
+        sys.exit("Kampagnenbeschreibung ungültig:\n  " + "\n  ".join(errors))
+    ordner = Path(args.spec).parent
+    quer = (ordner / spec["marketing_image"]).read_bytes()
+    quadrat = (ordner / spec["square_image"]).read_bytes()
+    c = client()
+    request = c.get_type("MutateGoogleAdsRequest")
+    request.customer_id = args.customer
+    request.mutate_operations.extend(display_operations(c, args.customer, spec, quer, quadrat))
+    request.validate_only = args.validate_only
+    response = c.get_service("GoogleAdsService").mutate(request=request)
+    if args.validate_only:
+        print(f"gültig: {len(request.mutate_operations)} Operationen, nichts angelegt")
+        return
+    for r in response.mutate_operation_responses:
+        for field in ("campaign_result", "ad_group_result", "ad_group_ad_result"):
+            if r._pb.HasField(field):
+                print(f"angelegt: {getattr(r, field).resource_name}")
+
+
 def cmd_demandgen(args) -> None:
     spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
     errors = check_demand_gen(spec)
@@ -498,6 +631,10 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("spec", help="JSON-Datei der Videokampagne; logo als Pfad relativ zu dieser Datei")
     s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
     s.set_defaults(fn=cmd_demandgen)
+    s = sub.add_parser("display")
+    s.add_argument("spec", help="JSON-Datei der Display-Kampagne; Bilder als Pfade relativ zu dieser Datei")
+    s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
+    s.set_defaults(fn=cmd_display)
     s = sub.add_parser("keywords")
     s.add_argument("file", help="Datei mit einem Keyword pro Zeile, - für stdin")
     s.add_argument("--geo", default="geoTargetConstants/2756", help="Standard Schweiz")
