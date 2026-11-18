@@ -23,6 +23,7 @@ Befehle:
                                                  Orte als Liste geoTargetConstants (kein Umkreis bei Demand Gen)
     ads display SPEC.json [--validate-only]      Display-Kampagne (Bildanzeige auf fremden Websites), pausiert,
                                                  Bilder quer 1.91:1 und quadratisch, max_cpc_chf null = ohne Obergrenze
+    ads apps-ausschliessen ID [ID ...]           Display-Kampagnen nicht in Handy-Apps zeigen (im Spec: apps_ausschliessen)
     ads enable ID [ID ...] | ads pause ID ...    Kampagnen ein- oder ausschalten
     ads keywords DATEI|-                         Suchvolumen und Klickpreise (Schweiz, Deutsch), braucht Basic
     ads keywords DATEI|- --verlauf [MONATE]      Monatswerte, letzte 12 Monate gegen Vorjahr (Trend messen)
@@ -319,6 +320,35 @@ def check_display(spec: dict) -> list[str]:
     return errors
 
 
+def apps_ausschliessen_operationen(c, customer_id: str, campaign_id: str) -> list:
+    """Ausschluss aller Handy-Apps für eine Display-Kampagne: oberste App-Kategorien 60000 «Google Play» und
+    60500 «Apple App Store»."""
+    ops = []
+    for kategorie in ("60000", "60500"):
+        o = c.get_type("MutateOperation")
+        kr = o.campaign_criterion_operation.create
+        kr.campaign = f"customers/{customer_id}/campaigns/{campaign_id}"
+        kr.negative = True
+        kr.mobile_app_category.mobile_app_category_constant = f"mobileAppCategoryConstants/{kategorie}"
+        ops.append(o)
+    return ops
+
+
+def cmd_apps_ausschliessen(args) -> None:
+    c = client()
+    request = c.get_type("MutateGoogleAdsRequest")
+    request.customer_id = args.customer
+    for i in args.ids:
+        request.mutate_operations.extend(apps_ausschliessen_operationen(c, args.customer, i))
+    request.validate_only = args.validate_only
+    response = c.get_service("GoogleAdsService").mutate(request=request)
+    if args.validate_only:
+        print(f"gültig: {len(request.mutate_operations)} Operationen, nichts angelegt")
+        return
+    for r in response.mutate_operation_responses:
+        print(f"ausgeschlossen: {r.campaign_criterion_result.resource_name}")
+
+
 def display_operations(c, customer_id: str, spec: dict, quer: bytes, quadrat: bytes) -> list:
     """Display-Kampagne als eine Transaktion: Budget, Kampagne nur im Displaynetzwerk (pausiert, Klicks maximieren),
     Orte und Sprache, Anzeigengruppe, Bild-Assets (quer 1.91:1, quadratisch 1:1) und responsive Bildanzeige."""
@@ -372,6 +402,8 @@ def display_operations(c, customer_id: str, spec: dict, quer: bytes, quadrat: by
     cc = op("campaign_criterion_operation")
     cc.campaign = campaign_rn
     cc.language.language_constant = spec["language_constant"]
+    if spec.get("apps_ausschliessen"):
+        ops.extend(apps_ausschliessen_operationen(c, customer_id, "-2"))
 
     g = op("ad_group_operation")
     g.resource_name = group_rn
@@ -638,6 +670,10 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("spec", help="JSON-Datei der Display-Kampagne; Bilder als Pfade relativ zu dieser Datei")
     s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts anlegen")
     s.set_defaults(fn=cmd_display)
+    s = sub.add_parser("apps-ausschliessen")
+    s.add_argument("ids", nargs="+", help="Display-Kampagnen")
+    s.add_argument("--validate-only", action="store_true", help="nur von Google prüfen lassen, nichts ändern")
+    s.set_defaults(fn=cmd_apps_ausschliessen)
     s = sub.add_parser("keywords")
     s.add_argument("file", help="Datei mit einem Keyword pro Zeile, - für stdin")
     s.add_argument("--geo", default="geoTargetConstants/2756", help="Standard Schweiz")

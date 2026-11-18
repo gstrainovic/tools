@@ -257,6 +257,28 @@ class DisplayOperationen(unittest.TestCase):
         self.assertEqual(ad.ad.final_urls[0], "https://pink-deko.ch/?utm_source=google-display")
 
 
+class AppsAusschliessen(unittest.TestCase):
+    """Gorans Entscheid 1127a: Display-Anzeigen nicht in Handy-Apps (Fehlklicks in Spielen)."""
+
+    def test_alle_apps_als_ausschluss_der_kampagne(self):
+        from google.ads.googleads.client import GoogleAdsClient
+        c = GoogleAdsClient(credentials=None, developer_token="test", use_proto_plus=True)
+        # 60000 ist «Google Play», 60500 «Apple App Store»: beide nötig für alle Apps
+        krs = [o.campaign_criterion_operation.create for o in ads.apps_ausschliessen_operationen(c, "123", "-2")]
+        self.assertTrue(all(kr.negative and kr.campaign == "customers/123/campaigns/-2" for kr in krs))
+        self.assertEqual(sorted(kr.mobile_app_category.mobile_app_category_constant for kr in krs),
+                         ["mobileAppCategoryConstants/60000", "mobileAppCategoryConstants/60500"])
+
+    def test_display_kampagne_schliesst_apps_auf_wunsch_aus(self):
+        from google.ads.googleads.client import GoogleAdsClient
+        c = GoogleAdsClient(credentials=None, developer_token="test", use_proto_plus=True)
+        ops = ads.display_operations(c, "123", {**DISPLAY, "apps_ausschliessen": True}, b"Q", b"Q")
+        kat = [o.campaign_criterion_operation.create.mobile_app_category.mobile_app_category_constant
+               for o in ops if o._pb.HasField("campaign_criterion_operation")]
+        self.assertIn("mobileAppCategoryConstants/60000", kat)
+        self.assertIn("mobileAppCategoryConstants/60500", kat)
+
+
 class KeywordLines(unittest.TestCase):
     def test_leere_zeilen_und_kommentare_fallen_weg(self):
         self.assertEqual(ads.keyword_lines(["serviceheft app\n", "\n", "# Kommentar\n", "  mfk app  \n"]),
