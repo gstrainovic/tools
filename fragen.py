@@ -88,7 +88,7 @@ def pruefen(wurzel: Path = WURZEL) -> Bericht:
     beantwortet = set().union(*(antworten(z) for _, _, _, z in alle)) if alle else set()
     bericht, gesehen = Bericht(), set()
     for repo, datei, i, zeile in alle:
-        for treffer in OFFEN.finditer(zeile):
+        for treffer in OFFEN.finditer(re.sub(r"`[^`]*`", "", zeile)):  # Code zeigt nur Beispiele
             nummer = int(next(g for g in treffer.groups() if g))
             if (datei, nummer) in gesehen:
                 continue

@@ -63,6 +63,13 @@ class Pruefen(unittest.TestCase):
         repo(self.wurzel, "b", {"TODO.md": "Antwort 321a umgesetzt\n"})
         self.assertEqual([b.nummer for b in fragen.pruefen(self.wurzel).veraltet], [321])
 
+    def test_beispiel_im_code_ist_keine_frage(self):
+        # Regeltext zeigt die Form als Code; dieselbe Nummer steht als Beispielantwort «312a»
+        repo(self.wurzel, "regeln", {"gemeinsam.md": "- Form: `**Frage 312:**` am Zeilenanfang\n"
+                                                     "- Antwort wie «312a»\n"})
+        bericht = fragen.pruefen(self.wurzel)
+        self.assertEqual((bericht.veraltet, bericht.offen), ([], []))
+
     def test_unbeantwortete_frage_ist_offen_mit_datum(self):
         repo(self.wurzel, "a", {"todo.md": "- [ ] **Frage 322: Banddrucker kaufen?** 322a ja, 322b nein\n"})
         bericht = fragen.pruefen(self.wurzel)
