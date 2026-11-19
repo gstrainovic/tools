@@ -1,6 +1,6 @@
 ---
-name: doku-pflege
-description: Regeln für todo.md, AGENTS.md, CLAUDE.md, README, Skills, Berichte und Artikel: nur geltender Stand, kein Changelog, Falsches löschen, Auslagern in Skills, keine Memories, Aussagen nur mit Beleg, Ergebnisse ins Repo. Laden, bevor eine dieser Dateien geschrieben oder geändert wird.
+name: 'doku-pflege'
+description: 'Regeln für todo.md, AGENTS.md, CLAUDE.md, README, Skills, Berichte und Artikel: nur geltender Stand, kein Changelog, Falsches löschen, Auslagern in Skills, keine Memories, Aussagen nur mit Beleg, Ergebnisse ins Repo. Laden, bevor eine dieser Dateien geschrieben oder geändert wird.'
 ---
 
 # Doku-Pflege (alle Projekte, verbindlich)

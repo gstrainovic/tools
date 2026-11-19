@@ -1,6 +1,6 @@
 ---
-name: mistral-api
-description: Mistral-API (OCR, Vision, Embedding): Modellnamen, Grenzen für Dateien und Bilder, Tarife und Ratenlimits, bewährte Pipeline. Laden bei Arbeit mit Mistral in dms, wartungsheft, rag-pgvector-beispiel, ai-proxy oder einem neuen Projekt.
+name: 'mistral-api'
+description: 'Mistral-API (OCR, Vision, Embedding): Modellnamen, Grenzen für Dateien und Bilder, Tarife und Ratenlimits, bewährte Pipeline. Laden bei Arbeit mit Mistral in dms, wartungsheft, rag-pgvector-beispiel, ai-proxy oder einem neuen Projekt.'
 ---
 
 # Mistral-API

@@ -1,6 +1,6 @@
 ---
-name: schweiz
-description: Goran wohnt in der Schweiz (Region Zürich): bei Steuer-, Bank-, Rechts-, Preis- und Zahlungsfragen Schweizer Recht und CHF annehmen, nicht deutsches oder EU-Recht; kein PayPal als Zahlungsweg. Laden bei solchen Fragen oder Empfehlungen mit Kosten.
+name: 'schweiz'
+description: 'Goran wohnt in der Schweiz (Region Zürich): bei Steuer-, Bank-, Rechts-, Preis- und Zahlungsfragen Schweizer Recht und CHF annehmen, nicht deutsches oder EU-Recht; kein PayPal als Zahlungsweg. Laden bei solchen Fragen oder Empfehlungen mit Kosten.'
 ---
 
 # Schweiz statt Deutschland/EU
