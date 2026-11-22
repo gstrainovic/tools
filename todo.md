@@ -1,5 +1,9 @@
 # Offene Punkte
 
+- **Exa-Guthaben aufgebraucht:** `recherche.py` bricht mit «HTTP Error 402: Payment Required» ab;
+  bis zur Aufladung nur mit `--ohne-exa` und Gegenprobe. Goran: Guthaben auf dashboard.exa.ai aufladen oder bis zum
+  nächsten Monatsguthaben warten.
+
 - **`test_fragen.py::test_ausgabe_nennt_datei_zeile_und_text` ist auf Windows rot:** erwartet `a/todo.md:1`,
   `ausgabe()` liefert `a\todo.md:1`. Pfad in `ausgabe()` mit `as_posix()` ausgeben oder den Test anpassen.
 
