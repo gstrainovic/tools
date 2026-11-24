@@ -133,7 +133,7 @@ def neu(wurzel: Path = WURZEL, zaehler: Path = ZAEHLER, anzahl: int = 1) -> list
 
 def ausgabe(bericht: Bericht) -> str:
     def ort(s: Stelle) -> str:
-        return str(s.datei.relative_to(s.repo.parent))
+        return s.datei.relative_to(s.repo.parent).as_posix()
 
     teile = []
     for s in bericht.veraltet:

@@ -4,9 +4,6 @@
   bis zur Aufladung nur mit `--ohne-exa` und Gegenprobe. Goran: Guthaben auf dashboard.exa.ai aufladen oder bis zum
   nächsten Monatsguthaben warten.
 
-- **`test_fragen.py::test_ausgabe_nennt_datei_zeile_und_text` ist auf Windows rot:** erwartet `a/todo.md:1`,
-  `ausgabe()` liefert `a\todo.md:1`. Pfad in `ausgabe()` mit `as_posix()` ausgeben oder den Test anpassen.
-
 - **Skripte an der Session `gchrome` öffnen neue Tabs in Gorans Fenster:** `newPage()` bzw. `tab-new` wird zu
   `chrome.tabs.create({ url })` ohne Fenster und ohne `active: false` (Skill `browser-wahl`, «Keine neuen Tabs»).
   Umstellen auf einen vorhandenen Session-Tab, je Skript mit Test: `find-jobs/linkedin/suche_cli.py` (jeder
@@ -42,6 +39,3 @@
 - `fragen pruefen` meldet «VERALTET Frage 312» für `skills-privat/claude/gemeinsam.md:36`: Dort steht «Frage 312» nur als
   Beispiel für die Form einer Frage. Entweder das Beispiel ohne echte Nummer schreiben (etwa «Frage N») oder
   `fragen.py` die Regeldateien unter `skills-privat/claude/` überspringen lassen, mit Test.
-- `fragen pruefen` sucht nur unter `~/projects` (`fragen.py:24`, `WURZEL`). Offene Fragen in Repos unter
-  `~/workspace` (etwa Frage 1259 in `workspace/diverses/pentester/todo.md`) erscheinen nicht. `WURZEL` um
-  `~/workspace` erweitern, mit Test; `neu` zählt schon global über den Zähler.
