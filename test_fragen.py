@@ -51,6 +51,17 @@ class Pruefen(unittest.TestCase):
     def setUp(self):
         self.wurzel = Path(tempfile.mkdtemp())
 
+    def test_findet_repos_unter_workspace_eine_ebene_tiefer(self):
+        # ~/workspace/<bereich>/<repo> neben ~/projects/<repo>
+        projekte, workspace = self.wurzel / "projects", self.wurzel / "workspace"
+        repo(projekte, "tools", {"todo.md": "Gorans Entscheid 330a\n"})
+        repo(workspace / "diverses", "pentester", {"todo.md": "- [ ] **Frage 331:** offen\n",
+                                                   "AGENTS.md": "wartet, bis Frage 330 geklärt\n"})
+        bericht = fragen.pruefen([projekte, workspace, self.wurzel / "fehlt"])
+        self.assertEqual([b.nummer for b in bericht.offen], [331])
+        self.assertEqual([b.nummer for b in bericht.veraltet], [330])
+        self.assertEqual(fragen.neu([projekte, workspace], self.wurzel / "zaehler"), [332])
+
     def test_verweis_auf_offene_frage_ist_veraltet_wenn_anderswo_entschieden(self):
         # Antwort beim Einzelartikel eingetragen, das Set verweist weiter auf «offen in Frage»
         repo(self.wurzel, "shop", {"sortiment/todo.md": "- [ ] Set nicht veröffentlichen, offen in Frage 320\n",

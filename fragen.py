@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fragen an Goran: eindeutige Nummern vergeben und prüfen, dass jede Antwort überall angekommen ist.
 
-    fragen neu [ANZAHL]     nächste freie Nummer(n), eindeutig über alle Repos unter ~/projects
+    fragen neu [ANZAHL]     nächste freie Nummer(n), eindeutig über alle Repos unter ~/projects und ~/workspace
     fragen pruefen          offene Fragen mit Datum; VERALTET, wo eine Stelle noch auf eine beantwortete Frage wartet
 
 Grund (Frage 307, 05.11.2026): Fragenummern begannen je Sitzung neu, eine Antwort wie «28b» kam darum nicht an
@@ -21,7 +21,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 START = 310
-WURZEL = Path.home() / "projects"
+# ~/projects/<repo> und ~/workspace/<bereich>/<repo>; eine fehlende Wurzel (Laptop ohne workspace) zählt nicht.
+WURZEL = [Path.home() / "projects", Path.home() / "workspace"]
 ZAEHLER = Path.home() / ".local" / "state" / "fragen" / "zaehler"
 
 FRAGE = re.compile(r"Frage (\d+)\b")
@@ -46,8 +47,18 @@ class Bericht:
     veraltet: list = field(default_factory=list)
 
 
-def repos(wurzel: Path) -> list[Path]:
-    return sorted(p for p in wurzel.iterdir() if (p / ".git").exists())
+def repos(wurzel) -> list[Path]:
+    """Repos direkt unter jeder Wurzel oder eine Ebene tiefer (Bereichsordner ohne eigenes .git)."""
+    gefunden = []
+    for w in [wurzel] if isinstance(wurzel, Path) else wurzel:
+        if not w.is_dir():
+            continue
+        for p in w.iterdir():
+            if (p / ".git").exists():
+                gefunden.append(p)
+            elif p.is_dir() and not p.name.startswith("."):
+                gefunden += [q for q in p.iterdir() if (q / ".git").exists()]
+    return sorted(gefunden)
 
 
 def dateien(repo: Path) -> list[Path]:
