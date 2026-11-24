@@ -42,3 +42,6 @@
 - `fragen pruefen` meldet «VERALTET Frage 312» für `skills-privat/claude/gemeinsam.md:36`: Dort steht «Frage 312» nur als
   Beispiel für die Form einer Frage. Entweder das Beispiel ohne echte Nummer schreiben (etwa «Frage N») oder
   `fragen.py` die Regeldateien unter `skills-privat/claude/` überspringen lassen, mit Test.
+- `fragen pruefen` sucht nur unter `~/projects` (`fragen.py:24`, `WURZEL`). Offene Fragen in Repos unter
+  `~/workspace` (etwa Frage 1259 in `workspace/diverses/pentester/todo.md`) erscheinen nicht. `WURZEL` um
+  `~/workspace` erweitern, mit Test; `neu` zählt schon global über den Zähler.
